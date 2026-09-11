@@ -3,7 +3,7 @@ name: Build Windows
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, staging-source]
 
 jobs:
   build-windows:
@@ -12,11 +12,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract Kitaba Companion source
+      - name: Reassemble and verify Kitaba Companion source
         shell: pwsh
         run: |
+          $parts = Get-ChildItem source-b64-10/part*.txt | Sort-Object Name
+          if ($parts.Count -ne 15) { throw "Expected 15 source chunks, found $($parts.Count)." }
+          $base64 = ($parts | ForEach-Object { (Get-Content $_.FullName -Raw).Trim() }) -join ''
+          $bytes = [Convert]::FromBase64String($base64)
+          [IO.File]::WriteAllBytes("kitaba-companion-source-reassembled.zip", $bytes)
+          $sha = (Get-FileHash "kitaba-companion-source-reassembled.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
+          $expected = "2ca6483e405a6035ebaffc2fa9f65b3d661e84d12d9d2c330b0da9745028dc78"
+          if ($sha -ne $expected) { throw "Source archive checksum mismatch. Got $sha expected $expected." }
           New-Item -ItemType Directory -Force -Path app | Out-Null
-          Expand-Archive -Path kitaba-companion-source.zip -DestinationPath app -Force
+          Expand-Archive -Path kitaba-companion-source-reassembled.zip -DestinationPath app -Force
 
       - name: Setup Node
         uses: actions/setup-node@v4
