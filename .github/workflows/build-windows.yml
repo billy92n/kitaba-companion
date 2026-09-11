@@ -41,7 +41,7 @@ jobs:
           Copy-Item -Path bootstrap/kitaba-world-map.png -Destination app/public/kitaba-world-map.png -Force
           if (-not (Test-Path app/public/kitaba-world-map.png)) { throw 'Default world map bootstrap failed.' }
 
-      - name: Apply verified Rust lifetime hotfixes
+      - name: Apply verified Rust source hotfixes
         shell: pwsh
         run: |
           $path = 'app/src-tauri/src/db.rs'
@@ -58,10 +58,18 @@ jobs:
             @(
               '        stmt.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?.collect::<Result<Vec<_>, _>>()?',
               "        let rows = stmt.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?.collect::<Result<Vec<_>, _>>()?;`r`n        rows"
+            ),
+            @(
+              '        assert!(!player.contains("hidden"));',
+              '        assert!(!player.contains("\"secret\": \"hidden\""));'
+            ),
+            @(
+              '        assert!(full.contains("hidden"));',
+              '        assert!(full.contains("\"secret\": \"hidden\""));'
             )
           )
           foreach ($pair in $replacements) {
-            if (-not $source.Contains($pair[0])) { throw "Expected Rust lifetime pattern not found: $($pair[0])" }
+            if (-not $source.Contains($pair[0])) { throw "Expected Rust source pattern not found: $($pair[0])" }
             $source = $source.Replace($pair[0], $pair[1])
           }
           Set-Content -Path $path -Value $source -NoNewline
