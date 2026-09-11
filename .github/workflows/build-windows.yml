@@ -16,8 +16,10 @@ jobs:
         shell: pwsh
         run: |
           $partNames = @(
-            'part00.txt','part01.txt','part02.txt','part03.txt','part04.txt','part05.txt','part06.txt','part07.txt','part08.txt','part09.txt',
-            'part10.txt','part11.txt','part12.txt','part13.txt','part14.txt','part15.txt','part16.txt',
+            'part00.txt','part01.txt','part02.txt','part03.txt','part04.txt','part05.txt','part06.txt',
+            'part07a.txt','part07b.txt','part07c.txt','part07d.txt',
+            'part08.txt','part09.txt','part10.txt','part11.txt','part12.txt','part13.txt','part14.txt','part15.txt',
+            'part16a.txt','part16b.txt','part16c.txt','part16d.txt',
             'part17a.txt','part17b.txt','part17c.txt','part17d.txt',
             'part18.txt','part19.txt','part20.txt','part21.txt','part22.txt','part23.txt','part24.txt'
           )
