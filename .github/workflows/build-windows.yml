@@ -85,7 +85,7 @@ jobs:
           $sidebarPath = 'app/src/components/Sidebar.tsx'
           $sidebar = Get-Content $sidebarPath -Raw
           $oldPc = '  const pc = entities.find((e) => e.entity_type === "player_character")?.data ?? {};'
-          $newPc = "  const pcEntity = entities.find((e) => e.entity_type === \"player_character\");`r`n  const pc = pcEntity?.data ?? {};"
+          $newPc = '  const pcEntity = entities.find((e) => e.entity_type === "player_character");' + [Environment]::NewLine + '  const pc = pcEntity?.data ?? {};'
           if (-not $sidebar.Contains($oldPc)) { throw 'Expected empty-state player-character pattern not found.' }
           $sidebar = $sidebar.Replace($oldPc, $newPc)
           $sidebar = $sidebar.Replace('  const firstName = text(pc, "first_name", "prenom", "name") ?? "Sully";', '  const firstName = text(pc, "first_name", "prenom", "name") ?? (campaign ? "Sully" : "—");')
