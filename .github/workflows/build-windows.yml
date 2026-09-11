@@ -15,14 +15,23 @@ jobs:
       - name: Reassemble and verify Kitaba Companion source
         shell: pwsh
         run: |
-          $parts = Get-ChildItem source-b64-v3/part*.txt | Sort-Object Name
-          if ($parts.Count -ne 25) { throw "Expected 25 source chunks, found $($parts.Count)." }
-          $base64 = ($parts | ForEach-Object { (Get-Content $_.FullName -Raw).Trim() }) -join ''
+          $partNames = @(
+            'part00.txt','part01.txt','part02.txt','part03.txt','part04.txt','part05.txt','part06.txt','part07.txt','part08.txt','part09.txt',
+            'part10.txt','part11.txt','part12.txt','part13.txt','part14.txt','part15.txt','part16.txt',
+            'part17a.txt','part17b.txt','part17c.txt','part17d.txt',
+            'part18.txt','part19.txt','part20.txt','part21.txt','part22.txt','part23.txt','part24.txt'
+          )
+          $parts = $partNames | ForEach-Object {
+            $path = Join-Path 'source-b64-v3' $_
+            if (-not (Test-Path $path)) { throw "Missing source chunk: $path" }
+            $path
+          }
+          $base64 = ($parts | ForEach-Object { (Get-Content $_ -Raw).Trim() }) -join ''
           if ($base64.Length -ne 147180) { throw "Unexpected base64 length $($base64.Length); expected 147180." }
           $bytes = [Convert]::FromBase64String($base64)
-          [IO.File]::WriteAllBytes("kitaba-companion-source-reassembled.zip", $bytes)
-          $sha = (Get-FileHash "kitaba-companion-source-reassembled.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
-          $expected = "2ca6483e405a6035ebaffc2fa9f65b3d661e84d12d9d2c330b0da9745028dc78"
+          [IO.File]::WriteAllBytes('kitaba-companion-source-reassembled.zip', $bytes)
+          $sha = (Get-FileHash 'kitaba-companion-source-reassembled.zip' -Algorithm SHA256).Hash.ToLowerInvariant()
+          $expected = '2ca6483e405a6035ebaffc2fa9f65b3d661e84d12d9d2c330b0da9745028dc78'
           if ($sha -ne $expected) { throw "Source archive checksum mismatch. Got $sha expected $expected." }
           New-Item -ItemType Directory -Force -Path app | Out-Null
           Expand-Archive -Path kitaba-companion-source-reassembled.zip -DestinationPath app -Force
