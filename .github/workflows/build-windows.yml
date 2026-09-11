@@ -41,7 +41,7 @@ jobs:
           Copy-Item -Path bootstrap/kitaba-world-map.png -Destination app/public/kitaba-world-map.png -Force
           if (-not (Test-Path app/public/kitaba-world-map.png)) { throw 'Default world map bootstrap failed.' }
 
-      - name: Apply verified Rust source hotfixes
+      - name: Apply verified source fixes for 0.1.1
         shell: pwsh
         run: |
           $path = 'app/src-tauri/src/db.rs'
@@ -82,6 +82,37 @@ jobs:
             Set-Content -Path $mainPath -Value $main -NoNewline
           }
 
+          $sidebarPath = 'app/src/components/Sidebar.tsx'
+          $sidebar = Get-Content $sidebarPath -Raw
+          $oldPc = '  const pc = entities.find((e) => e.entity_type === "player_character")?.data ?? {};'
+          $newPc = "  const pcEntity = entities.find((e) => e.entity_type === \"player_character\");`r`n  const pc = pcEntity?.data ?? {};"
+          if (-not $sidebar.Contains($oldPc)) { throw 'Expected empty-state player-character pattern not found.' }
+          $sidebar = $sidebar.Replace($oldPc, $newPc)
+          $sidebar = $sidebar.Replace('  const firstName = text(pc, "first_name", "prenom", "name") ?? "Sully";', '  const firstName = text(pc, "first_name", "prenom", "name") ?? (campaign ? "Sully" : "—");')
+          $sidebar = $sidebar.Replace('  const species = text(pc, "species", "espece") ?? "Humain";', '  const species = text(pc, "species", "espece");')
+          $sidebar = $sidebar.Replace('  const age = text(pc, "age") ?? "8";', '  const age = text(pc, "age");')
+          $oldIdentity = '        <span>{species} • {age} ans</span>'
+          $newIdentity = '        <span>{species !== null || age !== null ? `${species ?? "Espèce non renseignée"}${age !== null ? ` • ${age} ans` : ""}` : "Personnage non initialisé"}</span>'
+          if (-not $sidebar.Contains($oldIdentity)) { throw 'Expected sidebar identity pattern not found.' }
+          $sidebar = $sidebar.Replace($oldIdentity, $newIdentity)
+          if ($sidebar.Contains('?? "Humain"') -or $sidebar.Contains('text(pc, "age") ?? "8"')) { throw 'Hard-coded empty-state species/age still present.' }
+          Set-Content -Path $sidebarPath -Value $sidebar -NoNewline
+
+          $packagePath = 'app/package.json'
+          $package = Get-Content $packagePath -Raw
+          if (-not $package.Contains('"version": "0.1.0"')) { throw 'package.json version 0.1.0 not found.' }
+          Set-Content -Path $packagePath -Value ($package.Replace('"version": "0.1.0"', '"version": "0.1.1"')) -NoNewline
+
+          $cargoPath = 'app/src-tauri/Cargo.toml'
+          $cargo = Get-Content $cargoPath -Raw
+          if (-not $cargo.Contains('version = "0.1.0"')) { throw 'Cargo version 0.1.0 not found.' }
+          Set-Content -Path $cargoPath -Value ($cargo.Replace('version = "0.1.0"', 'version = "0.1.1"')) -NoNewline
+
+          $tauriPath = 'app/src-tauri/tauri.conf.json'
+          $tauri = Get-Content $tauriPath -Raw
+          if (-not $tauri.Contains('"version": "0.1.0"')) { throw 'Tauri version 0.1.0 not found.' }
+          Set-Content -Path $tauriPath -Value ($tauri.Replace('"version": "0.1.0"', '"version": "0.1.1"')) -NoNewline
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -119,10 +150,23 @@ jobs:
         working-directory: app
         run: npm run tauri build
 
+      - name: Verify Windows GUI subsystem
+        shell: pwsh
+        run: |
+          $exe = 'app/src-tauri/target/release/kitaba-companion.exe'
+          if (-not (Test-Path $exe)) { throw 'Release executable missing.' }
+          $bytes = [IO.File]::ReadAllBytes($exe)
+          $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+          if ([Text.Encoding]::ASCII.GetString($bytes, $peOffset, 4) -ne "PE`0`0") { throw 'Invalid PE signature.' }
+          $optionalHeaderOffset = $peOffset + 24
+          $subsystem = [BitConverter]::ToUInt16($bytes, $optionalHeaderOffset + 68)
+          if ($subsystem -ne 2) { throw "Release executable is not a Windows GUI application. PE subsystem=$subsystem" }
+          Write-Host 'PE subsystem 2 confirmed: Windows GUI, no console dependency.'
+
       - name: Upload Windows bundles
         uses: actions/upload-artifact@v4
         with:
-          name: kitaba-companion-windows
+          name: kitaba-companion-windows-0.1.1
           path: |
             app/src-tauri/target/release/bundle/nsis/*.exe
             app/src-tauri/target/release/kitaba-companion.exe
