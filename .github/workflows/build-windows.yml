@@ -74,6 +74,14 @@ jobs:
           }
           Set-Content -Path $path -Value $source -NoNewline
 
+          $mainPath = 'app/src-tauri/src/main.rs'
+          $main = Get-Content $mainPath -Raw
+          $subsystemAttr = '#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]'
+          if (-not $main.Contains($subsystemAttr)) {
+            $main = "$subsystemAttr`r`n$main"
+            Set-Content -Path $mainPath -Value $main -NoNewline
+          }
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
