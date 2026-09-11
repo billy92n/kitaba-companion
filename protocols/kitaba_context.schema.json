@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kitaba.local/schemas/kitaba_context.schema.json",
+  "title": "KITABA_CONTEXT",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "protocol_version",
+    "mode",
+    "campaign_id",
+    "campaign_revision",
+    "timeline_id",
+    "game_time",
+    "entities",
+    "continuity_metadata",
+    "death_pending",
+    "death_summary",
+    "campaign_name",
+    "companion_contract",
+    "dead_timelines"
+  ],
+  "properties": {
+    "format": {"const": "KITABA_CONTEXT"},
+    "protocol_version": {"const": 1},
+    "mode": {"enum": ["PLAYER", "GM_FULL"]},
+    "campaign_id": {"type": "string", "format": "uuid"},
+    "campaign_revision": {"type": "integer", "minimum": 0},
+    "timeline_id": {"type": "string", "format": "uuid"},
+    "exported_at": {"type": "string"},
+    "game_time": {"type": ["string", "null"]},
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "entity_type", "visibility", "entity_version", "data", "protection"],
+        "properties": {
+          "id": {"type": "string", "format": "uuid"},
+          "entity_type": {"type": "string"},
+          "visibility": {"enum": ["PLAYER", "GM"]},
+          "entity_version": {"type": "integer", "minimum": 1},
+          "data": {"type": "object"},
+          "protection": {"enum": ["NORMAL", "PROTECTED", "IMMUTABLE"]}
+        }
+      }
+    },
+    "last_rest_point": {"type": ["object", "null"]},
+    "dead_timeline_resolutions": {"type": "array"},
+    "canon_facts": {"type": "array"},
+    "continuity_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "last_update_id", "export_state_sha256"],
+      "properties": {
+        "schema_version": {"type": "integer", "minimum": 1},
+        "last_update_id": {"type": ["string", "null"]},
+        "parent_timeline_id": {"type": ["string", "null"]},
+        "restored_from_rest_point_id": {"type": ["string", "null"]},
+        "export_state_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "links": {"type": "array"},
+    "death_pending": {"type": "boolean"},
+    "death_summary": {"type": ["string", "null"]},
+    "campaign_name": {"type": "string", "minLength": 1},
+    "companion_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["update_format", "update_protocol_version", "next_base_revision", "next_target_revision", "required_timeline_id", "supported_operations", "ui_entity_types", "rules"],
+      "properties": {
+        "update_format": {"const": "KITABA_UPDATE"},
+        "update_protocol_version": {"const": 1},
+        "next_base_revision": {"type": "integer", "minimum": 0},
+        "next_target_revision": {"type": "integer", "minimum": 1},
+        "required_timeline_id": {"type": "string", "format": "uuid"},
+        "supported_operations": {
+          "type": "array",
+          "items": {"enum": ["create", "replace", "patch", "archive", "reveal"]},
+          "minItems": 5,
+          "uniqueItems": true
+        },
+        "ui_entity_types": {"type": "object", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+        "rules": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1}
+      }
+    },
+    "dead_timelines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["timeline_id", "died_at_revision", "death_summary", "state_snapshot", "rolled_back_to_rest_point_id", "created_at"],
+        "properties": {
+          "timeline_id": {"type": "string", "format": "uuid"},
+          "died_at_revision": {"type": "integer", "minimum": 0},
+          "death_summary": {"type": ["string", "null"]},
+          "state_snapshot": {"type": "object"},
+          "rolled_back_to_rest_point_id": {"type": ["string", "null"], "format": "uuid"},
+          "created_at": {"type": "string"}
+        }
+      }
+    }
+  }
+}

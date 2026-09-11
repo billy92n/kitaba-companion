@@ -1,0 +1,9 @@
+node_modules/
+dist/
+target/
+*.db
+*.sqlite
+*.kitaba
+.pytest_cache/
+__pycache__/
+.DS_Store
