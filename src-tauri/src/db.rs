@@ -808,7 +808,7 @@ pub fn export_context(conn: &Connection, campaign_id: &str, mode: &str) -> Resul
                 "missions": ["mission", "quest"],
                 "knowledge": ["knowledge", "rumor", "belief"],
                 "world": ["faction", "organization", "settlement", "state", "market", "economy_state", "conflict", "world_event", "environment_state", "resource_state", "infrastructure", "law", "political_state"],
-                "map": ["place", "map_marker", "map", "current_location"],
+                "map": ["place", "map_marker", "map", "current_location", "settlement", "state", "region", "route", "dungeon"],
                 "timeline": ["timeline_event", "historical_event"],
                 "adventurer_card": ["adventurer_card", "evaluation", "certification"],
                 "gm": ["canon_fact"]
@@ -826,7 +826,12 @@ pub fn export_context(conn: &Connection, campaign_id: &str, mode: &str) -> Resul
                 "For a fresh campaign with no player_character, complete character creation and starting-world anchoring before the first narrated gameplay scene.",
                 "Never assume the human player knows developer or world terminology. Introduce unfamiliar concepts diegetically and contextually when first encountered, even if the character would regard them as ordinary.",
                 "The initial campaign update must persist the player_character, immediate known setting, relevant close relations and baseline knowledge actually possessed by the character before gameplay begins.",
-                "Do not generate or import a character/PNJ portrait until the represented person's appearance has been canonically fixed; an illustration never creates canon by itself."
+                "Do not generate or import a character/PNJ portrait until the represented person's appearance has been canonically fixed; an illustration never creates canon by itself.",
+                "Prefer frequent playable beats over long passive narration: use a few salient sensory details, then return control to the player; action and dialogue beats should be especially concise.",
+                "The player controls only the protagonist's attempted actions, speech, intentions and voluntary thoughts. NPC reactions, action outcomes and external events remain GM-controlled even if the player writes a desired reaction.",
+                "When a player-known durable place becomes sufficiently localizable, persist stable normalized map coordinates x/y in [0,1] plus appropriate location_precision; never reveal secret GM geography through PLAYER map data.",
+                "Persist a stable textual visual_identity for important characters before or alongside reference imagery. Later state variants and multi-character scenes must preserve that identity; text canon always overrides an image.",
+                "Treat adaptive music as scene-level ambience: change music_state only at meaningful scene or emotional transitions, prefer long instrumental ambience, and never claim playback unless a compatible reader is actually connected."
             ]
         },
         "continuity_metadata": {"schema_version": CURRENT_SCHEMA_VERSION, "last_update_id": c.3, "parent_timeline_id": timeline_meta.0, "restored_from_rest_point_id": timeline_meta.1, "export_state_sha256": export_state_sha256}
