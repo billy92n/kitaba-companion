@@ -78,8 +78,9 @@ Next work:
 - [x] Define traceable editorial scene captures anchored to canonical source events/revisions.
 - [x] Define meaningful scene boundaries instead of splitting by message count.
 - [x] Define safe editorial merging rules that never rewrite canon.
+- [x] Implement and test a safe reference HTML renderer with optional scene illustrations.
 - [ ] Persist editorial scene captures in Companion without bloating MJ context.
-- [ ] Implement first readable HTML campaign export.
+- [ ] Connect HTML export to a Companion action and campaign assets.
 
 ## P1 — MVP presentation
 
