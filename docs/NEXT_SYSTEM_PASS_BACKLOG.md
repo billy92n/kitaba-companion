@@ -18,9 +18,11 @@ Status: working backlog for the post-0.1.5 development branch. It must not mutat
 - [x] Check common d100 outcome bands with exhaustive 1–100 distribution tests.
 - [x] Check baseline learning pace against demanding, severe, teacher-assisted and repeated-identical practice scenarios.
 - [x] Keep player-facing progression qualitative while internal points remain hidden.
+- [x] Draft damage, protection, HP and per-impact injury severity on the same non-level-scaled foundation.
+- [x] Draft mana-cost bands and explicit overchannel deficit severity through strain, injury, coma and death risk.
+- [ ] Calibrate combat against representative weak/equal/strong opponents and different armor profiles.
+- [ ] Calibrate recovery/stabilization with the future rest/travel model.
 - [ ] Promote only the validated portions into the next MASTER SOURCE / MJ contract after user acceptance.
-- [ ] Define damage, armor, HP, injuries and recovery on the same scale.
-- [ ] Define mana expenditure, recovery and overchanneling severity.
 
 ## P1 — interactive fiction quality
 
