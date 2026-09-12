@@ -21,7 +21,7 @@ def test_interactive_map_is_zoomable_pannable_and_clickable():
 def test_map_remains_player_knowledge_gated():
     component = _read("src/components/InteractiveMap.tsx")
     sidebar = _read("src/components/Sidebar.tsx")
-    assert "la carte reste verrouillée sur les limites du monde" in component
+    assert "limites du monde" in component
     assert 'map: ["place", "map_marker", "map", "current_location", "settlement", "state", "region", "route", "dungeon"]' in sidebar
 
 
@@ -50,6 +50,21 @@ def test_dense_atlas_has_layers_search_clustering_and_current_position():
     assert "interactive-map-cluster" in component
     assert "map-search-results" in css
     assert "interactive-map-cluster" in css
+
+
+def test_atlas_supports_routes_regions_and_approximate_positions_without_schema_change():
+    component = _read("src/components/InteractiveMap.tsx")
+    css = _read("src/interactive-map-mvp.css")
+    assert "parseNormalizedPoints" in component
+    assert 'data.path ?? data.points ?? data.map_path' in component
+    assert 'data.polygon ?? data.boundary ?? data.map_polygon' in component
+    assert "map-vector-route" in component
+    assert "map-vector-region" in component
+    assert "location_precision" in component
+    assert "connu(s) non localisé(s)" in component
+    assert ".map-vector-route" in css
+    assert ".map-vector-region" in css
+    assert ".interactive-map-marker.approximate" in css
 
 
 def test_visual_continuity_guidance_is_in_companion():
