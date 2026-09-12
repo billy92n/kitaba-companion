@@ -32,6 +32,24 @@ def test_visual_continuity_guidance_is_in_companion():
     assert "Scènes de groupe = références déjà établies" in app
 
 
+def test_exported_contract_carries_immersive_play_rules_in_both_engines():
+    rust = _read("src-tauri/src/db.rs")
+    py = _read("reference/engine.py")
+    phrases = [
+        "Prefer frequent playable beats over long passive narration",
+        "The player controls only the protagonist's attempted actions",
+        "persist stable normalized map coordinates x/y in [0,1]",
+        "Persist a stable textual visual_identity for important characters",
+        "Treat adaptive music as scene-level ambience",
+    ]
+    for phrase in phrases:
+        assert phrase in rust
+        assert phrase in py
+    map_types = '"map": ["place", "map_marker", "map", "current_location", "settlement", "state", "region", "route", "dungeon"]'
+    assert map_types in rust
+    assert map_types in py
+
+
 def test_patch_does_not_change_database_schema():
     db = _read("src-tauri/src/db.rs")
     assert "CURRENT_SCHEMA_VERSION: i64 = 4" in db
