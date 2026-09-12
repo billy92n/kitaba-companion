@@ -68,8 +68,9 @@ def test_companion_contract_requires_real_resolution_and_enriched_terse_actions(
     ref = _read("reference/engine.py")
     for text in (rust, ref):
         assert "states a success or world outcome as an attempted action" in text
-        assert "perform the resolution privately" in text
+        assert "single hidden dice-like or equivalent random draw" in text
         assert "allow failure, partial success, complications or success" in text
+        assert "do not reroll merely because the result is inconvenient" in text
         assert "When the player gives a terse action" in text
         assert "do not invent a materially different intention" in text
 
