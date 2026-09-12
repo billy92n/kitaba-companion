@@ -59,8 +59,8 @@ The Windows production workflow verifies, in order:
 6. Windows GUI PE subsystem;
 7. upload of the portable executable and NSIS installer.
 
-The 0.1.4 candidate must pass all of these gates before release. The release artifact must contain both `kitaba-companion.exe` and the 0.1.4 NSIS installer.
+A clean 0.1.4 release candidate has passed every automated gate. Distribution uses the latest green `main` artifact, which must pass the same gates and contain both `kitaba-companion.exe` and the 0.1.4 NSIS installer.
 
-## Remaining gate before gameplay
+## Remaining gate before long-term gameplay
 
-The remaining release gate is an end-to-end smoke test on the installed Windows application using a brand-new generic campaign workflow: launch, restore/import, integrity diagnostic, GM context export, ChatGPT round-trip, update preview/import, re-export, backup creation, and restart persistence. The campaign should not be declared ready for long-term play until this user-visible smoke test passes.
+The remaining release gate is a human end-to-end smoke test on the installed Windows application using a brand-new generic campaign workflow: launch, create a blank campaign, integrity diagnostic, GM context export, ChatGPT character-creation round-trip, update preview/import, re-export, backup creation, and restart persistence. The campaign should not be declared ready for long-term play until this user-visible smoke test passes.
