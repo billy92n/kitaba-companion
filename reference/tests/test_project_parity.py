@@ -131,12 +131,17 @@ def test_world_state_has_dedicated_player_ui_and_contract():
 
 def test_fresh_campaign_ui_is_generic_and_requires_character_creation_before_play():
     app = _read("src/App.tsx")
+    sidebar = _read("src/components/Sidebar.tsx")
     assert "Nouvelle campagne Kitaba Solo" in app
     assert "Créer la campagne vierge" in app
     assert "Création du personnage avant la scène 1" in app
     assert "createSullyCampaign" not in app
     assert 'backend.createCampaign("Sully — Kitaba Solo")' not in app
     assert '"Personnage non créé"' in app
+    assert '"Personnage à créer"' in sidebar
+    assert 'const preCreationNav' in sidebar
+    assert 'navigation = pcEntity ? nav : preCreationNav' in sidebar
+    assert 'portraitInitial = firstName ? firstName.slice(0, 1).toUpperCase() : "?"' in sidebar
 
 
 def test_companion_contract_teaches_onboarding_and_player_knowledge_discipline():
@@ -154,17 +159,12 @@ def test_companion_contract_teaches_onboarding_and_player_knowledge_discipline()
 
 
 def test_frontend_has_no_sully_specific_runtime_copy():
-    app = _read("src/App.tsx")
-    forbidden = [
-        "Créer la campagne de Sully",
-        "Portrait de Sully",
-        "Sully est mort",
-        "ce que Sully connaît",
-        "lieux connus de Sully",
+    frontend_files = [
+        path for path in (ROOT / "src").rglob("*")
+        if path.is_file() and path.suffix in {".ts", ".tsx"}
     ]
-    for text in forbidden:
-        assert text not in app
-
+    frontend_text = "\n".join(path.read_text(encoding="utf-8") for path in frontend_files)
+    assert "Sully" not in frontend_text
 
 
 def test_existing_campaign_can_create_an_independent_new_campaign():
