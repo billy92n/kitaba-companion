@@ -59,7 +59,7 @@ fn set_campaign_archived(campaign_id: String, archived: bool, state: State<'_, D
 
 #[tauri::command]
 fn delete_campaign_permanently(campaign_id: String, expected_name: String, state: State<'_, DbState>) -> Result<(), KitabaError> {
-    let mut conn = state.conn.lock().map_err(|_| KitabaError::Validation("database lock poisoned".into()))?;
+    let conn = state.conn.lock().map_err(|_| KitabaError::Validation("database lock poisoned".into()))?;
     let path = auto_backup_path(&state.app_dir, "pre-delete")?;
     db::create_technical_backup(&conn, Some(&campaign_id), &path, "automatic_pre_delete", &state.app_dir.join("assets"))?;
     prune_auto_backups(&state.app_dir, 30)?;

@@ -1296,7 +1296,8 @@ pub fn restore_technical_backup(
                 }
             }
 
-            conn.execute("ATTACH DATABASE ?1 AS incoming", [temp_db.to_string_lossy().as_ref()])?;
+            let temp_db_owned = temp_db.to_string_lossy().into_owned();
+            conn.execute("ATTACH DATABASE ?1 AS incoming", [&temp_db_owned])?;
             let merge_result = (|| -> Result<(), KitabaError> {
                 let tx = conn.transaction()?;
                 tx.execute_batch("PRAGMA defer_foreign_keys=ON;")?;
