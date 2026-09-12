@@ -1,8 +1,8 @@
 """Candidate combat, injury and mana resource helpers for Kitaba.
 
 PROPOSAL only. The functions are intentionally small and testable so damage,
-armor, injury and overchanneling can be calibrated before being promoted into
-campaign canon.
+armor, injury, recovery and overchanneling can be calibrated before being
+promoted into campaign canon.
 """
 
 from __future__ import annotations
@@ -26,6 +26,22 @@ MANA_COST_FRACTION = {
     "extreme": 0.35,
 }
 
+REST_RECOVERY_FRACTION = {
+    "poor": 0.08,
+    "normal": 0.15,
+    "excellent": 0.25,
+    "medical": 0.35,
+}
+
+INJURY_RECOVERY_MULTIPLIER = {
+    "none": 1.0,
+    "negligible": 1.0,
+    "minor": 0.90,
+    "serious": 0.65,
+    "critical": 0.35,
+    "catastrophic": 0.10,
+}
+
 
 @dataclass(frozen=True)
 class HarmResult:
@@ -42,6 +58,13 @@ class ManaSpendResult:
     paid: int
     deficit: int
     overchannel_severity: str | None
+
+
+@dataclass(frozen=True)
+class RecoveryResult:
+    hp_after: int
+    recovered: int
+    injury_persists: bool
 
 
 def clamp(value: int, low: int, high: int) -> int:
@@ -148,3 +171,32 @@ def recover_resource(current: int, maximum: int, fraction: float) -> int:
         raise ValueError("fraction must be within 0..1")
     recovered = floor(maximum * fraction + 0.5)
     return min(maximum, current + recovered)
+
+
+def recover_hp_after_safe_rest(
+    *,
+    hp_current: int,
+    hp_max: int,
+    rest_quality: str = "normal",
+    injury_severity: str = "none",
+) -> RecoveryResult:
+    """Candidate long-rest recovery that does not erase persistent injuries.
+
+    HP represents recoverable fighting capacity. Injury entities remain separate
+    canon and must be treated/healed on their own timeline.
+    """
+    if hp_max <= 0:
+        raise ValueError("hp_max must be positive")
+    if not 0 <= hp_current <= hp_max:
+        raise ValueError("hp_current must be within 0..hp_max")
+    if rest_quality not in REST_RECOVERY_FRACTION:
+        raise ValueError(f"unknown rest quality: {rest_quality}")
+    if injury_severity not in INJURY_RECOVERY_MULTIPLIER:
+        raise ValueError(f"unknown injury severity: {injury_severity}")
+
+    fraction = REST_RECOVERY_FRACTION[rest_quality] * INJURY_RECOVERY_MULTIPLIER[injury_severity]
+    recovered = floor(hp_max * fraction + 0.5)
+    hp_after = min(hp_max, hp_current + recovered)
+    actual_recovered = hp_after - hp_current
+    persists = injury_severity not in {"none", "negligible"}
+    return RecoveryResult(hp_after, actual_recovered, persists)

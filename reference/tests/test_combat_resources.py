@@ -5,6 +5,7 @@ from reference.combat_resources import (
     injury_severity_for_damage,
     mana_cost,
     overchannel_severity,
+    recover_hp_after_safe_rest,
     recover_resource,
     spend_mana,
 )
@@ -79,3 +80,34 @@ def test_recovery_is_bounded_and_requires_fiction_to_choose_rate():
     assert recover_resource(95, 100, 0.25) == 100
     with pytest.raises(ValueError):
         recover_resource(20, 100, 1.1)
+
+
+def test_safe_rest_recovers_capacity_but_does_not_erase_persistent_injury():
+    healthy = recover_hp_after_safe_rest(hp_current=20, hp_max=100, rest_quality="normal", injury_severity="none")
+    serious = recover_hp_after_safe_rest(hp_current=20, hp_max=100, rest_quality="normal", injury_severity="serious")
+    critical = recover_hp_after_safe_rest(hp_current=20, hp_max=100, rest_quality="normal", injury_severity="critical")
+
+    assert healthy.hp_after == 35
+    assert healthy.recovered == 15
+    assert healthy.injury_persists is False
+    assert serious.hp_after == 30
+    assert serious.recovered == 10
+    assert serious.injury_persists is True
+    assert critical.hp_after == 25
+    assert critical.recovered == 5
+    assert critical.injury_persists is True
+
+
+def test_better_rest_improves_recovery_without_instantly_curing_wounds():
+    poor = recover_hp_after_safe_rest(hp_current=50, hp_max=100, rest_quality="poor", injury_severity="serious")
+    medical = recover_hp_after_safe_rest(hp_current=50, hp_max=100, rest_quality="medical", injury_severity="serious")
+    assert poor.recovered == 5
+    assert medical.recovered == 23
+    assert poor.injury_persists is medical.injury_persists is True
+
+
+def test_recovery_inputs_are_validated():
+    with pytest.raises(ValueError):
+        recover_hp_after_safe_rest(hp_current=20, hp_max=100, rest_quality="magical_hotel", injury_severity="none")
+    with pytest.raises(ValueError):
+        recover_hp_after_safe_rest(hp_current=20, hp_max=100, rest_quality="normal", injury_severity="unknown")
