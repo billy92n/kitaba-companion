@@ -18,6 +18,12 @@ export function CharacterView({ entities }: { entities: EntityDocument[] }) {
   const characteristics = entities.filter((e) => e.entity_type === "characteristic");
   const specialized = entities.filter((e) => e.entity_type === "specialized_stat");
   const injuries = entities.filter((e) => ["injury", "status_effect"].includes(e.entity_type));
+  const hpCurrent = pc.hp_current ?? pc.hp;
+  const hpMax = pc.hp_max;
+  const manaCurrent = pc.mana_current ?? pc.mana;
+  const manaMax = pc.mana_max;
+  const hasHp = hpCurrent !== undefined && hpCurrent !== null || hpMax !== undefined && hpMax !== null;
+  const hasMana = manaCurrent !== undefined && manaCurrent !== null || manaMax !== undefined && manaMax !== null;
 
   return <div className="character-layout">
     <section className="panel character-identity">
@@ -34,13 +40,13 @@ export function CharacterView({ entities }: { entities: EntityDocument[] }) {
       {pc.appearance ? <p className="description-block">{text(pc.appearance)}</p> : null}
     </section>
 
-    <section className="panel resource-panel">
-      <h2>Ressources</h2>
+    {(hasHp || hasMana) && <section className="panel resource-panel">
+      <h2>Ressources connues</h2>
       <div className="resource-bars">
-        <Resource label="HP" current={pc.hp_current ?? pc.hp} max={pc.hp_max} />
-        <Resource label="Mana" current={pc.mana_current ?? pc.mana} max={pc.mana_max} />
+        {hasHp && <Resource label="HP" current={hpCurrent} max={hpMax} />}
+        {hasMana && <Resource label="Mana" current={manaCurrent} max={manaMax} />}
       </div>
-    </section>
+    </section>}
 
     <section className="panel">
       <h2>Caractéristiques</h2>
@@ -60,16 +66,16 @@ export function CharacterView({ entities }: { entities: EntityDocument[] }) {
       </div>}
     </section>
 
-    <section className="panel full-span">
+    {awakening && <section className="panel full-span">
       <h2>Éveil</h2>
-      {!awakening ? <div className="empty-inline">Aucune information d'Éveil enregistrée.</div> : <div className="identity-grid">
+      <div className="identity-grid">
         <div><span>Éveillé</span><strong>{text(awakening.awakened)}</strong></div>
         <div><span>Âge</span><strong>{text(awakening.age)}</strong></div>
         <div><span>Date</span><strong>{text(awakening.date)}</strong></div>
         <div><span>Lieu</span><strong>{text(awakening.location)}</strong></div>
         <div className="wide"><span>Manifestations connues</span><strong>{text(awakening.observed_manifestations ?? awakening.observation)}</strong></div>
-      </div>}
-    </section>
+      </div>
+    </section>}
 
     <section className="panel full-span">
       <h2>Blessures & états</h2>
@@ -121,8 +127,8 @@ export function RelationsView({ entities }: { entities: EntityDocument[] }) {
 
 export function KnowledgeView({ entities }: { entities: EntityDocument[] }) {
   const rows = entities.filter((e) => ["knowledge", "rumor", "belief"].includes(e.entity_type));
-  if (!rows.length) return <section className="panel"><h2>Connaissances</h2><div className="empty-inline">Sully n'a encore aucune connaissance enregistrée ici.</div></section>;
-  return <section className="panel"><h2>Connaissances de Sully</h2><div className="knowledge-list">{rows.map((e) => <article key={e.id} className="knowledge-card"><div className="knowledge-head"><strong>{labelFromData(e.data, "Information")}</strong><span className={`knowledge-type ${e.entity_type}`}>{e.entity_type === "rumor" ? "Rumeur" : e.entity_type === "belief" ? "Croyance" : "Connaissance"}</span></div><p>{text(e.data.content ?? e.data.text ?? e.data.description)}</p><div className="knowledge-meta"><span>Source : {text(e.data.source)}</span><span>Confiance : {text(e.data.confidence)}</span></div></article>)}</div></section>;
+  if (!rows.length) return <section className="panel"><h2>Connaissances</h2><div className="empty-inline">Aucune connaissance enregistrée ici.</div></section>;
+  return <section className="panel"><h2>Connaissances du personnage</h2><div className="knowledge-list">{rows.map((e) => <article key={e.id} className="knowledge-card"><div className="knowledge-head"><strong>{labelFromData(e.data, "Information")}</strong><span className={`knowledge-type ${e.entity_type}`}>{e.entity_type === "rumor" ? "Rumeur" : e.entity_type === "belief" ? "Croyance" : "Connaissance"}</span></div><p>{text(e.data.content ?? e.data.text ?? e.data.description)}</p><div className="knowledge-meta"><span>Source : {text(e.data.source)}</span><span>Confiance : {text(e.data.confidence)}</span></div></article>)}</div></section>;
 }
 
 export function JournalView({ entities }: { entities: EntityDocument[] }) {
