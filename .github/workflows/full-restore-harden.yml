@@ -1,0 +1,35 @@
+name: Harden Full Restore
+
+on:
+  push:
+    branches: [source-cleanup-v2]
+
+permissions:
+  contents: write
+
+jobs:
+  harden-full-restore:
+    if: ${{ !contains(github.event.head_commit.message, '[full-restore-hardened]') }}
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Apply full restore hardening
+        run: python scripts/full_restore_harden.py
+      - name: Run Rust regression tests before commit
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+      - name: Commit verified full restore hardening
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src-tauri/src/db.rs
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "[full-restore-hardened] Recover DB and assets together on restore failure"
+            git push origin source-cleanup-v2
+          }
