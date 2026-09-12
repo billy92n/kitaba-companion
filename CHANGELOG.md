@@ -8,6 +8,14 @@
 - aucun changement de schéma SQLite : les campagnes 0.1.4 restent directement compatibles et aucune réinitialisation n'est requise ;
 - préparation du contrat MJ 0.1.5 : narration plus courte et interactive, coordonnées cartographiques persistées, identité visuelle persistante et musique adaptative de scène.
 
+## 0.1.5 — Immersion & interaction
+
+- carte du monde réellement interactive : zoom molette, déplacement par glisser, plein écran, marqueurs cliquables et fiche de lieu ;
+- révélation cartographique pilotée par les entités PLAYER des KITABA_UPDATE (`place`, `map_marker`, `current_location`, `settlement`, `state`, `region`, `route`, `dungeon`) ;
+- médiathèque clarifiée autour de la continuité visuelle : image de référence, variantes d'état et scènes multi-personnages ;
+- aucun changement de schéma SQLite : les campagnes 0.1.4 restent directement compatibles et aucune réinitialisation n'est requise ;
+- préparation du contrat MJ 0.1.5 : narration plus courte et interactive, coordonnées cartographiques persistées, identité visuelle persistante et musique adaptative de scène.
+
 ## 0.1.4 — fresh-character onboarding
 
 - Removed Sully-specific assumptions from runtime campaign creation, export filenames, search, death, map, world and portrait UI copy.
