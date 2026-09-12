@@ -1,0 +1,28 @@
+.map-discovery-controls { display:flex; gap:.8rem; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+.map-layer-filters { display:flex; gap:.45rem; flex-wrap:wrap; }
+.map-layer-chip { display:flex; align-items:center; gap:.4rem; padding:.4rem .62rem; border-radius:999px; border:1px solid #343b48; background:#11151b; color:#aeb3bd; font-size:.76rem; }
+.map-layer-chip span { min-width:1.2rem; height:1.2rem; padding:0 .3rem; border-radius:999px; display:grid; place-items:center; background:#242a34; color:#d8d1c2; font-size:.68rem; }
+.map-layer-chip.active { border-color:#8d7953; color:#f0eadc; background:#221f19; }
+.map-layer-chip:disabled { opacity:.38; }
+.map-search-wrap { position:relative; min-width:min(320px,100%); flex:0 1 360px; }
+.map-search-wrap > input { width:100%; background:#0f1318; border:1px solid #303743; color:#e6e1d6; border-radius:9px; padding:.58rem .72rem; }
+.map-search-results { position:absolute; z-index:20; left:0; right:0; top:calc(100% + .35rem); display:grid; gap:.2rem; padding:.35rem; background:#0e1217f5; border:1px solid #343b48; border-radius:.7rem; box-shadow:0 14px 30px #0008; }
+.map-search-results button { display:flex; align-items:center; justify-content:space-between; gap:.8rem; background:transparent; border:0; color:#eee8da; text-align:left; padding:.55rem .6rem; }
+.map-search-results button:hover { background:#20252e; }
+.map-search-results span { color:#7f8794; font-size:.7rem; text-transform:capitalize; }
+.interactive-map-cluster { position:absolute; transform:translate(-50%,-50%) scale(calc(1 / var(--map-marker-scale, 1))); width:2.05rem; height:2.05rem; border-radius:50%; border:2px solid #dbc27e; background:#1b1d1fe8; color:#f7efd8; display:grid; place-items:center; box-shadow:0 0 0 .24rem #1118,0 0 .85rem #d9bf7066; z-index:4; padding:0; }
+.interactive-map-cluster span { font-size:.74rem; font-weight:900; }
+.interactive-map-marker { transform:translate(-50%,-50%) scale(calc(1 / var(--map-marker-scale, 1))); }
+.interactive-map-marker.layer-political .marker-dot { width:.82rem; height:.82rem; border-radius:3px; }
+.interactive-map-marker.layer-routes .marker-dot { width:.62rem; height:.62rem; background:#a6a28d; }
+.interactive-map-marker.layer-dungeons .marker-dot { background:#b86964; box-shadow:0 0 0 .18rem rgba(13,15,15,.72),0 0 .6rem rgba(184,105,100,.72); }
+.interactive-map-marker.rumor { opacity:.72; }
+.interactive-map-marker.rumor .marker-dot { border:1px dashed #efe1b0; background:#8d7d55; }
+.interactive-map-marker.selected b { border-color:#b9a476; }
+.interactive-map-marker b { max-width:15rem; overflow:hidden; text-overflow:ellipsis; }
+@media (max-width:700px) {
+  .map-discovery-controls { display:grid; }
+  .map-search-wrap { width:100%; min-width:0; }
+  .map-layer-filters { overflow-x:auto; flex-wrap:nowrap; padding-bottom:.2rem; }
+  .map-layer-chip { white-space:nowrap; }
+}
