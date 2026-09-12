@@ -47,17 +47,24 @@ export function SkillsView({ entities }: { entities: EntityDocument[] }) {
 }
 
 export function MagicView({ entities }: { entities: EntityDocument[] }) {
+  const magicTypes = ["magic", "spell", "affinity", "invocation", "contract", "enchantment", "known_aptitude"];
+  const knownMagic = entities.filter((e) => magicTypes.includes(e.entity_type));
+  if (!knownMagic.length) {
+    return <section className="panel"><h2>Magie</h2><div className="empty-inline">Aucune information magique connue ou enregistrée.</div></section>;
+  }
+
   const groups: Array<[string, string[], string]> = [
     ["Magies & techniques", ["magic", "spell"], "Aucune magie connue."],
     ["Affinités connues", ["affinity"], "Aucune affinité connue."],
     ["Invocations & contrats", ["invocation", "contract"], "Aucune invocation ou contrat connu."],
     ["Enchantements", ["enchantment"], "Aucun enchantement maîtrisé."],
-    ["Aptitudes révélées", ["known_aptitude"], "Aucune aptitude singulière révélée."],
+    ["Aptitudes révélées", ["known_aptitude"], "Aucune aptitude révélée."],
   ];
 
   return <div className="magic-layout">
     {groups.map(([title, types, empty]) => {
-      const rows = entities.filter((e) => types.includes(e.entity_type));
+      const rows = knownMagic.filter((e) => types.includes(e.entity_type));
+      if (!rows.length) return null;
       return <section className={`panel ${title === "Magies & techniques" ? "full-span" : ""}`} key={title}>
         <h2>{title}</h2>
         {!rows.length ? <div className="empty-inline">{empty}</div> : <div className="magic-grid">{rows.map((e) => <article className="magic-card" key={e.id}>
@@ -78,7 +85,7 @@ export function TimelineView({ entities }: { entities: EntityDocument[] }) {
   const rows = entities.filter((e) => ["timeline_event", "historical_event"].includes(e.entity_type));
   return <section className="panel">
     <h2>Chronologie connue</h2>
-    <p className="muted">Cette chronologie ne montre que les événements que Sully connaît ou qui sont publics pour lui.</p>
+    <p className="muted">Cette chronologie ne montre que les événements connus du personnage ou publiquement accessibles pour lui.</p>
     {!rows.length ? <div className="empty-inline">Aucun événement historique connu.</div> : <div className="timeline-list">
       {rows.map((e) => <article key={e.id} className="timeline-card">
         <div className="timeline-date">{text(e.data.game_time ?? e.data.date ?? e.data.period)}</div>
@@ -101,7 +108,7 @@ export function AdventurerCardView({ entities }: { entities: EntityDocument[] })
     return <section className="panel adventurer-empty">
       <div className="card-emblem">◇</div>
       <h2>Aucune carte d'aventurier</h2>
-      <p className="muted">Aucun document professionnel d'aventurier n'est enregistré pour Sully.</p>
+      <p className="muted">Aucun document professionnel d'aventurier n'est enregistré pour ce personnage.</p>
       {evaluations.length || certifications.length ? <div className="warning">Des évaluations ou certifications existent toutefois dans les données connues.</div> : null}
     </section>;
   }
@@ -109,7 +116,7 @@ export function AdventurerCardView({ entities }: { entities: EntityDocument[] })
   return <div className="adventurer-layout">
     <section className="panel adventurer-card-visual">
       <div className="adventurer-card-top"><span>CONCORDAT DES GUILDES</span><b>{text(card.official_rank ?? card.rank)}</b></div>
-      <h2>{text(card.name ?? card.holder_name, "Sully")}</h2>
+      <h2>{text(card.name ?? card.holder_name, "Titulaire")}</h2>
       <div className="identity-grid">
         <div><span>Espèce</span><strong>{text(card.species)}</strong></div>
         <div><span>Âge</span><strong>{text(card.age)}</strong></div>
