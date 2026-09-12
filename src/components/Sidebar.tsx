@@ -31,7 +31,6 @@ const nav: Array<[SectionKey, string]> = [
 
 const preCreationNav: Array<[SectionKey, string]> = [
   ["overview", "Vue d'ensemble"],
-  ["media", "Médiathèque"],
   ["sync", "Synchronisation"],
 ];
 
