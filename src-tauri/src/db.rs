@@ -268,7 +268,10 @@ pub fn import_asset(conn: &Connection, campaign_id: &str, kind: &str, input_path
         let _ = std::fs::remove_file(&target);
         return Err(err);
     }
-    tx.commit()?;
+    if let Err(err) = tx.commit() {
+        let _ = std::fs::remove_file(&target);
+        return Err(err.into());
+    }
     for old in old_paths {
         if let Ok(old_path) = managed_asset_path(asset_root, campaign_id, &old) {
             if old_path != target { let _ = std::fs::remove_file(old_path); }
@@ -1296,6 +1299,17 @@ pub fn restore_technical_backup(
                 }
             }
 
+            // Stage the incoming campaign assets on the same filesystem before touching
+            // either the canonical database or the currently active asset directory. This
+            // makes ordinary I/O failures happen while the old state is still untouched.
+            std::fs::create_dir_all(asset_root)?;
+            let destination = asset_root.join(cid);
+            let swap_token = Uuid::new_v4().to_string();
+            let staged_destination = asset_root.join(format!(".restore-stage-{cid}-{swap_token}"));
+            let previous_destination = asset_root.join(format!(".restore-previous-{cid}-{swap_token}"));
+            std::fs::create_dir_all(&staged_destination)?;
+            copy_dir_recursive(&incoming_asset_dir, &staged_destination)?;
+
             let temp_db_owned = temp_db.to_string_lossy().into_owned();
             conn.execute("ATTACH DATABASE ?1 AS incoming", [&temp_db_owned])?;
             let merge_result = (|| -> Result<(), KitabaError> {
@@ -1311,16 +1325,41 @@ pub fn restore_technical_backup(
                 ] {
                     tx.execute(&format!("INSERT INTO {table} SELECT * FROM incoming.{table} WHERE campaign_id=?1"), [cid])?;
                 }
-                tx.commit()?;
+
+                // Keep the SQLite transaction open while swapping the filesystem state.
+                // If activation fails, dropping tx rolls the DB back. If SQLite commit
+                // fails after activation, restore the previous asset directory immediately.
+                let had_previous_assets = destination.exists();
+                if had_previous_assets {
+                    std::fs::rename(&destination, &previous_destination)?;
+                }
+                if let Err(err) = std::fs::rename(&staged_destination, &destination) {
+                    if had_previous_assets {
+                        let _ = std::fs::rename(&previous_destination, &destination);
+                    }
+                    return Err(err.into());
+                }
+
+                if let Err(err) = tx.commit() {
+                    let _ = std::fs::remove_dir_all(&destination);
+                    if had_previous_assets {
+                        let _ = std::fs::rename(&previous_destination, &destination);
+                    }
+                    return Err(err.into());
+                }
+
+                if previous_destination.exists() {
+                    let _ = std::fs::remove_dir_all(&previous_destination);
+                }
                 Ok(())
             })();
             let detach = conn.execute_batch("DETACH DATABASE incoming;");
+            if staged_destination.exists() { let _ = std::fs::remove_dir_all(&staged_destination); }
+            if merge_result.is_err() && previous_destination.exists() && !destination.exists() {
+                let _ = std::fs::rename(&previous_destination, &destination);
+            }
             merge_result?;
             detach?;
-
-            let destination = asset_root.join(cid);
-            if destination.exists() { std::fs::remove_dir_all(&destination)?; }
-            copy_dir_recursive(&incoming_asset_dir, &destination)?;
         } else {
             conn.restore(DatabaseName::Main, &temp_db, None::<fn(rusqlite::backup::Progress)>)?;
             migrate(conn)?;
@@ -1446,4 +1485,78 @@ mod tests {
         assert!(report.checks.iter().any(|c| c.code == "assets" && !c.ok));
         let _ = std::fs::remove_dir_all(root);
     }
+
+    #[test]
+    fn rust_core_campaign_backup_restore_preserves_other_campaign_and_assets() {
+        let mut conn = setup();
+        let sully = create_campaign(&conn, "Sully").unwrap();
+        let other = create_campaign(&conn, "Other campaign").unwrap();
+        let entity_id = Uuid::new_v4().to_string();
+        let initial = update_json(
+            &sully.id,
+            &sully.current_timeline_id,
+            0,
+            json!([{"op":"create","entity_type":"player_character","entity_id":entity_id,"data":{"first_name":"Sully","age":8}}]),
+            json!([]),
+        );
+        apply_update(&mut conn, &initial).unwrap();
+
+        let root = std::env::temp_dir().join(format!("kitaba-rust-restore-test-{}", Uuid::new_v4()));
+        let asset_root = root.join("assets");
+        std::fs::create_dir_all(&root).unwrap();
+        let original_image = root.join("original.png");
+        let original_bytes = b"\x89PNG\r\n\x1a\nkitaba-original";
+        std::fs::write(&original_image, original_bytes).unwrap();
+        let original_asset = import_asset(&conn, &sully.id, "world_map", &original_image, &asset_root).unwrap();
+
+        let backup = root.join("sully.kitaba");
+        create_technical_backup(&conn, Some(&sully.id), &backup, "test", &asset_root).unwrap();
+
+        let changed = update_json(
+            &sully.id,
+            &sully.current_timeline_id,
+            1,
+            json!([{"op":"patch","entity_type":"player_character","entity_id":entity_id,"data":{"first_name":"Changed"}}]),
+            json!([]),
+        );
+        apply_update(&mut conn, &changed).unwrap();
+        let replacement_image = root.join("replacement.png");
+        std::fs::write(&replacement_image, b"\x89PNG\r\n\x1a\nreplacement").unwrap();
+        import_asset(&conn, &sully.id, "world_map", &replacement_image, &asset_root).unwrap();
+
+        restore_technical_backup(&mut conn, &backup, &asset_root).unwrap();
+
+        let restored: (i64, String) = conn.query_row(
+            "SELECT current_revision,current_timeline_id FROM campaigns WHERE id=?1",
+            [&sully.id],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        ).unwrap();
+        assert_eq!(restored.0, 1);
+        assert_eq!(restored.1, sully.current_timeline_id);
+        let restored_name: String = conn.query_row(
+            "SELECT json_extract(data_json,'$.first_name') FROM entity_documents WHERE campaign_id=?1 AND id=?2",
+            params![sully.id, entity_id],
+            |r| r.get(0),
+        ).unwrap();
+        assert_eq!(restored_name, "Sully");
+
+        let other_still_exists: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM campaigns WHERE id=?1",
+            [&other.id],
+            |r| r.get(0),
+        ).unwrap();
+        assert_eq!(other_still_exists, 1);
+
+        let restored_assets = list_assets(&conn, &sully.id).unwrap();
+        assert_eq!(restored_assets.len(), 1);
+        assert_eq!(restored_assets[0].id, original_asset.id);
+        let restored_path = managed_asset_path(&asset_root, &sully.id, &restored_assets[0].relative_path).unwrap();
+        assert_eq!(std::fs::read(restored_path).unwrap(), original_bytes);
+
+        assert_eq!(conn.query_row("PRAGMA integrity_check", [], |r| r.get::<_, String>(0)).unwrap(), "ok");
+        let mut fk = conn.prepare("PRAGMA foreign_key_check").unwrap();
+        assert!(fk.query([]).unwrap().next().unwrap().is_none());
+        let _ = std::fs::remove_dir_all(root);
+    }
+
 }
