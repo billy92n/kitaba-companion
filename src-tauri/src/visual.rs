@@ -162,6 +162,7 @@ pub fn unbind_asset(
 mod tests {
     use super::*;
     use crate::db;
+    use std::io::Read;
 
     fn setup() -> (Connection, String, std::path::PathBuf) {
         let conn = Connection::open_in_memory().unwrap();
@@ -174,7 +175,7 @@ mod tests {
             params![campaign.id, now],
         ).unwrap();
         conn.execute(
-            "INSERT INTO assets(id,campaign_id,kind,relative_path,mime_type,sha256,created_at) VALUES ('asset-1',?1,'npc_portrait',?2,'image/png','x',?3)",
+            "INSERT INTO assets(id,campaign_id,kind,relative_path,mime_type,sha256,created_at) VALUES ('asset-1',?1,'npc_portrait',?2,'image/png',NULL,?3)",
             params![campaign.id, format!("{}/asset-1.png", campaign.id), now],
         ).unwrap();
         let root = std::env::temp_dir().join(format!("kitaba-visual-test-{}", Uuid::new_v4()));
@@ -208,5 +209,36 @@ mod tests {
         let err = bind_asset(&conn, &campaign_id, "asset-1", "secret-1", "primary_reference", None, None, &root).unwrap_err();
         assert!(err.to_string().contains("GM-only"));
         let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn visual_binding_metadata_survives_campaign_backup_and_restore() {
+        let (conn, campaign_id, root) = setup();
+        let image_path = root.join(&campaign_id).join("asset-1.png");
+        std::fs::create_dir_all(image_path.parent().unwrap()).unwrap();
+        std::fs::write(&image_path, b"visual-reference-bytes").unwrap();
+        let bound = bind_asset(&conn, &campaign_id, "asset-1", "npc-1", "primary_reference", Some("normal"), None, &root).unwrap();
+
+        let backup = std::env::temp_dir().join(format!("kitaba-visual-backup-{}.kitaba", Uuid::new_v4()));
+        db::create_technical_backup(&conn, Some(&campaign_id), &backup, "visual-binding-test", &root).unwrap();
+
+        let file = std::fs::File::open(&backup).unwrap();
+        let mut archive = zip::ZipArchive::new(file).unwrap();
+        let metadata_name = format!("assets/{}/visual-bindings.json", campaign_id);
+        let mut metadata = String::new();
+        archive.by_name(&metadata_name).unwrap().read_to_string(&mut metadata).unwrap();
+        assert!(metadata.contains("primary_reference"));
+        drop(archive);
+
+        let mut restored = Connection::open_in_memory().unwrap();
+        restored.execute_batch("PRAGMA foreign_keys=ON;").unwrap();
+        db::migrate(&restored).unwrap();
+        let restored_root = std::env::temp_dir().join(format!("kitaba-visual-restored-{}", Uuid::new_v4()));
+        db::restore_technical_backup(&mut restored, &backup, &restored_root).unwrap();
+        assert_eq!(list_bindings(&restored, &campaign_id, &restored_root).unwrap(), vec![bound]);
+
+        let _ = std::fs::remove_dir_all(root);
+        let _ = std::fs::remove_dir_all(restored_root);
+        let _ = std::fs::remove_file(backup);
     }
 }
