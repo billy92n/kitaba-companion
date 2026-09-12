@@ -16,6 +16,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -31,8 +32,8 @@ jobs:
       - name: Run executable reference suite
         run: python -m pytest reference/tests -q
 
-      - name: Install frontend dependencies
-        run: npm install
+      - name: Install frontend dependencies reproducibly
+        run: npm ci
 
       - name: Run frontend type/build checks
         run: npm run build
