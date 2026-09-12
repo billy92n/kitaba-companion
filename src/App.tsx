@@ -5,7 +5,6 @@ import { EntityList } from "./components/EntityList";
 import { CharacterView, InventoryView, JournalView, KnowledgeView, MissionsView, RelationsView } from "./components/RpgViews";
 import { AdventurerCardView, MagicView, SkillsView, TimelineView } from "./components/ProgressionViews";
 import { InteractiveMap } from "./components/InteractiveMap";
-import { InteractiveMap } from "./components/InteractiveMap";
 import { backend } from "./lib/backend";
 import type {
   AssetSummary,
