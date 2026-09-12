@@ -12,6 +12,21 @@ function labelFromData(data: Record<string, unknown>, fallback: string) {
   return text(data.name ?? data.title ?? data.label ?? data.known_name ?? data.first_name, fallback);
 }
 
+function visualIdentitySummary(value: unknown): string {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return typeof value === "string" ? value : "";
+  const identity = value as Record<string, unknown>;
+  const parts = [
+    identity.apparent_age,
+    identity.build,
+    identity.face,
+    identity.hair,
+    identity.eyes,
+    identity.distinctive_features,
+    identity.usual_clothing,
+  ].map((item) => text(item, "")).filter(Boolean);
+  return parts.join(" · ");
+}
+
 export function CharacterView({ entities }: { entities: EntityDocument[] }) {
   const pc = entities.find((e) => e.entity_type === "player_character")?.data ?? {};
   const awakening = entities.find((e) => e.entity_type === "awakening")?.data;
@@ -24,6 +39,7 @@ export function CharacterView({ entities }: { entities: EntityDocument[] }) {
   const manaMax = pc.mana_max;
   const hasHp = hpCurrent !== undefined && hpCurrent !== null || hpMax !== undefined && hpMax !== null;
   const hasMana = manaCurrent !== undefined && manaCurrent !== null || manaMax !== undefined && manaMax !== null;
+  const visualIdentity = visualIdentitySummary(pc.visual_identity);
 
   return <div className="character-layout">
     <section className="panel character-identity">
@@ -38,6 +54,7 @@ export function CharacterView({ entities }: { entities: EntityDocument[] }) {
         <div><span>Profession</span><strong>{text(pc.profession)}</strong></div>
       </div>
       {pc.appearance ? <p className="description-block">{text(pc.appearance)}</p> : null}
+      {visualIdentity && <p className="visual-identity-summary"><b>Référence visuelle stable</b><span>{visualIdentity}</span></p>}
     </section>
 
     {(hasHp || hasMana) && <section className="panel resource-panel">
@@ -119,7 +136,11 @@ export function RelationsView({ entities }: { entities: EntityDocument[] }) {
   const relations = entities.filter((e) => e.entity_type === "relationship");
   const reps = entities.filter((e) => e.entity_type === "reputation");
   return <div className="relations-layout">
-    <section className="panel full-span"><h2>Personnes connues</h2>{npcs.length === 0 ? <div className="empty-inline">Personne enregistrée.</div> : <div className="npc-grid">{npcs.map((e) => <article className="npc-card" key={e.id}><div className="npc-avatar">{labelFromData(e.data, "?").slice(0,1).toUpperCase()}</div><div><strong>{labelFromData(e.data, "Personne inconnue")}</strong><span>{[text(e.data.species, ""), text(e.data.profession, "")].filter(Boolean).join(" · ")}</span><p>{text(e.data.player_impression ?? e.data.known_information ?? e.data.description, "Aucune impression particulière.")}</p></div></article>)}</div>}</section>
+    <section className="panel full-span"><h2>Personnes connues</h2>{npcs.length === 0 ? <div className="empty-inline">Personne enregistrée.</div> : <div className="npc-grid">{npcs.map((e) => {
+      const visualIdentity = visualIdentitySummary(e.data.visual_identity);
+      const visualState = text(e.data.visual_state ?? e.data.current_visual_state, "");
+      return <article className="npc-card" key={e.id}><div className="npc-avatar">{labelFromData(e.data, "?").slice(0,1).toUpperCase()}</div><div><strong>{labelFromData(e.data, "Personne inconnue")}</strong><span>{[text(e.data.species, ""), text(e.data.profession, "")].filter(Boolean).join(" · ")}</span><p>{text(e.data.player_impression ?? e.data.known_information ?? e.data.description, "Aucune impression particulière.")}</p>{visualIdentity && <p className="visual-identity-summary"><b>Référence visuelle</b><span>{visualIdentity}{visualState ? ` · État : ${visualState}` : ""}</span></p>}</div></article>;
+    })}</div>}</section>
     <section className="panel"><h2>Relations perçues</h2><CompactEntities entities={relations} empty="Aucune relation explicitement perçue." /></section>
     <section className="panel"><h2>Réputation</h2><CompactEntities entities={reps} empty="Aucune réputation enregistrée." /></section>
   </div>;
