@@ -20,7 +20,9 @@ jobs:
         with:
           python-version: '3.13'
       - name: Apply patch
-        run: python scripts/apply_immersive_patch.py
+        run: |
+          python scripts/apply_immersive_patch.py
+          git checkout -- .github/workflows/build-windows.yml
       - name: Commit patch
         run: |
           git config user.name "github-actions[bot]"
