@@ -18,12 +18,6 @@ replace_exact(
 )
 
 # This connection is only passed immutably in the delete command.
-replace_exact(
-    "src-tauri/src/lib.rs",
-    'fn delete_campaign_permanently(campaign_id: String, expected_name: String, state: State<\'_ , DbState>) -> Result<(), KitabaError> {',
-    'fn delete_campaign_permanently(campaign_id: String, expected_name: String, state: State<\'_ , DbState>) -> Result<(), KitabaError> {',
-) if False else None
-
 p = Path("src-tauri/src/lib.rs")
 text = p.read_text(encoding="utf-8")
 old = '''fn delete_campaign_permanently(campaign_id: String, expected_name: String, state: State<'_, DbState>) -> Result<(), KitabaError> {\n    let mut conn = state.conn.lock().map_err(|_| KitabaError::Validation("database lock poisoned".into()))?;'''
