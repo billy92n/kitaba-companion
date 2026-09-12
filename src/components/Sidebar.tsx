@@ -34,6 +34,16 @@ const preCreationNav: Array<[SectionKey, string]> = [
   ["sync", "Synchronisation"],
 ];
 
+const discoveryTypes: Partial<Record<SectionKey, string[]>> = {
+  skills: ["skill", "mastery", "characteristic", "specialized_stat"],
+  magic: ["magic", "spell", "affinity", "invocation", "contract", "enchantment", "known_aptitude"],
+  missions: ["mission", "quest"],
+  world: ["faction", "organization", "settlement", "state", "market", "economy_state", "conflict", "world_event", "environment_state", "resource_state", "infrastructure", "law", "political_state"],
+  map: ["place", "map_marker", "map", "current_location"],
+  timeline: ["timeline_event", "historical_event"],
+  adventurer_card: ["adventurer_card", "evaluation", "certification"],
+};
+
 function text(data: Record<string, unknown>, ...keys: string[]) {
   for (const key of keys) {
     const value = data[key];
@@ -55,7 +65,14 @@ export function Sidebar({ campaign, entities, active, onNavigate, portraitUrl, m
   const hpMax = text(pc, "hp_max");
   const manaCurrent = text(pc, "mana_current", "mana");
   const manaMax = text(pc, "mana_max");
-  const navigation = pcEntity ? nav : preCreationNav;
+  const entityTypes = new Set(entities.map((entity) => entity.entity_type));
+  const navigation = pcEntity ? nav.filter(([key]) => {
+    const required = discoveryTypes[key];
+    if (!required) return true;
+    if (key === "magic" && (manaCurrent !== null || manaMax !== null)) return true;
+    if (key === "adventurer_card" && rank !== null) return true;
+    return required.some((type) => entityTypes.has(type));
+  }) : preCreationNav;
 
   return (
     <aside className={`sidebar ${mobileOpen ? "mobile-open" : ""}`} aria-label="Navigation de campagne">
