@@ -1,0 +1,1 @@
+ALTER TABLE entity_documents ADD COLUMN protection TEXT NOT NULL DEFAULT 'NORMAL' CHECK (protection IN ('NORMAL','PROTECTED','IMMUTABLE'));

@@ -1,0 +1,493 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kitaba.local/schemas/kitaba_update.schema.json",
+  "title": "KITABA_UPDATE",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "protocol_version",
+    "campaign_id",
+    "timeline_id",
+    "update_id",
+    "base_revision",
+    "target_revision",
+    "operations",
+    "gm_operations"
+  ],
+  "properties": {
+    "format": {
+      "const": "KITABA_UPDATE"
+    },
+    "protocol_version": {
+      "const": 1
+    },
+    "campaign_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "timeline_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "update_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "base_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "target_revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "game_time": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "set": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "elapsed_minutes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "elapsed_minutes": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "elapsed_minutes"
+            ]
+          },
+          "then": {
+            "required": [
+              "set"
+            ],
+            "properties": {
+              "set": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/playerOperation"
+      }
+    },
+    "gm_operations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/gmOperation"
+      }
+    },
+    "journal_entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/playerDocument"
+      },
+      "default": []
+    },
+    "notifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "level",
+          "message"
+        ],
+        "properties": {
+          "level": {
+            "enum": [
+              "info",
+              "warning",
+              "success"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "default": []
+    },
+    "checkpoint": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "location",
+            "description"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "location": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "death": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "occurred"
+          ],
+          "properties": {
+            "occurred": {
+              "const": true
+            },
+            "summary": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "dead_timeline_resolutions": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "checkpoint_id",
+          "state_fingerprint",
+          "action_fingerprint",
+          "context",
+          "result",
+          "consequences"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "checkpoint_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "state_fingerprint": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action_fingerprint": {
+            "type": "string",
+            "minLength": 1
+          },
+          "context": {
+            "type": "object"
+          },
+          "result": {
+            "type": "object"
+          },
+          "consequences": {
+            "type": "object"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "link_operations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/linkOperation"
+      },
+      "default": []
+    },
+    "gm_link_operations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/linkOperation"
+      },
+      "default": []
+    }
+  },
+  "$defs": {
+    "baseOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "entity_type",
+        "entity_id"
+      ],
+      "properties": {
+        "op": {
+          "enum": [
+            "create",
+            "replace",
+            "patch",
+            "archive",
+            "reveal"
+          ]
+        },
+        "entity_type": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{1,63}$"
+        },
+        "entity_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expected_entity_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "data": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "source_gm_entity_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "protection": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "NORMAL",
+            "PROTECTED",
+            "IMMUTABLE",
+            null
+          ]
+        },
+        "override_immutable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "override_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "enum": [
+                  "create",
+                  "replace",
+                  "patch",
+                  "reveal"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "data"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "reveal"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "source_gm_entity_id"
+            ]
+          }
+        }
+      ]
+    },
+    "playerOperation": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/baseOperation"
+        },
+        {
+          "not": {
+            "properties": {
+              "entity_type": {
+                "pattern": "^gm_"
+              }
+            },
+            "required": [
+              "entity_type"
+            ]
+          }
+        }
+      ]
+    },
+    "gmOperation": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/baseOperation"
+        },
+        {
+          "properties": {
+            "op": {
+              "enum": [
+                "create",
+                "replace",
+                "patch",
+                "archive"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "playerDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_type",
+        "entity_id",
+        "data"
+      ],
+      "properties": {
+        "entity_type": {
+          "type": "string"
+        },
+        "entity_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "data": {
+          "type": "object"
+        }
+      }
+    },
+    "linkOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "link_id"
+      ],
+      "properties": {
+        "op": {
+          "enum": [
+            "link",
+            "unlink"
+          ]
+        },
+        "link_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "from_entity_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "to_entity_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        },
+        "link_type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "data": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "link"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "from_entity_id",
+              "to_entity_id",
+              "link_type"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
