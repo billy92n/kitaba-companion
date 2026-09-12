@@ -10,6 +10,7 @@
 - Added canon-before-image rules so portraits/scenes cannot invent undecided appearances.
 - Added regression tests preventing a return to a hard-coded Sully launch path.
 - Added a New campaign action even when another active campaign exists, so independent playthroughs no longer require archiving the current one first.
+- Fresh playtests now start from a genuinely empty campaign branch; previous prototype campaigns remain independent historical data and are never reused as character-creation templates.
 
 ## 0.1.3 — campaign launch hardening
 
