@@ -20,6 +20,8 @@ type WorldGeometry = {
 type LayerKey = "settlements" | "political" | "routes" | "dungeons" | "other";
 type PositionedMarker = { entity: EntityDocument; x: number; y: number; current: boolean; priority: number; layer: LayerKey };
 type MarkerCluster = { id: string; x: number; y: number; markers: PositionedMarker[] };
+type NormalizedPoint = { x: number; y: number };
+type VectorFeature = { entity: EntityDocument; layer: "political" | "routes"; points: NormalizedPoint[]; closed: boolean };
 
 const MAX_ZOOM = 6;
 const LAYERS: Array<{ key: LayerKey; label: string }> = [
@@ -78,6 +80,40 @@ function visibleAtZoom(marker: PositionedMarker, zoom: number) {
   if (marker.priority >= 50) return zoom >= 1.55;
   if (marker.priority >= 40) return zoom >= 1.85;
   return zoom >= 2.2;
+}
+
+function parseNormalizedPoints(value: unknown): NormalizedPoint[] {
+  if (!Array.isArray(value)) return [];
+  const points: NormalizedPoint[] = [];
+  for (const row of value) {
+    let x: number | null = null;
+    let y: number | null = null;
+    if (Array.isArray(row) && row.length >= 2) {
+      const maybeX = Number(row[0]);
+      const maybeY = Number(row[1]);
+      if (Number.isFinite(maybeX) && Number.isFinite(maybeY)) { x = maybeX; y = maybeY; }
+    } else if (row && typeof row === "object") {
+      const record = row as Record<string, unknown>;
+      const maybeX = Number(record.x ?? record.map_x);
+      const maybeY = Number(record.y ?? record.map_y);
+      if (Number.isFinite(maybeX) && Number.isFinite(maybeY)) { x = maybeX; y = maybeY; }
+    }
+    if (x !== null && y !== null && x >= 0 && x <= 1 && y >= 0 && y <= 1) points.push({ x, y });
+  }
+  return points;
+}
+
+function vectorFeature(entity: EntityDocument): VectorFeature | null {
+  const data = entity.data;
+  if (entity.entity_type === "route") {
+    const points = parseNormalizedPoints(data.path ?? data.points ?? data.map_path);
+    return points.length >= 2 ? { entity, layer: "routes", points, closed: false } : null;
+  }
+  if (["region", "state"].includes(entity.entity_type)) {
+    const points = parseNormalizedPoints(data.polygon ?? data.boundary ?? data.map_polygon);
+    return points.length >= 3 ? { entity, layer: "political", points, closed: true } : null;
+  }
+  return null;
 }
 
 function measureWorld(viewport: HTMLDivElement | null, image: HTMLImageElement | null): WorldGeometry | null {
@@ -147,6 +183,15 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
     return x !== null && y !== null && x >= 0 && x <= 1 && y >= 0 && y <= 1;
   }), [entities]);
 
+  const vectors = useMemo(() => entities.map(vectorFeature).filter((feature): feature is VectorFeature => feature !== null), [entities]);
+  const unpositionedCount = useMemo(() => entities.filter((entity) => {
+    const canBeMapped = ["settlement", "place", "map_marker", "current_location", "state", "region", "route", "dungeon"].includes(entity.entity_type);
+    if (!canBeMapped) return false;
+    if (rawMarkers.some((marker) => marker.id === entity.id)) return false;
+    if (vectors.some((feature) => feature.entity.id === entity.id)) return false;
+    return true;
+  }).length, [entities, rawMarkers, vectors]);
+
   const currentLocation = useMemo(() => entities.find((entity) => entity.entity_type === "current_location") ?? null, [entities]);
   const currentLinkedIds = useMemo(() => new Set([
     stringField(currentLocation?.data ?? {}, "place_id"),
@@ -181,10 +226,19 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
   }, [markers, query]);
 
   const layerCounts = useMemo(() => {
-    const counts: Record<LayerKey, number> = { settlements: 0, political: 0, routes: 0, dungeons: 0, other: 0 };
-    for (const marker of markers) counts[marker.layer] += 1;
-    return counts;
-  }, [markers]);
+    const ids: Record<LayerKey, Set<string>> = {
+      settlements: new Set(), political: new Set(), routes: new Set(), dungeons: new Set(), other: new Set(),
+    };
+    for (const marker of markers) ids[marker.layer].add(marker.entity.id);
+    for (const feature of vectors) ids[feature.layer].add(feature.entity.id);
+    return {
+      settlements: ids.settlements.size,
+      political: ids.political.size,
+      routes: ids.routes.size,
+      dungeons: ids.dungeons.size,
+      other: ids.other.size,
+    };
+  }, [markers, vectors]);
 
   function synchronizeGeometry() {
     const nextGeometry = measureWorld(viewportRef.current, imageRef.current);
@@ -255,7 +309,7 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
 
   return <div className="interactive-map-shell">
     <div className="interactive-map-toolbar">
-      <div><strong>Carte interactive</strong><span>{markers.length} lieu(x) positionné(s) · {filteredMarkers.length} visible(s) à ce niveau</span></div>
+      <div><strong>Carte interactive</strong><span>{markers.length} repère(s) · {vectors.length} tracé(s) · {filteredMarkers.length} repère(s) visible(s){unpositionedCount ? ` · ${unpositionedCount} connu(s) non localisé(s)` : ""}</span></div>
       <div className="map-controls">
         {currentMarker && <button className="secondary small" onClick={() => focusMarker(currentMarker)}>Ma position</button>}
         <button className="ghost small" onClick={() => setZoomSafe(zoom - .25)} disabled={zoom <= minimumZoom + .001}>−</button>
@@ -311,6 +365,19 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
     >
       <div className="interactive-map-stage" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, ["--map-marker-scale" as string]: zoom }}>
         <img ref={imageRef} src={imageUrl} alt="Carte physique interactive de Kitaba" draggable={false} onLoad={synchronizeGeometry} />
+        {geometry && <svg
+          className="interactive-map-vector-layer"
+          style={{ left: `${geometry.offsetX}px`, top: `${geometry.offsetY}px`, width: `${geometry.fittedWidth}px`, height: `${geometry.fittedHeight}px` }}
+          viewBox="0 0 1000 500"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          {vectors.filter((feature) => layers[feature.layer]).map((feature) => {
+            const points = feature.points.map((point) => `${point.x * 1000},${point.y * 500}`).join(" ");
+            if (feature.closed) return <polygon key={feature.entity.id} className="map-vector-region" points={points} />;
+            return <polyline key={feature.entity.id} className="map-vector-route" points={points} />;
+          })}
+        </svg>}
         {clusters.map((cluster) => {
           const left = geometry ? geometry.offsetX + cluster.x * geometry.fittedWidth : cluster.x * 100;
           const top = geometry ? geometry.offsetY + cluster.y * geometry.fittedHeight : cluster.y * 100;
@@ -328,9 +395,10 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
           const label = markerLabel(marker.entity);
           const showLabel = marker.current || marker.entity.id === selectedId || marker.priority >= 80 || zoom >= 2.2;
           const knowledge = (stringField(marker.entity.data, "knowledge_state", "status", "known_status") ?? "known").toLocaleLowerCase("fr");
+          const precision = (stringField(marker.entity.data, "location_precision", "map_precision") ?? "exact").toLocaleLowerCase("fr");
           return <button
             key={marker.entity.id}
-            className={`interactive-map-marker layer-${marker.layer} ${marker.current ? "current" : ""} ${selectedId === marker.entity.id ? "selected" : ""} ${knowledge.includes("rumeur") || knowledge.includes("rumor") ? "rumor" : ""}`}
+            className={`interactive-map-marker layer-${marker.layer} ${marker.current ? "current" : ""} ${selectedId === marker.entity.id ? "selected" : ""} ${knowledge.includes("rumeur") || knowledge.includes("rumor") ? "rumor" : ""} ${precision.includes("approx") ? "approximate" : ""}`}
             style={markerStyle}
             onClick={(event) => { event.stopPropagation(); setSelectedId(marker.entity.id); }}
             title={label}
@@ -349,10 +417,11 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
       <dl>
         {stringField(selected.data, "realm", "kingdom", "state_name") && <div><dt>Royaume / État</dt><dd>{stringField(selected.data, "realm", "kingdom", "state_name")}</dd></div>}
         {stringField(selected.data, "region", "region_name", "continent") && <div><dt>Région</dt><dd>{stringField(selected.data, "region", "region_name", "continent")}</dd></div>}
+        {stringField(selected.data, "location_precision", "map_precision") && <div><dt>Précision</dt><dd>{stringField(selected.data, "location_precision", "map_precision")}</dd></div>}
         {stringField(selected.data, "discovered_at", "first_known_at") && <div><dt>Découvert</dt><dd>{stringField(selected.data, "discovered_at", "first_known_at")}</dd></div>}
         {stringField(selected.data, "status", "known_status", "knowledge_state") && <div><dt>Statut connu</dt><dd>{stringField(selected.data, "status", "known_status", "knowledge_state")}</dd></div>}
       </dl>
       <button className="ghost small" onClick={() => setSelectedId(null)}>Fermer</button>
-    </article> : <p className="interactive-map-hint">Molette : zoom · cliquer-glisser : déplacer · un groupe numéroté se sépare en zoomant. Les détails apparaissent progressivement et la carte reste verrouillée sur les limites du monde.</p>}
+    </article> : <p className="interactive-map-hint">Molette : zoom · cliquer-glisser : déplacer · un groupe numéroté se sépare en zoomant. Les régions et routes connues peuvent se révéler comme couches cartographiques, tandis que les détails apparaissent progressivement.</p>}
   </div>;
 }
