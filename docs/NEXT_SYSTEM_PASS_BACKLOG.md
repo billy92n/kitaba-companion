@@ -35,7 +35,7 @@ Already carried by 0.1.5 contract and still under playtest:
 Next work:
 
 - [x] Add explicit pacing profiles for exploration, dialogue, tension/combat and emotional scenes.
-- [ ] Define chapter/scene editorial capture for future readable story export without storing a verbatim chat transcript as canon.
+- [x] Define chapter/scene editorial capture for future readable story export without storing a verbatim chat transcript as canon.
 
 ## P1 — visual continuity
 
@@ -70,6 +70,15 @@ Next work:
 - [x] Allow immediate transition for real scene changes or large tonal jumps while requiring confirmation for small fluctuations.
 - [ ] Connect the state contract to a real playback path after validating the available ChatGPT/Companion integration surface.
 
+## P1 — book/story foundation
+
+- [x] Separate canonical memory, functional player journal and editorial prose conceptually.
+- [x] Define traceable editorial scene captures anchored to canonical source events/revisions.
+- [x] Define meaningful scene boundaries instead of splitting by message count.
+- [x] Define safe editorial merging rules that never rewrite canon.
+- [ ] Persist editorial scene captures in Companion without bloating MJ context.
+- [ ] Implement first readable HTML campaign export.
+
 ## P1 — MVP presentation
 
 - [x] Define a presentation scope and 10–15 minute demonstration flow.
@@ -84,12 +93,6 @@ Next work:
 - [ ] Travel model: distance, terrain, weather, pace, fatigue, camp, food/water and meaningful encounter frequency.
 - [ ] Equipment/crafting: quality, durability, repair, materials and encumbrance without inventory micromanagement overload.
 - [ ] Relationship/reputation evolution: local memory, rumor spread, favors, debts, fear, trust and conflicting dimensions.
-
-## P2 — final story/book
-
-- [ ] Separate compact canonical memory from an editorial narrative layer.
-- [ ] Scene/chapter summaries preserving facts without turning summaries into new canon.
-- [ ] Illustrated campaign export concept: readable HTML/PDF/EPUB-like output after sufficient validation.
 
 ## Release rule
 
