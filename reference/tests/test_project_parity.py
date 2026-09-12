@@ -140,8 +140,24 @@ def test_fresh_campaign_ui_is_generic_and_requires_character_creation_before_pla
     assert '"Personnage non créé"' in app
     assert '"Personnage à créer"' in sidebar
     assert 'const preCreationNav' in sidebar
-    assert 'navigation = pcEntity ? nav : preCreationNav' in sidebar
+    assert 'const discoveryTypes' in sidebar
+    assert 'pcEntity ? nav.filter' in sidebar
     assert 'portraitInitial = firstName ? firstName.slice(0, 1).toUpperCase() : "?"' in sidebar
+
+
+def test_player_knowledge_ui_hides_undiscovered_resource_and_lore_surfaces():
+    sidebar = _read("src/components/Sidebar.tsx")
+    rpg = _read("src/components/RpgViews.tsx")
+    progression = _read("src/components/ProgressionViews.tsx")
+    main = _read("src/main.tsx")
+    hardening_css = _read("src/player-knowledge-hardening.css")
+    assert '["overview", "Vue d\'ensemble"],\n  ["sync", "Synchronisation"]' in sidebar
+    assert 'discoveryTypes' in sidebar
+    assert 'awakening && <section' in rpg
+    assert 'hasMana && <Resource label="Mana"' in rpg
+    assert 'Aucune information magique connue ou enregistrée.' in progression
+    assert 'import "./player-knowledge-hardening.css"' in main
+    assert 'main:has(.onboarding-panel)' in hardening_css
 
 
 def test_companion_contract_teaches_onboarding_and_player_knowledge_discipline():
