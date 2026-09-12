@@ -15,7 +15,7 @@ def test_interactive_map_is_zoomable_pannable_and_clickable():
     assert "requestFullscreen" in component
     assert "setSelectedId" in component
     assert "InteractiveMap" in app
-    assert '"settlement", "state", "region", "route", "dungeon"' in app
+    assert '\"settlement\", \"state\", \"region\", \"route\", \"dungeon\"' in app
 
 
 def test_map_remains_player_knowledge_gated():
@@ -124,7 +124,8 @@ def test_companion_contract_requires_real_resolution_and_enriched_terse_actions(
         assert "do not invent a materially different intention" in text
 
 
-def test_release_version_is_015():
-    assert '"version": "0.1.5"' in _read("package.json")
-    assert '"version": "0.1.5"' in _read("src-tauri/tauri.conf.json")
-    assert 'version = "0.1.5"' in _read("src-tauri/Cargo.toml")
+def test_release_version_is_016():
+    assert '"version": "0.1.6"' in _read("package.json")
+    assert '"version": "0.1.6"' in _read("src-tauri/tauri.conf.json")
+    assert 'version = "0.1.6"' in _read("src-tauri/Cargo.toml")
+    assert "kitaba-companion-windows-0.1.6" in _read(".github/workflows/build-windows.yml")
