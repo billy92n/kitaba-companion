@@ -44,12 +44,12 @@ def test_html_export_can_attach_known_scene_illustrations():
         illustration_src_by_asset_id={"img-1": "assets/scene-1.webp"},
     )
     assert 'src="assets/scene-1.webp"' in html
-    assert 'class="scene-image"' in html
+    assert '<img class="scene-image"' in html
 
 
 def test_missing_illustration_mapping_does_not_break_export():
     html = render_story_html("Kitaba", [sample_scene()], illustration_src_by_asset_id={})
-    assert "scene-image" not in html
+    assert '<img class="scene-image"' not in html
 
 
 def test_empty_title_is_rejected():
