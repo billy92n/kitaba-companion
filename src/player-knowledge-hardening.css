@@ -1,0 +1,16 @@
+/*
+ * Player-knowledge hardening.
+ * The overview remains contextual and must not teach resource/rank terminology
+ * before those concepts are actually represented in player-visible canon.
+ * Known HP/mana values remain available in the Character view and sidebar once
+ * their corresponding fields exist.
+ */
+.hero-panel .hero-stats > div:nth-child(1),
+.hero-panel .hero-stats > div:nth-child(2),
+.hero-panel .hero-stats > div:nth-child(3) {
+  display: none;
+}
+
+.hero-panel .hero-stats {
+  grid-template-columns: minmax(0, 1fr);
+}
