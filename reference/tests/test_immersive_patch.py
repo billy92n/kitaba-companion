@@ -19,9 +19,11 @@ def test_interactive_map_is_zoomable_pannable_and_clickable():
 
 
 def test_map_remains_player_knowledge_gated():
-    component = _read("src/components/InteractiveMap.tsx")
+    app = _read("src/App.tsx")
     sidebar = _read("src/components/Sidebar.tsx")
-    assert "limites du monde" in component
+    assert "const mapEntities = entities.filter" in app
+    assert "<InteractiveMap imageUrl={worldMapUrl" in app
+    assert "entities={mapEntities}" in app
     assert 'map: ["place", "map_marker", "map", "current_location", "settlement", "state", "region", "route", "dungeon"]' in sidebar
 
 
