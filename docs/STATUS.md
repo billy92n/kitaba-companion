@@ -1,9 +1,9 @@
 # Verification status
 
 Legend:
-- **IMPLEMENTED+TESTED**: executable reference implementation exists and automated tests pass in this environment.
-- **IMPLEMENTED/NOT COMPILED HERE**: production Rust/React source exists, but this Linux environment has no Rust toolchain / Windows Tauri runtime, so compilation is not yet claimed.
-- **NOT YET VERIFIED ON WINDOWS**: requires the future Windows build gate.
+- **IMPLEMENTED+TESTED**: behavior is covered by executable tests and/or the production Windows CI gate.
+- **IMPLEMENTED+STATIC-TESTED**: frontend behavior is covered by static/type/build verification but still needs user interaction smoke-testing on the installed app.
+- **RUNTIME SMOKE TEST PENDING**: automated production build is green; final validation requires launching the installed application and exercising the real Sully workflow.
 
 | Area | Status |
 |---|---|
@@ -24,30 +24,40 @@ Legend:
 | Technical `.kitaba` ZIP backup + checksums | IMPLEMENTED+TESTED |
 | Campaign visual assets (map/portrait) + backup inclusion | IMPLEMENTED+TESTED |
 | Campaign-scoped `.kitaba` isolation + merge restore | IMPLEMENTED+TESTED |
+| Full-backup DB/assets recovery hardening | IMPLEMENTED+TESTED |
 | Backup tamper/future-schema rejection | IMPLEMENTED+TESTED |
-| Rust/Tauri persistence core | IMPLEMENTED/NOT COMPILED HERE |
-| Rust core unit tests | IMPLEMENTED/NOT COMPILED HERE |
-| Rust `.kitaba` ZIP format parity | IMPLEMENTED/NOT COMPILED HERE |
-| React shell + sync/import/export UI | IMPLEMENTED/NOT COMPILED HERE |
+| Rust/Tauri persistence core | IMPLEMENTED+TESTED |
+| Rust core unit tests | IMPLEMENTED+TESTED |
+| Rust `.kitaba` ZIP format parity | IMPLEMENTED+TESTED |
+| React shell + sync/import/export UI | IMPLEMENTED+STATIC-TESTED |
 | Responsive PC sidebar / mobile drawer navigation | IMPLEMENTED+STATIC-TESTED |
-| Purpose-built Character/Inventory/Relations/Knowledge/Journal/Missions views | IMPLEMENTED/NOT COMPILED HERE |
-| Skills/Magic/Timeline/Adventurer Card views | IMPLEMENTED/NOT COMPILED HERE |
-| World map player layer | IMPLEMENTED/NOT COMPILED HERE |
+| Purpose-built Character/Inventory/Relations/Knowledge/Journal/Missions views | IMPLEMENTED+STATIC-TESTED |
+| Skills/Magic/Timeline/Adventurer Card views | IMPLEMENTED+STATIC-TESTED |
+| World map player layer | IMPLEMENTED+STATIC-TESTED |
 | Audited manual corrections + revision bump | IMPLEMENTED+TESTED |
 | GM manual correction audit anti-spoiler | IMPLEMENTED+TESTED |
-| Hidden GM map layer | IMPLEMENTED/NOT COMPILED HERE |
+| Hidden GM map layer | IMPLEMENTED+STATIC-TESTED |
 | Campaign archive / restore / guarded deletion | IMPLEMENTED+TESTED |
 | Campaign integrity diagnostics | IMPLEMENTED+TESTED |
 | Managed asset path-containment guard | IMPLEMENTED+TESTED |
 | Cross-layer migration/protocol/Tauri command parity | IMPLEMENTED+TESTED |
-| Windows `.exe` / installer | NOT YET VERIFIED ON WINDOWS |
+| Windows x64 `.exe` / NSIS installer | IMPLEMENTED+TESTED |
+| Installed-app end-to-end Sully smoke test | RUNTIME SMOKE TEST PENDING |
 
-## Automated verification in this environment
+## Automated verification
 
-`python -m pytest reference/tests -q` → **61 passed**.
+The Windows production workflow verifies, in order:
 
-The reference suite has already caught real implementation/test issues during development, including migration replay ordering and one false-positive time-validation test that was corrected to test the intended invariant.
+1. executable Python reference tests;
+2. reproducible `npm ci` installation;
+3. TypeScript/Vite production build;
+4. Rust unit tests;
+5. Tauri Windows packaging;
+6. Windows GUI PE subsystem;
+7. upload of the portable executable and NSIS installer.
 
-## Remaining gate before “playable” release
+A complete 0.1.2 direct-source Windows build has passed all of these gates. The generated artifact contains both `kitaba-companion.exe` and `Kitaba Companion_0.1.2_x64-setup.exe`.
 
-The application will not be presented to the user as playable until the Rust/Tauri project compiles on a real Windows runner, the frontend production build succeeds, the Windows installer is produced, and the first end-to-end Sully synchronization cycle is exercised against that build.
+## Remaining gate before gameplay
+
+The remaining release gate is an end-to-end smoke test on the installed Windows application using the real Sully campaign workflow: launch, restore/import, integrity diagnostic, GM context export, ChatGPT round-trip, update preview/import, re-export, backup creation, and restart persistence. The campaign should not be declared ready for long-term play until this user-visible smoke test passes.

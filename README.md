@@ -9,9 +9,9 @@ It is **not** the game engine. ChatGPT remains the GM, narrator, resolver, and w
 
 ## Current repository status
 
-This repository starts with the persistence/synchronization core first, before UI polish.
+Version **0.1.2** uses the real React/Tauri/Rust source tree directly. The former Base64/materialization build path has been removed.
 
-Implemented as executable specification in `reference/` and mirrored in the Tauri/Rust architecture:
+Implemented and covered by automated verification:
 
 - campaign revisions and stale-update rejection
 - update idempotency
@@ -20,10 +20,12 @@ Implemented as executable specification in `reference/` and mirrored in the Taur
 - full/player context export
 - Rest Points distinct from technical backups
 - death rollback model preserving dead-timeline resolutions
-- technical `.kitaba` backup format
-- audit metadata
+- checksum-protected technical `.kitaba` backups
+- campaign-scoped and full-backup restore protection
+- managed campaign visual assets
+- audit metadata and integrity diagnostics
 
-The React/Tauri shell is included, but the Rust/Tauri build is **not claimed as compiled in this environment** because Rust and the Windows toolchain are unavailable here.
+The production Windows pipeline now runs the Python reference suite, reproducible frontend installation/build, Rust tests, Tauri packaging, PE GUI-subsystem verification, and artifact upload. A complete 0.1.2 Windows build has passed these gates on GitHub Actions.
 
 ## Core invariants
 
@@ -35,14 +37,27 @@ The React/Tauri shell is included, but the Rust/Tauri build is **not claimed as 
 6. Death rollback restores the canonical checkpoint state while preserving dead-timeline records.
 7. A full `KITABA_CONTEXT` must be sufficient to continue the campaign in a new ChatGPT conversation.
 
-## Local verification
+## Verification
 
-The reference core is dependency-light and can be tested with:
+Reference verification:
 
 ```bash
 python -m pytest reference/tests -q
 ```
 
-## Future Windows build
+Production Rust verification:
 
-The intended production stack is Tauri 2 + React + TypeScript + SQLite. A GitHub Actions Windows workflow is included as the eventual build path.
+```bash
+cargo test --manifest-path src-tauri/Cargo.toml
+```
+
+Frontend production verification:
+
+```bash
+npm ci
+npm run build
+```
+
+## Windows build
+
+The production stack is Tauri 2 + React + TypeScript + SQLite. `.github/workflows/build-windows.yml` builds the x64 Windows application and NSIS installer from the committed direct source and lockfiles.
