@@ -20,8 +20,9 @@ Status: working backlog for the post-0.1.5 development branch. It must not mutat
 - [x] Keep player-facing progression qualitative while internal points remain hidden.
 - [x] Draft damage, protection, HP and per-impact injury severity on the same non-level-scaled foundation.
 - [x] Draft mana-cost bands and explicit overchannel deficit severity through strain, injury, coma and death risk.
-- [ ] Calibrate combat against representative weak/equal/strong opponents and different armor profiles.
-- [ ] Calibrate recovery/stabilization with the future rest/travel model.
+- [x] Calibrate representative weak/equal/strong resolution targets and multiple armor/protection profiles.
+- [x] Draft safe-rest HP recovery separated from persistent injuries, with injury severity slowing recovery.
+- [ ] Calibrate stabilization and recovery against the future travel/camp model.
 - [ ] Promote only the validated portions into the next MASTER SOURCE / MJ contract after user acceptance.
 
 ## P1 — interactive fiction quality
@@ -47,8 +48,9 @@ Next work:
 - [x] Define multi-character scene reference sets so known characters remain visually consistent in group illustrations.
 - [x] Define a campaign-level art-direction profile for consistent fantasy-anime/isekai visual language without copying a specific copyrighted production.
 - [x] Define an illustration priority policy for home, starting settlement, close relations and major locations/scenes.
-- [ ] Implement Companion UI for binding imported local assets to visual identities.
-- [ ] Show primary visual references/variants directly on linked character and place views.
+- [x] Implement backup-safe Companion backend for binding local image assets to visible campaign subjects without schema migration.
+- [x] Add MVP binding UI: associate imported portraits/illustrations with a known player-facing character/place, role and visual state; edit or remove the association without deleting the image.
+- [ ] Show primary visual references/variants directly inside linked character and place cards, beyond the dedicated visual-reference tool.
 
 ## P1 — living atlas
 
