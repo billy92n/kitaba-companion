@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.3 — campaign launch hardening
+
+- Added explicit persistent World State entity categories for factions, organizations, settlements, states, markets, economy, conflicts, world events, environment, resources, infrastructure, laws and politics.
+- Added a player-facing World section while keeping unknown/off-screen world truth in GM scope.
+- Hardened ChatGPT update import so file-loaded raw JSON is hidden by default; manual raw-paste mode now carries an explicit spoiler warning.
+- Added a campaign media library entry point for NPC portraits and other illustrations, backed by the existing checksum-protected asset store and `.kitaba` backups.
+- Campaign integrity diagnostics now refresh automatically with campaign data.
+- Reduced search re-serialization work by precomputing searchable entity text only when campaign entities change.
+- Added regression tests for hidden World State persistence and raw-update anti-spoiler UI.
+
+
 ## 0.1.2 — hardened direct-source Windows build
 
 - Replaced the legacy Base64/materialization build path with the committed React/Tauri/Rust source tree.

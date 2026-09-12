@@ -108,3 +108,22 @@ def test_mobile_navigation_uses_drawer_not_static_top_sidebar():
     assert "mobileOpen" in sidebar
     assert ".sidebar.mobile-open" in css
     assert "transform: translateX(-105%)" in css
+
+
+def test_sync_ui_masks_raw_update_payload_by_default():
+    app = _read("src/App.tsx")
+    assert "rawUpdateVisible" in app
+    assert "Payload chargé — contenu brut masqué" in app
+    assert "Collage manuel (avancé)" in app
+    assert "Mode collage manuel" in app
+
+
+def test_world_state_has_dedicated_player_ui_and_contract():
+    app = _read("src/App.tsx")
+    sidebar = _read("src/components/Sidebar.tsx")
+    rust = _read("src-tauri/src/db.rs")
+    py = _read("reference/engine.py")
+    assert '["world", "Monde"]' in sidebar
+    assert 'world: ["faction", "organization", "settlement"' in app
+    assert '"world": ["faction", "organization", "settlement"' in rust
+    assert '"world": ["faction", "organization", "settlement"' in py

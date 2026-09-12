@@ -9,7 +9,7 @@ It is **not** the game engine. ChatGPT remains the GM, narrator, resolver, and w
 
 ## Current repository status
 
-Version **0.1.2** uses the real React/Tauri/Rust source tree directly. The former Base64/materialization build path has been removed.
+Version **0.1.3** uses the real React/Tauri/Rust source tree directly. The former Base64/materialization build path has been removed.
 
 Implemented and covered by automated verification:
 
@@ -25,7 +25,7 @@ Implemented and covered by automated verification:
 - managed campaign visual assets
 - audit metadata and integrity diagnostics
 
-The production Windows pipeline now runs the Python reference suite, reproducible frontend installation/build, Rust tests, Tauri packaging, PE GUI-subsystem verification, and artifact upload. A complete 0.1.2 Windows build has passed these gates on GitHub Actions.
+The production Windows pipeline now runs the Python reference suite, reproducible frontend installation/build, Rust tests, Tauri packaging, PE GUI-subsystem verification, and artifact upload. A complete 0.1.3 Windows build has passed these gates on GitHub Actions.
 
 ## Core invariants
 

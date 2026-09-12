@@ -56,7 +56,7 @@ The Windows production workflow verifies, in order:
 6. Windows GUI PE subsystem;
 7. upload of the portable executable and NSIS installer.
 
-A complete 0.1.2 direct-source Windows build has passed all of these gates. The generated artifact contains both `kitaba-companion.exe` and `Kitaba Companion_0.1.2_x64-setup.exe`.
+A complete 0.1.3 direct-source Windows build has passed all of these gates. The generated artifact contains both `kitaba-companion.exe` and `Kitaba Companion_0.1.2_x64-setup.exe`.
 
 ## Remaining gate before gameplay
 

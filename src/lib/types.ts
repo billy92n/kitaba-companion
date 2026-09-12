@@ -123,6 +123,8 @@ export type SectionKey =
   | "journal"
   | "missions"
   | "knowledge"
+  | "world"
+  | "media"
   | "map"
   | "timeline"
   | "adventurer_card"

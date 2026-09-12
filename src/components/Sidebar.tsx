@@ -20,6 +20,8 @@ const nav: Array<[SectionKey, string]> = [
   ["journal", "Journal"],
   ["missions", "Missions"],
   ["knowledge", "Connaissances"],
+  ["world", "Monde"],
+  ["media", "Médiathèque"],
   ["map", "Carte"],
   ["timeline", "Chronologie"],
   ["adventurer_card", "Carte d'aventurier"],

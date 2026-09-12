@@ -542,6 +542,7 @@ class KitabaEngine:
                     "journal": ["journal_entry"],
                     "missions": ["mission", "quest"],
                     "knowledge": ["knowledge", "rumor", "belief"],
+                    "world": ["faction", "organization", "settlement", "state", "market", "economy_state", "conflict", "world_event", "environment_state", "resource_state", "infrastructure", "law", "political_state"],
                     "map": ["place", "map_marker", "map", "current_location"],
                     "timeline": ["timeline_event", "historical_event"],
                     "adventurer_card": ["adventurer_card", "evaluation", "certification"],
@@ -555,7 +556,8 @@ class KitabaEngine:
                     "The Companion never advances time itself. When time advances, provide an explicit game_time.set; elapsed_minutes is informational and requires set.",
                     "Create checkpoint only after a sufficiently safe completed long rest validated by the GM.",
                     "Set death.occurred=true only for confirmed player death. After death, no further update is accepted until Companion rollback.",
-                    "Store repeated dead-timeline material resolutions in dead_timeline_resolutions with stable fingerprints."
+                    "Store repeated dead-timeline material resolutions in dead_timeline_resolutions with stable fingerprints.",
+                    "Persist durable campaign-world changes, including off-screen changes unknown to the player, as entities. Keep unknown world truth in GM scope until legitimately revealed."
                 ]
             },
             "continuity_metadata": {

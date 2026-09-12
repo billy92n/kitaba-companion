@@ -878,3 +878,23 @@ def test_registered_asset_path_cannot_escape_campaign_directory(eng, tmp_path):
     report = eng.integrity_report(campaign_id)
     assert report["ok"] is False
     assert next(c for c in report["checks"] if c["code"] == "assets")["ok"] is False
+
+
+def test_world_state_contract_and_hidden_persistence(eng):
+    cid, tid = eng.create_campaign("World state")
+    secret_id = u()
+    eng.apply_update(base_update(
+        cid, tid,
+        gm_operations=[{
+            "op": "create",
+            "entity_type": "faction",
+            "entity_id": secret_id,
+            "data": {"name": "Hidden faction", "status": "SECRET_WORLD_SENTINEL"},
+        }],
+    ))
+    player = eng.export_context(cid, "PLAYER")
+    full = eng.export_context(cid, "GM_FULL")
+    expected = {"faction", "organization", "settlement", "state", "market", "economy_state", "conflict", "world_event", "environment_state", "resource_state", "infrastructure", "law", "political_state"}
+    assert expected <= set(full["companion_contract"]["ui_entity_types"]["world"])
+    assert "SECRET_WORLD_SENTINEL" not in json.dumps(player)
+    assert "SECRET_WORLD_SENTINEL" in json.dumps(full)

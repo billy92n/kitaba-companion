@@ -29,6 +29,8 @@ const sectionTypes: Record<SectionKey, string[]> = {
   journal: ["journal_entry"],
   missions: ["mission", "quest"],
   knowledge: ["knowledge", "rumor", "belief"],
+  world: ["faction", "organization", "settlement", "state", "market", "economy_state", "conflict", "world_event", "environment_state", "resource_state", "infrastructure", "law", "political_state"],
+  media: [],
   map: ["place", "map_marker", "map", "current_location"],
   timeline: ["timeline_event", "historical_event"],
   adventurer_card: ["adventurer_card", "evaluation", "certification"],
@@ -47,6 +49,8 @@ const labels: Record<SectionKey, string> = {
   journal: "Journal",
   missions: "Missions",
   knowledge: "Connaissances",
+  world: "Monde",
+  media: "Médiathèque",
   map: "Carte",
   timeline: "Chronologie",
   adventurer_card: "Carte d'aventurier",
@@ -65,6 +69,7 @@ export default function App() {
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [active, setActive] = useState<SectionKey>("overview");
   const [jsonText, setJsonText] = useState("");
+  const [rawUpdateVisible, setRawUpdateVisible] = useState(false);
   const [preview, setPreview] = useState<UpdatePreview | null>(null);
   const [status, setStatus] = useState("Prêt.");
   const [busy, setBusy] = useState(false);
@@ -76,6 +81,8 @@ export default function App() {
   const [assets, setAssets] = useState<AssetSummary[]>([]);
   const [worldMapUrl, setWorldMapUrl] = useState<string | null>(null);
   const [portraitUrl, setPortraitUrl] = useState<string | null>(null);
+  const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string | null>(null);
+  const [mediaPreviewAssetId, setMediaPreviewAssetId] = useState<string | null>(null);
   const [manualPlayerEntityId, setManualPlayerEntityId] = useState("");
   const [manualPlayerPatch, setManualPlayerPatch] = useState("{}");
   const [manualPlayerReason, setManualPlayerReason] = useState("");
@@ -98,11 +105,16 @@ export default function App() {
     return entities.filter((e) => types.includes(e.entity_type));
   }, [active, entities]);
 
+  const searchableEntities = useMemo(() => entities.map((entity) => ({
+    entity,
+    text: `${entity.entity_type} ${JSON.stringify(entity.data)}`.toLocaleLowerCase("fr"),
+  })), [entities]);
+
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLocaleLowerCase("fr");
     if (!q) return [];
-    return entities.filter((entity) => `${entity.entity_type} ${JSON.stringify(entity.data)}`.toLocaleLowerCase("fr").includes(q)).slice(0, 24);
-  }, [entities, searchQuery]);
+    return searchableEntities.filter((row) => row.text.includes(q)).slice(0, 24).map((row) => row.entity);
+  }, [searchQuery, searchableEntities]);
 
   const pc: Record<string, unknown> = entities.find((e) => e.entity_type === "player_character")?.data ?? {};
   const currentLocation = entities.find((e) => e.entity_type === "current_location")?.data;
@@ -121,16 +133,18 @@ export default function App() {
   }
 
   async function refreshCampaignData(campaignId: string) {
-    const [player, rests, audit, assetRows] = await Promise.all([
+    const [player, rests, audit, assetRows, integrityReport] = await Promise.all([
       backend.listEntities(campaignId, false),
       backend.listRestPoints(campaignId),
       backend.listAuditEvents(campaignId, 30),
       backend.listAssets(campaignId),
+      backend.campaignIntegrityReport(campaignId),
     ]);
     setEntities(player);
     setRestPoints(rests);
     setAuditEvents(audit);
     setAssets(assetRows);
+    setIntegrity(integrityReport);
     const mapAsset = assetRows.find((a) => a.kind === "world_map");
     const portraitAsset = assetRows.find((a) => a.kind === "player_portrait");
     const [mapUrl, portrait] = await Promise.all([
@@ -141,7 +155,8 @@ export default function App() {
     setPortraitUrl(portrait);
     setGmEntities([]);
     setGmUnlocked(false);
-    setIntegrity(null);
+    setMediaPreviewUrl(null);
+    setMediaPreviewAssetId(null);
   }
 
   useEffect(() => {
@@ -170,7 +185,8 @@ export default function App() {
     try {
       const next = await backend.previewUpdate(jsonText);
       setPreview(next);
-      setStatus("Structure, révision et timeline validées. L’application transactionnelle effectuera le contrôle final des opérations.");
+      setRawUpdateVisible(false);
+      setStatus("Structure, révision et timeline validées. Le contenu brut reste masqué pour éviter les spoilers MJ.");
     } catch (e) {
       setPreview(null);
       setStatus(`Analyse refusée : ${String(e)}`);
@@ -190,8 +206,9 @@ export default function App() {
       if (!path || Array.isArray(path)) return;
       const text = await backend.readTextFile(path);
       setJsonText(text);
+      setRawUpdateVisible(false);
       setPreview(null);
-      setStatus("Fichier KITABA_UPDATE chargé. Clique sur Analyser avant application.");
+      setStatus("Fichier KITABA_UPDATE chargé. Son contenu brut est masqué ; clique sur Analyser avant application.");
     } catch (e) { setStatus(`Lecture impossible : ${String(e)}`); }
   }
 
@@ -202,6 +219,7 @@ export default function App() {
       setLastImport(result);
       setPreview(null);
       setJsonText("");
+      setRawUpdateVisible(false);
       const note = result.notifications.length ? ` — ${result.notifications.map((n) => n.message).join(" · ")}` : "";
       setStatus(`Mise à jour appliquée atomiquement. Révision ${result.revision}. ${result.gm_operation_count} opération(s) MJ masquée(s).${note}`);
       await refreshCampaigns();
@@ -296,11 +314,17 @@ export default function App() {
     } catch (e) { setStatus(`Restauration impossible : ${String(e)}`); }
   }
 
-  async function importVisual(kind: "world_map" | "player_portrait") {
+  async function importVisual(kind: "world_map" | "player_portrait" | "npc_portrait" | "other_image") {
     if (!campaign) return;
+    const titles: Record<typeof kind, string> = {
+      world_map: "Importer le fond de carte",
+      player_portrait: "Importer le portrait de Sully",
+      npc_portrait: "Importer un portrait de PNJ",
+      other_image: "Importer une image de campagne",
+    };
     try {
       const path = await open({
-        title: kind === "world_map" ? "Importer le fond de carte" : "Importer le portrait de Sully",
+        title: titles[kind],
         multiple: false,
         directory: false,
         filters: [{ name: "Image", extensions: ["png", "jpg", "jpeg", "webp"] }],
@@ -308,10 +332,19 @@ export default function App() {
       if (!path || Array.isArray(path)) return;
       await backend.importCampaignAsset(campaign.id, kind, path);
       await refreshCampaignData(campaign.id);
-      setStatus(kind === "world_map" ? "Fond de carte importé et intégré aux sauvegardes de campagne." : "Portrait importé et intégré aux sauvegardes de campagne.");
+      setStatus(kind === "world_map" ? "Fond de carte importé et intégré aux sauvegardes de campagne." : kind === "player_portrait" ? "Portrait de Sully importé et intégré aux sauvegardes de campagne." : kind === "npc_portrait" ? "Portrait de PNJ ajouté à la médiathèque de campagne." : "Image ajoutée à la médiathèque de campagne.");
     } catch (e) {
       setStatus(`Import d'image impossible : ${String(e)}`);
     }
+  }
+
+  async function previewMediaAsset(asset: AssetSummary) {
+    if (!campaign) return;
+    try {
+      const url = await backend.readAssetDataUrl(campaign.id, asset.id);
+      setMediaPreviewUrl(url);
+      setMediaPreviewAssetId(asset.id);
+    } catch (e) { setStatus(`Prévisualisation impossible : ${String(e)}`); }
   }
 
   async function applyManualCorrection(scope: "PLAYER" | "GM") {
@@ -433,8 +466,8 @@ export default function App() {
         <article className="panel">
           <h2>Importer depuis ChatGPT</h2>
           <p>Colle un <code>KITABA_UPDATE</code>. Rien n'est écrit avant validation et confirmation.</p>
-          <textarea value={jsonText} onChange={(e) => { setJsonText(e.target.value); setPreview(null); }} placeholder={'{ "format": "KITABA_UPDATE", ... }'} />
-          <div className="action-row"><button className="ghost" onClick={loadUpdateFile} disabled={busy || Boolean(campaign?.death_pending)}>Charger un fichier</button><button className="secondary" onClick={analyzeUpdate} disabled={busy || !jsonText.trim() || Boolean(campaign?.death_pending)}>Analyser</button>{preview && <button onClick={importUpdate} disabled={busy || Boolean(campaign?.death_pending)}>Appliquer la mise à jour</button>}</div>
+          {rawUpdateVisible ? <><div className="warning">Mode collage manuel : le JSON peut contenir des données MJ. Préfère « Charger un fichier » pour conserver les secrets masqués.</div><textarea value={jsonText} onChange={(e) => { setJsonText(e.target.value); setPreview(null); }} placeholder={'{ "format": "KITABA_UPDATE", ... }'} /></> : jsonText ? <div className="preview-box"><strong>Payload chargé — contenu brut masqué</strong><p className="muted">Le Companion conserve le fichier en mémoire pour l'analyse sans afficher les opérations MJ.</p><div className="action-row"><button className="ghost" onClick={() => { setRawUpdateVisible(true); setPreview(null); }}>Afficher / modifier le JSON</button><button className="ghost" onClick={() => { setJsonText(""); setPreview(null); setRawUpdateVisible(false); }}>Retirer</button></div></div> : <div className="empty-inline">Charge directement le fichier KITABA_UPDATE. Le contenu brut restera masqué.</div>}
+          <div className="action-row"><button className="ghost" onClick={loadUpdateFile} disabled={busy || Boolean(campaign?.death_pending)}>Charger un fichier</button><button className="ghost" onClick={() => setRawUpdateVisible(true)} disabled={busy || Boolean(campaign?.death_pending) || Boolean(jsonText)}>Collage manuel (avancé)</button><button className="secondary" onClick={analyzeUpdate} disabled={busy || !jsonText.trim() || Boolean(campaign?.death_pending)}>Analyser</button>{preview && <button onClick={importUpdate} disabled={busy || Boolean(campaign?.death_pending)}>Appliquer la mise à jour</button>}</div>
           {preview && <div className="preview-box"><h3>Résumé avant import</h3><div className="preview-grid"><span>Révision</span><strong>{preview.base_revision} → {preview.target_revision}</strong><span>Changements joueur</span><strong>{preview.player_operation_count}</strong><span>Entrées journal</span><strong>{preview.journal_entry_count}</strong><span>Données MJ</span><strong>{preview.gm_operation_count + preview.gm_link_operation_count} opération(s) masquée(s)</strong><span>Liens joueur</span><strong>{preview.player_link_operation_count}</strong><span>Résolutions timeline morte</span><strong>{preview.dead_resolution_count} masquée(s)</strong><span>Rest Point</span><strong>{preview.creates_checkpoint ? "Oui" : "Non"}</strong><span>Mort confirmée</span><strong>{preview.marks_death ? "Oui" : "Non"}</strong></div>{preview.player_changes.length > 0 && <ul>{preview.player_changes.map((x, i) => <li key={i}>{x}</li>)}</ul>}</div>}
         </article>
         <article className="panel">
@@ -448,9 +481,13 @@ export default function App() {
       <section className="grid two lower-grid"><article className="panel"><h2>Diagnostic d'intégrité</h2><p className="muted">Vérifie SQLite, les clés étrangères, la timeline active, les Rest Points, les timelines mortes et les fichiers visuels, sans afficher le contenu du Coffre MJ.</p><button className="secondary" onClick={runIntegrityCheck} disabled={busy}>Vérifier l'intégrité</button>{integrity && <div className={`integrity-report ${integrity.ok ? "ok" : "bad"}`}><strong>{integrity.ok ? "Intégrité validée" : "Anomalie détectée"}</strong><span>{new Date(integrity.checked_at).toLocaleString("fr-FR")}</span><ul>{integrity.checks.map((check) => <li key={check.code} className={check.ok ? "ok" : "bad"}>{check.ok ? "✓" : "✕"} {check.message}</li>)}</ul></div>}</article><article className="panel"><h2>Gestion de la campagne</h2><p className="muted">Archiver masque la campagne sans supprimer ses données. La suppression définitive n'est disponible que depuis les archives et crée d'abord une sauvegarde technique automatique.</p><button className="ghost" onClick={archiveCurrentCampaign} disabled={busy}>Archiver cette campagne</button></article></section>
       {renderArchivedCampaigns()}
       <section className="panel manual-correction"><h2>Correction manuelle exceptionnelle</h2><p className="muted">À utiliser uniquement pour corriger une erreur de saisie ou de synchronisation. Chaque correction crée d'abord une sauvegarde technique, avance la révision canonique et laisse une trace d'audit.</p><div className="manual-grid"><label>Donnée visible à corriger<select value={manualPlayerEntityId} onChange={(e) => setManualPlayerEntityId(e.target.value)}><option value="">Sélectionner…</option>{entities.map((e) => <option key={e.id} value={e.id}>{entityLabel(e)}</option>)}</select></label><label>Raison<input value={manualPlayerReason} onChange={(e) => setManualPlayerReason(e.target.value)} placeholder="Ex. erreur de saisie dans l'âge" /></label><label className="manual-json">Patch JSON<textarea value={manualPlayerPatch} onChange={(e) => setManualPlayerPatch(e.target.value)} spellCheck={false} placeholder={'{ "champ": "nouvelle valeur" }'} /></label></div><button className="secondary" disabled={busy || !manualPlayerEntityId || Boolean(campaign?.death_pending)} onClick={() => applyManualCorrection("PLAYER")}>Appliquer la correction auditée</button></section>
-      <section className="panel asset-panel"><h2>Visuels de campagne</h2><p className="muted">Les visuels importés sont copiés dans le stockage local de Kitaba et inclus dans les sauvegardes <code>.kitaba</code>.</p><div className="asset-actions"><button className="secondary" onClick={() => importVisual("player_portrait")}>Importer / remplacer le portrait</button><button className="secondary" onClick={() => importVisual("world_map")}>Importer / remplacer la carte</button><span>{assets.length} visuel(s) géré(s) par la campagne</span></div></section>
+      <section className="panel asset-panel"><h2>Visuels de campagne</h2><p className="muted">Les visuels importés sont copiés dans le stockage local de Kitaba et inclus dans les sauvegardes <code>.kitaba</code>.</p><div className="asset-actions"><button className="secondary" onClick={() => importVisual("player_portrait")}>Importer / remplacer le portrait</button><button className="secondary" onClick={() => importVisual("world_map")}>Importer / remplacer la carte</button><button className="secondary" onClick={() => importVisual("npc_portrait")}>Ajouter portrait PNJ</button><button className="secondary" onClick={() => importVisual("other_image")}>Ajouter image</button><span>{assets.length} visuel(s) géré(s) par la campagne</span></div></section>
       <section className="panel audit-panel"><h2>Historique technique récent</h2><p className="muted">Cet historique n'affiche jamais le contenu du Coffre MJ.</p>{auditEvents.length === 0 ? <div className="empty-inline">Aucun événement technique.</div> : <div className="audit-list">{auditEvents.map((event) => <div className="audit-row" key={event.id}><div><strong>{event.event_type.replaceAll("_", " ")}</strong><span>{event.summary}</span></div><time>{new Date(event.created_at).toLocaleString("fr-FR")}</time></div>)}</div>}</section>
     </>;
+  }
+
+  function renderMedia() {
+    return <section className="panel"><h2>Médiathèque de campagne</h2><p className="muted">Portraits et illustrations conservés localement et inclus dans les sauvegardes. Les illustrations d'ambiance ne modifient jamais le canon à elles seules.</p><div className="action-row"><button className="secondary" onClick={() => importVisual("npc_portrait")}>Ajouter un portrait PNJ</button><button className="secondary" onClick={() => importVisual("other_image")}>Ajouter une illustration</button><button className="ghost" onClick={() => importVisual("player_portrait")}>Portrait de Sully</button><button className="ghost" onClick={() => importVisual("world_map")}>Carte du monde</button></div>{assets.length === 0 ? <div className="empty-inline">Aucun visuel importé.</div> : <div className="audit-list">{assets.map((asset) => <div className="audit-row" key={asset.id}><div><strong>{asset.kind.replaceAll("_", " ")}</strong><span>{new Date(asset.created_at).toLocaleString("fr-FR")}</span></div><button className="ghost small" onClick={() => previewMediaAsset(asset)}>{mediaPreviewAssetId === asset.id ? "Actualiser" : "Voir"}</button></div>)}</div>}{mediaPreviewUrl && <div style={{marginTop: "1rem", textAlign: "center"}}><img src={mediaPreviewUrl} alt="Prévisualisation du visuel sélectionné" style={{maxWidth: "100%", maxHeight: "70vh", objectFit: "contain", borderRadius: ".6rem"}} /></div>}</section>;
   }
 
   function renderGmVault() {
@@ -494,6 +531,8 @@ export default function App() {
     if (active === "checkpoints") return renderCheckpoints();
     if (active === "gm_vault") return renderGmVault();
     if (active === "map") return renderMap();
+    if (active === "world") return <section className="panel"><h2>État du monde connu</h2><p className="muted">Factions, institutions, marchés, conflits, villes et autres changements durables que Sully peut légitimement connaître. Les évolutions hors champ inconnues restent dans le Coffre MJ.</p><EntityList entities={sectionEntities} empty="Aucun état mondial connu n'est encore enregistré." /></section>;
+    if (active === "media") return renderMedia();
     if (active === "character") return <><CharacterView entities={sectionEntities} /><section className="panel portrait-tools"><h2>Portrait</h2><p className="muted">Le portrait est purement visuel et n'altère jamais le canon narratif.</p><button className="secondary" onClick={() => importVisual("player_portrait")}>{portraitUrl ? "Remplacer le portrait" : "Importer un portrait"}</button></section></>;
     if (active === "inventory") return <InventoryView entities={sectionEntities} />;
     if (active === "relations") return <RelationsView entities={sectionEntities} />;
