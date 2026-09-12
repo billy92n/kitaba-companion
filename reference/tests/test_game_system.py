@@ -2,7 +2,9 @@ import pytest
 
 from reference.game_system import (
     learning_award,
+    mastery_progress_feeling,
     mastery_tier,
+    mastery_tier_key,
     resolve_roll,
     success_target,
 )
@@ -20,6 +22,16 @@ def test_mastery_thresholds_are_nonlinear_and_stable():
     assert mastery_tier(650) == "Expert"
     assert mastery_tier(1199) == "Expert"
     assert mastery_tier(1200) == "Maître"
+    assert mastery_tier_key(120) == "competent"
+    assert mastery_tier_key(1200) == "maitre"
+
+
+def test_player_facing_progress_feeling_hides_raw_points():
+    assert mastery_progress_feeling(0) == "début de palier"
+    assert mastery_progress_feeling(20) == "en progression"
+    assert mastery_progress_feeling(32) == "bien établi"
+    assert mastery_progress_feeling(38) == "proche d’un nouveau palier"
+    assert mastery_progress_feeling(1200) == "maîtrise établie"
 
 
 def test_progression_rewards_meaningful_learning_not_farming():
@@ -31,6 +43,9 @@ def test_progression_rewards_meaningful_learning_not_farming():
     assert learning_award("hard", "success", repetition_index=2) == 2
     assert learning_award("hard", "success", repetition_index=3) == 0
     assert learning_award("hard", "success", repetition_index=20) == 0
+    assert learning_award("hard", "partial_success") == 7
+    assert learning_award("hard", "exceptional_success") == 8
+    assert learning_award("hard", "failure") == 2
 
 
 def test_resolution_baseline_is_playable_but_not_automatic():
@@ -64,6 +79,16 @@ def test_roll_100_only_flags_existing_hazard_instead_of_inventing_catastrophe():
     assert safe.outcome == dangerous.outcome == "failure"
     assert safe.hazard_escalation_possible is False
     assert dangerous.hazard_escalation_possible is True
+
+
+def test_distribution_at_common_targets_is_predictable():
+    def distribution(target: int):
+        rows = [resolve_roll(target, roll).outcome for roll in range(1, 101)]
+        return {name: rows.count(name) for name in set(rows)}
+
+    assert distribution(40) == {"exceptional_success": 4, "success": 36, "partial_success": 15, "failure": 45}
+    assert distribution(55) == {"exceptional_success": 5, "success": 50, "partial_success": 15, "failure": 30}
+    assert distribution(75) == {"exceptional_success": 7, "success": 68, "partial_success": 15, "failure": 10}
 
 
 def test_invalid_reference_inputs_are_rejected():
