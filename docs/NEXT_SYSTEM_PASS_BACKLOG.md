@@ -9,14 +9,16 @@ Status: working backlog for the post-0.1.5 development branch. It must not mutat
 - [x] Keep map markers aligned with the actually rendered image area.
 - [x] Highlight the current linked settlement/place when coordinates exist.
 - [x] Add regression coverage for map boundary behavior.
-- [ ] Validate the map-boundary fix in a Windows build before merging to `main`.
+- [ ] Validate the final dense-map implementation in a Windows build before merging to `main`.
 
 ## P1 — core game mechanics
 
 - [x] Draft a calibrated hidden progression model with nonlinear mastery thresholds and anti-farming.
 - [x] Draft a single hidden uncertainty-resolution scale shared by exploration, social and skill actions.
-- [ ] Simulate/check probability bands and learning pace against representative character profiles.
-- [ ] Promote only the validated portions into the next MASTER SOURCE / MJ contract.
+- [x] Check common d100 outcome bands with exhaustive 1–100 distribution tests.
+- [x] Check baseline learning pace against demanding, severe, teacher-assisted and repeated-identical practice scenarios.
+- [x] Keep player-facing progression qualitative while internal points remain hidden.
+- [ ] Promote only the validated portions into the next MASTER SOURCE / MJ contract after user acceptance.
 - [ ] Define damage, armor, HP, injuries and recovery on the same scale.
 - [ ] Define mana expenditure, recovery and overchanneling severity.
 
@@ -47,11 +49,24 @@ Next work:
 ## P1 — living atlas
 
 - [x] Normalized x/y world-map markers supported by Companion.
+- [x] Strict pan/zoom world bounds with no exposed black border.
+- [x] Current-location focus button when a positioned current marker exists.
+- [x] Search and recenter on known positioned places.
+- [x] Filterable map layers for places, regions, routes, dungeons and other geography.
+- [x] Multi-scale detail: less-important labels/markers appear only as the player zooms in.
+- [x] Nearby markers automatically cluster and split when zooming in.
+- [x] Player/MJ layer separation remains enforced by the existing PLAYER/GM entity boundary.
 - [ ] Geography-placement contract: biome, climate, rivers, terrain, economy and known demographics constrain new settlements before coordinates are persisted.
 - [ ] Region/state/route polygon or path layers in addition to point markers.
-- [ ] Current-location auto-focus option without forcing it on the player.
-- [ ] Discovery states such as known-by-name, approximately located, precisely located and visited.
-- [ ] Player/MJ layer separation for undiscovered geography.
+- [ ] Formal discovery states: known-by-name, approximately located, precisely located and visited.
+
+## P1 — MVP presentation
+
+- [x] Define a presentation scope and 10–15 minute demonstration flow.
+- [ ] Produce a green Windows candidate build from the final MVP branch state.
+- [ ] Verify upgrade compatibility against a real 0.1.5 `.kitaba` backup.
+- [ ] Run the MVP demonstration checklist end-to-end with a live campaign copy.
+- [ ] Freeze a presentation candidate only after the above gates are green.
 
 ## P2 — world simulation systems
 
