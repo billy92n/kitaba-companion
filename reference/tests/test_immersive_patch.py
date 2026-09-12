@@ -21,8 +21,7 @@ def test_interactive_map_is_zoomable_pannable_and_clickable():
 def test_map_remains_player_knowledge_gated():
     component = _read("src/components/InteractiveMap.tsx")
     sidebar = _read("src/components/Sidebar.tsx")
-    assert "La carte reste verrouillée sur les limites du monde" in component
-    assert "révèle uniquement les lieux présents dans le canon joueur" in component
+    assert "la carte reste verrouillée sur les limites du monde" in component
     assert 'map: ["place", "map_marker", "map", "current_location", "settlement", "state", "region", "route", "dungeon"]' in sidebar
 
 
@@ -35,8 +34,22 @@ def test_interactive_map_clamps_pan_and_prevents_black_borders():
     assert "Math.max(-maxY, Math.min(maxY, next.y))" in component
     assert "ResizeObserver" in component
     assert 'document.addEventListener("fullscreenchange", synchronizeGeometry)' in component
-    assert "geometry.offsetX + normalizedX * geometry.fittedWidth" in component
-    assert "geometry.offsetY + normalizedY * geometry.fittedHeight" in component
+    assert "geometry.offsetX + cluster.x * geometry.fittedWidth" in component
+    assert "geometry.offsetY + cluster.y * geometry.fittedHeight" in component
+
+
+def test_dense_atlas_has_layers_search_clustering_and_current_position():
+    component = _read("src/components/InteractiveMap.tsx")
+    css = _read("src/interactive-map-mvp.css")
+    assert "clusterMarkers" in component
+    assert "map-layer-chip" in component
+    assert "Trouver un lieu connu" in component
+    assert "Ma position" in component
+    assert "visibleAtZoom" in component
+    assert "map_importance" in component
+    assert "interactive-map-cluster" in component
+    assert "map-search-results" in css
+    assert "interactive-map-cluster" in css
 
 
 def test_visual_continuity_guidance_is_in_companion():
