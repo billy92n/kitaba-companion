@@ -28,11 +28,13 @@ jobs:
         run: npm install --package-lock-only --ignore-scripts
       - name: Refresh Cargo lock metadata
         run: cargo update --manifest-path src-tauri/Cargo.toml -p kitaba-companion
+      - name: Keep permanent workflow unchanged on this branch
+        run: git checkout -- .github/workflows/build-windows.yml
       - name: Commit patched product
         shell: bash
         run: |
           git config user.name "kitaba-ci"
           git config user.email "kitaba-ci@users.noreply.github.com"
-          git add src src-tauri reference package.json package-lock.json README.md docs/STATUS.md CHANGELOG.md .github/workflows/build-windows.yml
+          git add src src-tauri reference package.json package-lock.json README.md docs/STATUS.md CHANGELOG.md
           git commit -m "Add fresh character creation onboarding (0.1.4)"
           git push origin character-creation-v014
