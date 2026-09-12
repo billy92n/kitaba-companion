@@ -7,6 +7,8 @@
 - médiathèque clarifiée autour de la continuité visuelle : image de référence, variantes d'état et scènes multi-personnages ;
 - aucun changement de schéma SQLite : les campagnes 0.1.4 restent directement compatibles et aucune réinitialisation n'est requise ;
 - préparation du contrat MJ 0.1.5 : narration plus courte et interactive, coordonnées cartographiques persistées, identité visuelle persistante et musique adaptative de scène.
+- arbitrage renforcé : une réussite déclarée par le joueur reste une tentative ; le MJ résout en privé selon compétences, contexte, opposition et enjeux, avec échec et réussite partielle possibles ;
+- les actions joueur très brèves sont reformulées de façon vivante et concise (gestes, sensations, nuance émotionnelle) sans inventer une intention différente ni garantir le résultat.
 
 ## 0.1.4 — fresh-character onboarding
 

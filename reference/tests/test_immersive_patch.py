@@ -63,6 +63,17 @@ def test_patch_does_not_change_database_schema():
     ]
 
 
+def test_companion_contract_requires_real_resolution_and_enriched_terse_actions():
+    rust = _read("src-tauri/src/db.rs")
+    ref = _read("reference/engine.py")
+    for text in (rust, ref):
+        assert "states a success or world outcome as an attempted action" in text
+        assert "perform the resolution privately" in text
+        assert "allow failure, partial success, complications or success" in text
+        assert "When the player gives a terse action" in text
+        assert "do not invent a materially different intention" in text
+
+
 def test_release_version_is_015():
     assert '"version": "0.1.5"' in _read("package.json")
     assert '"version": "0.1.5"' in _read("src-tauri/tauri.conf.json")
