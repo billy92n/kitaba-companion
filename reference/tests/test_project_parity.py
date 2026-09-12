@@ -127,3 +127,41 @@ def test_world_state_has_dedicated_player_ui_and_contract():
     assert 'world: ["faction", "organization", "settlement"' in app
     assert '"world": ["faction", "organization", "settlement"' in rust
     assert '"world": ["faction", "organization", "settlement"' in py
+
+
+def test_fresh_campaign_ui_is_generic_and_requires_character_creation_before_play():
+    app = _read("src/App.tsx")
+    assert "Nouvelle campagne Kitaba Solo" in app
+    assert "Créer la campagne vierge" in app
+    assert "Création du personnage avant la scène 1" in app
+    assert "createSullyCampaign" not in app
+    assert 'backend.createCampaign("Sully — Kitaba Solo")' not in app
+    assert '"Personnage non créé"' in app
+
+
+def test_companion_contract_teaches_onboarding_and_player_knowledge_discipline():
+    rust = _read("src-tauri/src/db.rs")
+    py = _read("reference/engine.py")
+    phrases = [
+        "complete character creation and starting-world anchoring before the first narrated gameplay scene",
+        "Never assume the human player knows developer or world terminology",
+        "initial campaign update must persist the player_character",
+        "appearance has been canonically fixed",
+    ]
+    for phrase in phrases:
+        assert phrase in rust
+        assert phrase in py
+
+
+def test_frontend_has_no_sully_specific_runtime_copy():
+    app = _read("src/App.tsx")
+    forbidden = [
+        "Créer la campagne de Sully",
+        "Portrait de Sully",
+        "Sully est mort",
+        "ce que Sully connaît",
+        "lieux connus de Sully",
+    ]
+    for text in forbidden:
+        assert text not in app
+

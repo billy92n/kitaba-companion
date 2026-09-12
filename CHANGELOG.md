@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.4 — fresh-character onboarding
+
+- Removed Sully-specific assumptions from runtime campaign creation, export filenames, search, death, map, world and portrait UI copy.
+- Added generic named campaign creation and an explicit pre-narration character-creation gate for fresh campaigns.
+- Added onboarding guidance: export the empty GM context, create/anchor the character with the GM, import the initialization update, then begin scene 1.
+- Extended the Companion continuity contract so future game chats must introduce unfamiliar world terminology contextually instead of assuming developer knowledge.
+- Required the initialization update to persist the protagonist, immediate setting, relevant close relations and legitimate baseline knowledge before gameplay begins.
+- Added canon-before-image rules so portraits/scenes cannot invent undecided appearances.
+- Added regression tests preventing a return to a hard-coded Sully launch path.
+
 ## 0.1.3 — campaign launch hardening
 
 - Added explicit persistent World State entity categories for factions, organizations, settlements, states, markets, economy, conflicts, world events, environment, resources, infrastructure, laws and politics.

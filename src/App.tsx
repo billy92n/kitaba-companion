@@ -63,6 +63,7 @@ export default function App() {
   const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
   const [archivedCampaigns, setArchivedCampaigns] = useState<CampaignSummary[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const [newCampaignName, setNewCampaignName] = useState("Kitaba Solo — Nouvelle campagne");
   const [entities, setEntities] = useState<EntityDocument[]>([]);
   const [gmEntities, setGmEntities] = useState<EntityDocument[]>([]);
   const [restPoints, setRestPoints] = useState<RestPointSummary[]>([]);
@@ -118,6 +119,7 @@ export default function App() {
 
   const pc: Record<string, unknown> = entities.find((e) => e.entity_type === "player_character")?.data ?? {};
   const currentLocation = entities.find((e) => e.entity_type === "current_location")?.data;
+  const characterInitialized = entities.some((e) => e.entity_type === "player_character");
 
   function entityLabel(entity: EntityDocument) {
     const data = entity.data;
@@ -167,14 +169,16 @@ export default function App() {
     if (campaign?.id) refreshCampaignData(campaign.id).catch((e) => setStatus(`Erreur de chargement : ${String(e)}`));
   }, [campaign?.id, campaign?.current_revision]);
 
-  async function createSullyCampaign() {
+  async function createCampaign() {
+    const name = newCampaignName.trim();
+    if (!name) { setStatus("Indique un nom de campagne avant de la créer."); return; }
     setBusy(true);
     try {
-      const created = await backend.createCampaign("Sully — Kitaba Solo");
+      const created = await backend.createCampaign(name);
       await refreshCampaigns();
       setSelectedId(created.id);
       setActive("sync");
-      setStatus("Campagne créée. Exporte maintenant le contexte complet MJ vers ChatGPT pour initialiser la campagne sans perdre les données cachées futures.");
+      setStatus("Campagne vierge créée. Exporte le contexte complet MJ puis effectue la création du personnage avec le MJ avant toute narration.");
     } catch (e) { setStatus(`Erreur : ${String(e)}`); }
     finally { setBusy(false); }
   }
@@ -234,7 +238,7 @@ export default function App() {
       const isGm = mode === "GM_FULL";
       const path = await save({
         title: isGm ? "Exporter le contexte complet pour ChatGPT" : "Exporter le contexte joueur",
-        defaultPath: isGm ? "Sully_Kitaba_Context_MJ.json" : "Sully_Kitaba_Context_Joueur.json",
+        defaultPath: `${campaign.name.replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "") || "Kitaba"}_${isGm ? "Context_MJ" : "Context_Joueur"}.json`,
         filters: [{ name: isGm ? "Contexte Kitaba complet" : "Contexte Kitaba joueur", extensions: ["json"] }],
       });
       if (!path) return;
@@ -268,7 +272,7 @@ export default function App() {
 
   async function confirmRollback(restPointId: string) {
     if (!campaign) return;
-    if (!campaign.death_pending) { setStatus("Rollback refusé : aucune mort de Sully n'a été confirmée par le MJ."); return; }
+    if (!campaign.death_pending) { setStatus("Rollback refusé : aucune mort du personnage n'a été confirmée par le MJ."); return; }
     const ok = window.confirm("Rollback après mort : l'état canonique reviendra à ce Rest Point et une nouvelle timeline sera créée. Continuer ?");
     if (!ok) return;
     setRollbackTarget(restPointId);
@@ -318,7 +322,7 @@ export default function App() {
     if (!campaign) return;
     const titles: Record<typeof kind, string> = {
       world_map: "Importer le fond de carte",
-      player_portrait: "Importer le portrait de Sully",
+      player_portrait: "Importer le portrait du personnage",
       npc_portrait: "Importer un portrait de PNJ",
       other_image: "Importer une image de campagne",
     };
@@ -332,7 +336,7 @@ export default function App() {
       if (!path || Array.isArray(path)) return;
       await backend.importCampaignAsset(campaign.id, kind, path);
       await refreshCampaignData(campaign.id);
-      setStatus(kind === "world_map" ? "Fond de carte importé et intégré aux sauvegardes de campagne." : kind === "player_portrait" ? "Portrait de Sully importé et intégré aux sauvegardes de campagne." : kind === "npc_portrait" ? "Portrait de PNJ ajouté à la médiathèque de campagne." : "Image ajoutée à la médiathèque de campagne.");
+      setStatus(kind === "world_map" ? "Fond de carte importé et intégré aux sauvegardes de campagne." : kind === "player_portrait" ? "Portrait du personnage importé et intégré aux sauvegardes de campagne." : kind === "npc_portrait" ? "Portrait de PNJ ajouté à la médiathèque de campagne." : "Image ajoutée à la médiathèque de campagne.");
     } catch (e) {
       setStatus(`Import d'image impossible : ${String(e)}`);
     }
@@ -433,6 +437,7 @@ export default function App() {
   }
 
   function renderOverview() {
+    if (!characterInitialized) return <section className="panel empty-state"><div className="eyebrow">Phase de création</div><h2>Personnage non initialisé</h2><p>Cette campagne est volontairement vierge. Exporte le contexte complet MJ, termine la création du personnage avec le MJ, puis importe le premier KITABA_UPDATE avant de commencer la narration.</p><p className="muted">Le Companion ne doit jamais inventer le nom, l'âge, l'espèce, l'apparence, les proches ou les connaissances de départ.</p><button onClick={() => setActive("sync")}>Ouvrir la synchronisation</button></section>;
     const recentJournal = entities.filter((e) => e.entity_type === "journal_entry").slice(-5).reverse();
     const missions = entities.filter((e) => ["mission", "quest"].includes(e.entity_type));
     const injuries = entities.filter((e) => ["injury", "status_effect"].includes(e.entity_type));
@@ -440,7 +445,7 @@ export default function App() {
       <div className="dashboard-grid">
         <article className="panel hero-panel">
           <div className="eyebrow">État canonique</div>
-          <h2>{String(pc.first_name ?? pc.name ?? "Sully")}</h2>
+          <h2>{String(pc.first_name ?? pc.name ?? "Personnage non créé")}</h2>
           <div className="hero-stats">
             <div><span>HP</span><strong>{String(pc.hp_current ?? pc.hp ?? "—")}{pc.hp_max ? ` / ${pc.hp_max}` : ""}</strong></div>
             <div><span>Mana</span><strong>{String(pc.mana_current ?? pc.mana ?? "—")}{pc.mana_max ? ` / ${pc.mana_max}` : ""}</strong></div>
@@ -462,6 +467,7 @@ export default function App() {
 
   function renderSync() {
     return <>
+      {!characterInitialized && <section className="panel onboarding-panel"><div className="eyebrow">Démarrage d'une campagne neuve</div><h2>Création du personnage avant la scène 1</h2><p>1. Exporte le contexte complet MJ de cette campagne vierge. 2. Dans le chat de jeu, crée le personnage et fixe son apparence ainsi que son ancrage immédiat. 3. Importe le premier KITABA_UPDATE d'initialisation. 4. Commence seulement ensuite la narration.</p><div className="warning">Aucun concept du monde ne doit être supposé connu du joueur. Le MJ doit introduire naturellement le vocabulaire, les lieux, les proches et les règles découvertes.</div></section>}
       <section className="grid two">
         <article className="panel">
           <h2>Importer depuis ChatGPT</h2>
@@ -487,7 +493,7 @@ export default function App() {
   }
 
   function renderMedia() {
-    return <section className="panel"><h2>Médiathèque de campagne</h2><p className="muted">Portraits et illustrations conservés localement et inclus dans les sauvegardes. Les illustrations d'ambiance ne modifient jamais le canon à elles seules.</p><div className="action-row"><button className="secondary" onClick={() => importVisual("npc_portrait")}>Ajouter un portrait PNJ</button><button className="secondary" onClick={() => importVisual("other_image")}>Ajouter une illustration</button><button className="ghost" onClick={() => importVisual("player_portrait")}>Portrait de Sully</button><button className="ghost" onClick={() => importVisual("world_map")}>Carte du monde</button></div>{assets.length === 0 ? <div className="empty-inline">Aucun visuel importé.</div> : <div className="audit-list">{assets.map((asset) => <div className="audit-row" key={asset.id}><div><strong>{asset.kind.replaceAll("_", " ")}</strong><span>{new Date(asset.created_at).toLocaleString("fr-FR")}</span></div><button className="ghost small" onClick={() => previewMediaAsset(asset)}>{mediaPreviewAssetId === asset.id ? "Actualiser" : "Voir"}</button></div>)}</div>}{mediaPreviewUrl && <div style={{marginTop: "1rem", textAlign: "center"}}><img src={mediaPreviewUrl} alt="Prévisualisation du visuel sélectionné" style={{maxWidth: "100%", maxHeight: "70vh", objectFit: "contain", borderRadius: ".6rem"}} /></div>}</section>;
+    return <section className="panel"><h2>Médiathèque de campagne</h2><p className="muted">Portraits et illustrations conservés localement et inclus dans les sauvegardes. Les illustrations d'ambiance ne modifient jamais le canon à elles seules.</p><div className="action-row"><button className="secondary" onClick={() => importVisual("npc_portrait")}>Ajouter un portrait PNJ</button><button className="secondary" onClick={() => importVisual("other_image")}>Ajouter une illustration</button><button className="ghost" onClick={() => importVisual("player_portrait")}>Portrait du personnage</button><button className="ghost" onClick={() => importVisual("world_map")}>Carte du monde</button></div>{assets.length === 0 ? <div className="empty-inline">Aucun visuel importé.</div> : <div className="audit-list">{assets.map((asset) => <div className="audit-row" key={asset.id}><div><strong>{asset.kind.replaceAll("_", " ")}</strong><span>{new Date(asset.created_at).toLocaleString("fr-FR")}</span></div><button className="ghost small" onClick={() => previewMediaAsset(asset)}>{mediaPreviewAssetId === asset.id ? "Actualiser" : "Voir"}</button></div>)}</div>}{mediaPreviewUrl && <div style={{marginTop: "1rem", textAlign: "center"}}><img src={mediaPreviewUrl} alt="Prévisualisation du visuel sélectionné" style={{maxWidth: "100%", maxHeight: "70vh", objectFit: "contain", borderRadius: ".6rem"}} /></div>}</section>;
   }
 
   function renderGmVault() {
@@ -511,7 +517,7 @@ export default function App() {
       try { await mapFrameRef.current?.requestFullscreen(); }
       catch (e) { setStatus(`Plein écran indisponible : ${String(e)}`); }
     }
-    return <section className="panel"><div className="map-header"><div><h2>Carte du monde</h2><p className="muted">Fond géographique canonique. Seuls les lieux connus de Sully peuvent apparaître.</p></div><div className="map-controls"><button className="ghost small" onClick={() => setMapZoom((z) => Math.max(.75, Number((z - .25).toFixed(2))))}>−</button><button className="ghost small" onClick={() => setMapZoom(1)}>{Math.round(mapZoom * 100)} %</button><button className="ghost small" onClick={() => setMapZoom((z) => Math.min(3, Number((z + .25).toFixed(2))))}>+</button><button className="ghost small" onClick={() => importVisual("world_map")}>Remplacer la carte</button><button className="secondary small" onClick={fullscreenMap}>Plein écran</button></div></div><div className="map-frame" ref={mapFrameRef}><div className="map-canvas" style={{width: `${mapZoom * 100}%`}}><img src={worldMapUrl ?? "/kitaba-world-map.png"} alt="Carte physique de Kitaba" />{markers.map((m) => { const x = Number(m.data.x ?? m.data.map_x) * 100; const y = Number(m.data.y ?? m.data.map_y) * 100; const label = String(m.data.name ?? m.data.label ?? (m.entity_type === "current_location" ? "Position actuelle" : "Lieu connu")); return <div key={m.id} className={`map-marker ${m.entity_type === "current_location" ? "current" : ""}`} style={{left:`${x}%`,top:`${y}%`}} title={label}><span></span><b>{label}</b></div>; })}</div></div><div className="map-known"><EntityList entities={sectionEntities} empty="Aucun lieu ou marqueur connu n'est encore enregistré." /></div></section>;
+    return <section className="panel"><div className="map-header"><div><h2>Carte du monde</h2><p className="muted">Fond géographique canonique. Seuls les lieux légitimement connus du personnage peuvent apparaître.</p></div><div className="map-controls"><button className="ghost small" onClick={() => setMapZoom((z) => Math.max(.75, Number((z - .25).toFixed(2))))}>−</button><button className="ghost small" onClick={() => setMapZoom(1)}>{Math.round(mapZoom * 100)} %</button><button className="ghost small" onClick={() => setMapZoom((z) => Math.min(3, Number((z + .25).toFixed(2))))}>+</button><button className="ghost small" onClick={() => importVisual("world_map")}>Remplacer la carte</button><button className="secondary small" onClick={fullscreenMap}>Plein écran</button></div></div><div className="map-frame" ref={mapFrameRef}><div className="map-canvas" style={{width: `${mapZoom * 100}%`}}><img src={worldMapUrl ?? "/kitaba-world-map.png"} alt="Carte physique de Kitaba" />{markers.map((m) => { const x = Number(m.data.x ?? m.data.map_x) * 100; const y = Number(m.data.y ?? m.data.map_y) * 100; const label = String(m.data.name ?? m.data.label ?? (m.entity_type === "current_location" ? "Position actuelle" : "Lieu connu")); return <div key={m.id} className={`map-marker ${m.entity_type === "current_location" ? "current" : ""}`} style={{left:`${x}%`,top:`${y}%`}} title={label}><span></span><b>{label}</b></div>; })}</div></div><div className="map-known"><EntityList entities={sectionEntities} empty="Aucun lieu ou marqueur connu n'est encore enregistré." /></div></section>;
   }
 
   function navigateTo(section: SectionKey) {
@@ -531,7 +537,7 @@ export default function App() {
     if (active === "checkpoints") return renderCheckpoints();
     if (active === "gm_vault") return renderGmVault();
     if (active === "map") return renderMap();
-    if (active === "world") return <section className="panel"><h2>État du monde connu</h2><p className="muted">Factions, institutions, marchés, conflits, villes et autres changements durables que Sully peut légitimement connaître. Les évolutions hors champ inconnues restent dans le Coffre MJ.</p><EntityList entities={sectionEntities} empty="Aucun état mondial connu n'est encore enregistré." /></section>;
+    if (active === "world") return <section className="panel"><h2>État du monde connu</h2><p className="muted">Factions, institutions, marchés, conflits, villes et autres changements durables que le personnage peut légitimement connaître. Les évolutions hors champ inconnues restent dans le Coffre MJ.</p><EntityList entities={sectionEntities} empty="Aucun état mondial connu n'est encore enregistré." /></section>;
     if (active === "media") return renderMedia();
     if (active === "character") return <><CharacterView entities={sectionEntities} /><section className="panel portrait-tools"><h2>Portrait</h2><p className="muted">Le portrait est purement visuel et n'altère jamais le canon narratif.</p><button className="secondary" onClick={() => importVisual("player_portrait")}>{portraitUrl ? "Remplacer le portrait" : "Importer un portrait"}</button></section></>;
     if (active === "inventory") return <InventoryView entities={sectionEntities} />;
@@ -551,10 +557,10 @@ export default function App() {
       <Sidebar campaign={campaign} entities={entities} active={active} onNavigate={navigateTo} portraitUrl={portraitUrl} mobileOpen={mobileNavOpen} onCloseMobile={() => setMobileNavOpen(false)} />
       {mobileNavOpen && <button className="mobile-backdrop" aria-label="Fermer la navigation" onClick={() => setMobileNavOpen(false)} />}
       <main>
-        <header className="topbar"><div className="topbar-title"><button className="mobile-menu-button" aria-label="Ouvrir la navigation" onClick={() => setMobileNavOpen(true)}>☰</button><div><h1>{labels[active]}</h1><p>Mémoire canonique locale de Kitaba Solo</p></div></div><div className="top-actions">{campaigns.length > 1 && <select className="campaign-select" value={campaign?.id ?? ""} onChange={(e) => { setSelectedId(e.target.value); setSearchQuery(""); setActive("overview"); }}>{campaigns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>}{campaign && <input className="global-search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Rechercher dans ce que Sully connaît…" />}<div className={`sync-pill ${campaign && campaign.last_gm_export_revision !== campaign.current_revision ? "needs-export" : "synced"}`}>{campaign ? (campaign.last_gm_export_revision === campaign.current_revision ? `Révision ${campaign.current_revision} · contexte MJ exporté` : `Révision ${campaign.current_revision} · contexte MJ à exporter`) : "Aucune campagne"}</div></div></header>
+        <header className="topbar"><div className="topbar-title"><button className="mobile-menu-button" aria-label="Ouvrir la navigation" onClick={() => setMobileNavOpen(true)}>☰</button><div><h1>{labels[active]}</h1><p>Mémoire canonique locale de Kitaba Solo</p></div></div><div className="top-actions">{campaigns.length > 1 && <select className="campaign-select" value={campaign?.id ?? ""} onChange={(e) => { setSelectedId(e.target.value); setSearchQuery(""); setActive("overview"); }}>{campaigns.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>}{campaign && <input className="global-search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Rechercher dans les connaissances du personnage…" />}<div className={`sync-pill ${campaign && campaign.last_gm_export_revision !== campaign.current_revision ? "needs-export" : "synced"}`}>{campaign ? (campaign.last_gm_export_revision === campaign.current_revision ? `Révision ${campaign.current_revision} · contexte MJ exporté` : `Révision ${campaign.current_revision} · contexte MJ à exporter`) : "Aucune campagne"}</div></div></header>
         {searchQuery.trim() && campaign && <section className="panel search-panel"><div className="search-head"><h2>Résultats de recherche</h2><button className="ghost small" onClick={() => setSearchQuery("")}>Fermer</button></div><EntityList entities={searchResults} empty="Aucun résultat dans les connaissances visibles du joueur." /></section>}
-        {campaign?.death_pending && <section className="death-banner"><strong>Sully est mort dans la timeline active.</strong><span>{campaign.death_summary ?? "Mort confirmée par le MJ."} Le gameplay est verrouillé jusqu'au rollback vers un Rest Point autorisé.</span></section>}
-        {!campaign ? <><section className="panel empty-state"><h2>Créer la campagne de Sully</h2><p>Le Companion crée uniquement le conteneur de campagne. Il n'invente aucune statistique, relation, aptitude ou élément de lore.</p><div className="action-row"><button onClick={createSullyCampaign} disabled={busy}>Créer la campagne</button><button className="secondary" onClick={restoreBackup}>Restaurer un fichier .kitaba</button></div></section>{renderArchivedCampaigns()}</> : renderSection()}
+        {campaign?.death_pending && <section className="death-banner"><strong>Le personnage est mort dans la timeline active.</strong><span>{campaign.death_summary ?? "Mort confirmée par le MJ."} Le gameplay est verrouillé jusqu'au rollback vers un Rest Point autorisé.</span></section>}
+        {!campaign ? <><section className="panel empty-state"><h2>Nouvelle campagne Kitaba Solo</h2><p>Crée uniquement un conteneur canonique vierge. La création du personnage se fera ensuite avec le MJ avant toute narration.</p><label style={{display:"grid",gap:".45rem",maxWidth:"34rem",margin:"1rem auto"}}>Nom de campagne<input value={newCampaignName} onChange={(e) => setNewCampaignName(e.target.value)} placeholder="Ex. Kitaba Solo — Playtest" /></label><div className="action-row"><button onClick={createCampaign} disabled={busy || !newCampaignName.trim()}>Créer la campagne vierge</button><button className="secondary" onClick={restoreBackup}>Restaurer un fichier .kitaba</button></div></section>{renderArchivedCampaigns()}</> : renderSection()}
         <div className="global-status" aria-live="polite">{status}</div>
       </main>
     </div>

@@ -557,7 +557,11 @@ class KitabaEngine:
                     "Create checkpoint only after a sufficiently safe completed long rest validated by the GM.",
                     "Set death.occurred=true only for confirmed player death. After death, no further update is accepted until Companion rollback.",
                     "Store repeated dead-timeline material resolutions in dead_timeline_resolutions with stable fingerprints.",
-                    "Persist durable campaign-world changes, including off-screen changes unknown to the player, as entities. Keep unknown world truth in GM scope until legitimately revealed."
+                    "Persist durable campaign-world changes, including off-screen changes unknown to the player, as entities. Keep unknown world truth in GM scope until legitimately revealed.",
+                    "For a fresh campaign with no player_character, complete character creation and starting-world anchoring before the first narrated gameplay scene.",
+                    "Never assume the human player knows developer or world terminology. Introduce unfamiliar concepts diegetically and contextually when first encountered, even if the character would regard them as ordinary.",
+                    "The initial campaign update must persist the player_character, immediate known setting, relevant close relations and baseline knowledge actually possessed by the character before gameplay begins.",
+                    "Do not generate or import a character/PNJ portrait until the represented person's appearance has been canonically fixed; an illustration never creates canon by itself."
                 ]
             },
             "continuity_metadata": {
