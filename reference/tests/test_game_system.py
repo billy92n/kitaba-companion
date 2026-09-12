@@ -48,6 +48,28 @@ def test_progression_rewards_meaningful_learning_not_farming():
     assert learning_award("hard", "failure") == 2
 
 
+def test_baseline_learning_pace_is_visible_without_becoming_instant_mastery():
+    demanding = learning_award("demanding", "success")
+    severe = learning_award("severe", "success")
+    teacher_hard = learning_award("hard", "success", feedback="teacher")
+
+    assert mastery_tier(demanding * 9) == "Novice"
+    assert mastery_tier(demanding * 10) == "Apprenti"
+    assert mastery_tier(demanding * 30) == "Compétent"
+    assert mastery_tier(demanding * 75) == "Confirmé"
+
+    assert mastery_tier(severe * 11) == "Apprenti"
+    assert mastery_tier(severe * 12) == "Compétent"
+    assert mastery_tier(severe * 120) == "Maître"
+
+    assert mastery_tier(teacher_hard * 4) == "Novice"
+    assert mastery_tier(teacher_hard * 5) == "Apprenti"
+
+    repeated_same_problem = sum(learning_award("hard", "success", repetition_index=i) for i in range(8))
+    assert repeated_same_problem == 13
+    assert mastery_tier(repeated_same_problem) == "Novice"
+
+
 def test_resolution_baseline_is_playable_but_not_automatic():
     assert success_target("untrained", "routine") == 55
     assert success_target("competent", "standard") == 55
