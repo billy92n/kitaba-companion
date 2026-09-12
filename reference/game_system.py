@@ -21,6 +21,25 @@ MASTERY_MODIFIERS = {
     "maitre": 35,
 }
 
+MASTERY_LABELS = {
+    "novice": "Novice",
+    "apprenti": "Apprenti",
+    "competent": "Compétent",
+    "confirme": "Confirmé",
+    "expert": "Expert",
+    "maitre": "Maître",
+}
+
+# Descending thresholds keep lookup cheap while preserving nonlinear growth.
+MASTERY_THRESHOLDS = (
+    (1200, "maitre"),
+    (650, "expert"),
+    (300, "confirme"),
+    (120, "competent"),
+    (40, "apprenti"),
+    (0, "novice"),
+)
+
 DIFFICULTY_MODIFIERS = {
     "routine": 30,
     "easy": 15,
@@ -41,12 +60,14 @@ LEARNING_BASE = {
     "breakthrough": 14,
 }
 
+# Keys deliberately match resolve_roll where possible, so the reference engine
+# can pass outcomes through without accidental translation bugs.
 OUTCOME_MULTIPLIERS = {
     "success": 1.0,
-    "partial": 1.0,
+    "partial_success": 1.0,
     "instructive_failure": 0.8,
-    "uninstructive_failure": 0.25,
-    "exceptional": 1.15,
+    "failure": 0.25,
+    "exceptional_success": 1.15,
 }
 
 FEEDBACK_MULTIPLIERS = {
@@ -56,15 +77,6 @@ FEEDBACK_MULTIPLIERS = {
 }
 
 REPETITION_MULTIPLIERS = (1.0, 0.5, 0.25, 0.0)
-
-MASTERY_THRESHOLDS = (
-    (1200, "Maître"),
-    (650, "Expert"),
-    (300, "Confirmé"),
-    (120, "Compétent"),
-    (40, "Apprenti"),
-    (0, "Novice"),
-)
 
 
 @dataclass(frozen=True)
@@ -79,13 +91,37 @@ def clamp(value: int, low: int, high: int) -> int:
     return max(low, min(high, value))
 
 
-def mastery_tier(learning_points: int) -> str:
+def mastery_tier_key(learning_points: int) -> str:
     if learning_points < 0:
         raise ValueError("learning_points must be non-negative")
     for threshold, tier in MASTERY_THRESHOLDS:
         if learning_points >= threshold:
             return tier
     raise AssertionError("unreachable")
+
+
+def mastery_tier(learning_points: int) -> str:
+    return MASTERY_LABELS[mastery_tier_key(learning_points)]
+
+
+def mastery_progress_feeling(learning_points: int) -> str:
+    """Return a player-facing feeling without exposing raw hidden LP."""
+    key = mastery_tier_key(learning_points)
+    if key == "maitre":
+        return "maîtrise établie"
+
+    ascending = [(0, "novice"), (40, "apprenti"), (120, "competent"), (300, "confirme"), (650, "expert"), (1200, "maitre")]
+    index = next(i for i, (_, tier) in enumerate(ascending) if tier == key)
+    lower = ascending[index][0]
+    upper = ascending[index + 1][0]
+    ratio = (learning_points - lower) / (upper - lower)
+    if ratio < 0.25:
+        return "début de palier"
+    if ratio < 0.60:
+        return "en progression"
+    if ratio < 0.85:
+        return "bien établi"
+    return "proche d’un nouveau palier"
 
 
 def success_target(
