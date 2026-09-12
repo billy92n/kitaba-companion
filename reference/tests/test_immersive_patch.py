@@ -37,6 +37,7 @@ def test_exported_contract_carries_immersive_play_rules_in_both_engines():
     py = _read("reference/engine.py")
     phrases = [
         "Prefer frequent playable beats over long passive narration",
+        "When player input is brief or underspecified",
         "The player controls only the protagonist's attempted actions",
         "persist stable normalized map coordinates x/y in [0,1]",
         "Persist a stable textual visual_identity for important characters",
