@@ -9,35 +9,22 @@ It is **not** the game engine. ChatGPT remains the GM, narrator, resolver, and w
 
 ## Current repository status
 
-Version **0.1.4** uses the real React/Tauri/Rust source tree directly. The former Base64/materialization build path has been removed.
+Version **0.1.5** uses the real React/Tauri/Rust source tree directly and remains on SQLite schema v4, with no new database migration from 0.1.4.
 
-Implemented and covered by automated verification:
+Implemented and covered by automated verification include campaign revision/idempotency rules, player/GM separation, atomic updates, full/player context export, Rest Points and death rollback, checksum-protected `.kitaba` backups, campaign visual assets, integrity diagnostics, generic character creation, discovery-gated navigation, a zoomable/pannable/clickable world map driven by PLAYER entities, visual-continuity guidance, concise enrichment of terse player actions, and hidden resolution of genuinely uncertain actions.
 
-- campaign revisions and stale-update rejection
-- update idempotency
-- player/GM data separation
-- atomic update application
-- full/player context export
-- Rest Points distinct from technical backups
-- death rollback model preserving dead-timeline resolutions
-- checksum-protected technical `.kitaba` backups
-- campaign-scoped and full-backup restore protection
-- managed campaign visual assets
-- audit metadata and integrity diagnostics
-- generic fresh-campaign creation with an explicit pre-narration character-creation gate
-- self-describing onboarding rules requiring diegetic introduction of world terminology and canon-before-image discipline
-
-The production Windows pipeline runs the Python reference suite, reproducible frontend installation/build, Rust tests, Tauri packaging, PE GUI-subsystem verification, and artifact upload. A clean 0.1.4 release candidate passed every gate; distribution of `main` is conditioned on the latest `main` workflow passing the same gates.
+The 0.1.5 production Windows gate on `main` passed the Python reference suite (76 tests), reproducible frontend installation/build, Rust tests (7 tests), Tauri/NSIS packaging, PE GUI-subsystem verification, and artifact upload. See `docs/RELEASE_0.1.5.md` for the validated release metadata.
 
 ## Core invariants
 
 1. No real-time clock advances game time.
-2. Companion never resolves gameplay.
+2. Companion never resolves gameplay; ChatGPT does.
 3. GM secrets never enter player exports.
 4. Updates are atomic and revision-checked.
 5. Rest Points are gameplay checkpoints; technical backups are disaster recovery only.
 6. Death rollback restores the canonical checkpoint state while preserving dead-timeline records.
 7. A full `KITABA_CONTEXT` must be sufficient to continue the campaign in a new ChatGPT conversation.
+8. Existing campaign canon is not rewritten merely because the Companion or presentation rules are upgraded.
 
 ## Verification
 
@@ -63,3 +50,5 @@ npm run build
 ## Windows build
 
 The production stack is Tauri 2 + React + TypeScript + SQLite. `.github/workflows/build-windows.yml` builds the x64 Windows application and NSIS installer from the committed direct source and lockfiles.
+
+For a live 0.1.4 campaign, create a technical `.kitaba` backup before installing 0.1.5 over the existing installation. Do not recreate the campaign solely for this upgrade.
