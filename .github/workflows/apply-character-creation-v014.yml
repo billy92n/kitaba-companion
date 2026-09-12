@@ -4,7 +4,7 @@ on:
   push:
     branches: [character-creation-v014]
     paths:
-      - scripts/apply_character_creation_v014.py
+      - scripts/add_new_campaign_button_v014.py
       - .github/workflows/apply-character-creation-v014.yml
 
 permissions:
@@ -22,19 +22,13 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-      - name: Apply onboarding patch
-        run: python scripts/apply_character_creation_v014.py
-      - name: Refresh npm lock metadata
-        run: npm install --package-lock-only --ignore-scripts
-      - name: Refresh Cargo lock metadata
-        run: cargo update --manifest-path src-tauri/Cargo.toml -p kitaba-companion
-      - name: Keep permanent workflow unchanged on this branch
-        run: git checkout -- .github/workflows/build-windows.yml
+      - name: Apply new-campaign UX patch
+        run: python scripts/add_new_campaign_button_v014.py
       - name: Commit patched product
         shell: bash
         run: |
           git config user.name "kitaba-ci"
           git config user.email "kitaba-ci@users.noreply.github.com"
-          git add src src-tauri reference package.json package-lock.json README.md docs/STATUS.md CHANGELOG.md
-          git commit -m "Add fresh character creation onboarding (0.1.4)"
+          git add src reference CHANGELOG.md
+          git commit -m "Allow independent campaign creation from active campaign"
           git push origin character-creation-v014
