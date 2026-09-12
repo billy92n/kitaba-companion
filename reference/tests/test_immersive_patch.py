@@ -69,9 +69,14 @@ def test_atlas_supports_routes_regions_and_approximate_positions_without_schema_
 
 def test_visual_continuity_guidance_is_in_companion():
     app = _read("src/App.tsx")
+    rpg = _read("src/components/RpgViews.tsx")
     assert "Continuité visuelle" in app
     assert "Variantes = même personnage, nouvel état" in app
     assert "Scènes de groupe = références déjà établies" in app
+    assert "visualIdentitySummary" in rpg
+    assert "Référence visuelle stable" in rpg
+    assert "Référence visuelle" in rpg
+    assert "current_visual_state" in rpg
 
 
 def test_exported_contract_carries_immersive_play_rules_in_both_engines():
