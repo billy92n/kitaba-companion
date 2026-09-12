@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Apply patch
-        run: python scripts/apply_013_launch_hardening.py
+        run: python scripts/run_013_patch.py
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
