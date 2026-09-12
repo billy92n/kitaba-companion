@@ -1,6 +1,6 @@
 [package]
 name = "kitaba-companion"
-version = "0.1.5"
+version = "0.1.6"
 description = "Local canonical campaign memory for Kitaba Solo"
 authors = ["Kitaba Solo"]
 edition = "2021"
@@ -28,6 +28,3 @@ zip = { version = "2.2", default-features = false, features = ["deflate"] }
 
 [profile.release]
 strip = true
-lto = true
-codegen-units = 1
-panic = "abort"
