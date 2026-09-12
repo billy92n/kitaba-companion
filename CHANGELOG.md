@@ -9,6 +9,7 @@
 - Required the initialization update to persist the protagonist, immediate setting, relevant close relations and legitimate baseline knowledge before gameplay begins.
 - Added canon-before-image rules so portraits/scenes cannot invent undecided appearances.
 - Added regression tests preventing a return to a hard-coded Sully launch path.
+- Added a New campaign action even when another active campaign exists, so independent playthroughs no longer require archiving the current one first.
 
 ## 0.1.3 — campaign launch hardening
 

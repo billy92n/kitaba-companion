@@ -165,3 +165,10 @@ def test_frontend_has_no_sully_specific_runtime_copy():
     for text in forbidden:
         assert text not in app
 
+
+
+def test_existing_campaign_can_create_an_independent_new_campaign():
+    app = _read("src/App.tsx")
+    assert "async function createAnotherCampaign()" in app
+    assert ">Nouvelle campagne</button>" in app
+    assert "Nouvelle campagne vierge créée" in app
