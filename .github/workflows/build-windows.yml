@@ -5,15 +5,19 @@ on:
   push:
     branches: [main, source-cleanup-v2]
 
+concurrency:
+  group: build-windows-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -22,7 +26,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
@@ -57,7 +61,7 @@ jobs:
           if ($subsystem -ne 2) { throw "Release executable is not a Windows GUI application. PE subsystem=$subsystem" }
 
       - name: Upload Windows bundles
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: kitaba-companion-windows-0.1.2
           path: |
