@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.2 — hardened direct-source Windows build
+
+- Replaced the legacy Base64/materialization build path with the committed React/Tauri/Rust source tree.
+- Added reproducible npm and Rust lockfiles; production CI now uses `npm ci`.
+- Hardened campaign-scoped restore so database and campaign assets are swapped with rollback protection.
+- Hardened full-backup restore so database and all managed assets recover together if restoration fails.
+- Added production Rust restore regression coverage, including multi-campaign and asset preservation checks.
+- Updated the Windows CI pipeline to current official GitHub Actions runtimes, added per-branch concurrency/cancellation, and removed obsolete one-shot mutation workflows that generated misleading failures.
+- Windows CI verifies the executable Python reference suite, frontend production build, Rust tests, Tauri packaging, Windows GUI PE subsystem, and artifact upload.
+- Verified production artifact contains both `kitaba-companion.exe` and `Kitaba Companion_0.1.2_x64-setup.exe`.
+
 ## 0.1.0-foundation
 
 - Added SQLite schema and migration tracking.
@@ -45,7 +56,6 @@
 - Static TypeScript verification uncovered and fixed a real strict-mode build issue in recursive display helpers (`text` now has an explicit string return type).
 - Reference verification increased to 46 passing tests.
 
-
 ## 0.1.0-foundation — campaign safety pass
 
 - Added campaign archive/restore management and guarded permanent deletion.
@@ -56,7 +66,7 @@
 - Changed ChatGPT context export filenames to standard `.json` for maximum upload compatibility.
 - Reference verification suite increased to 52 passing tests.
 
-- Added production Rust unit tests for campaign/update round-trip, GM/player separation, duplicate update rejection, archive/restore integrity, and asset path containment. These tests are committed but remain unexecuted here until a Rust toolchain/Windows runner is available.
+- Added production Rust unit tests for campaign/update round-trip, GM/player separation, duplicate update rejection, archive/restore integrity, and asset path containment.
 - Added cross-layer parity tests to prevent drift between reference SQL migrations and production Rust migrations, protocol versions, frontend invoke names, Tauri command registration, Windows bundle configuration, and release workflow gates.
 - Corrected first-campaign onboarding so the user is explicitly directed to export the full MJ context to ChatGPT rather than only the player context.
 - Removed unreachable dead code in the reference engine manual-correction path.
