@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { EntityDocument } from "../lib/types";
 
 type Props = {
@@ -29,8 +29,31 @@ function markerLabel(entity: EntityDocument) {
   return stringField(entity.data, "name", "label", "known_name", "title") ?? (entity.entity_type === "current_location" ? "Position actuelle" : "Lieu connu");
 }
 
+function clampPanToWorld(next: Pan, zoom: number, viewport: HTMLDivElement | null, image: HTMLImageElement | null): Pan {
+  if (!viewport || zoom <= 1) return { x: 0, y: 0 };
+
+  const { width, height } = viewport.getBoundingClientRect();
+  if (width <= 0 || height <= 0) return next;
+
+  const naturalAspect = image?.naturalWidth && image?.naturalHeight
+    ? image.naturalWidth / image.naturalHeight
+    : 2;
+  const viewportAspect = width / height;
+
+  const fittedWidth = viewportAspect > naturalAspect ? height * naturalAspect : width;
+  const fittedHeight = viewportAspect > naturalAspect ? height : width / naturalAspect;
+  const maxX = Math.max(0, (fittedWidth * zoom - width) / 2);
+  const maxY = Math.max(0, (fittedHeight * zoom - height) / 2);
+
+  return {
+    x: Math.max(-maxX, Math.min(maxX, next.x)),
+    y: Math.max(-maxY, Math.min(maxY, next.y)),
+  };
+}
+
 export function InteractiveMap({ imageUrl, entities }: Props) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
   const dragRef = useRef<{ pointerId: number; startX: number; startY: number; origin: Pan } | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState<Pan>({ x: 0, y: 0 });
@@ -42,12 +65,34 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
     return x !== null && y !== null && x >= 0 && x <= 1 && y >= 0 && y <= 1;
   }), [entities]);
 
+  const currentLocation = useMemo(() => entities.find((entity) => entity.entity_type === "current_location") ?? null, [entities]);
+  const currentLinkedIds = useMemo(() => new Set([
+    stringField(currentLocation?.data ?? {}, "place_id"),
+    stringField(currentLocation?.data ?? {}, "settlement_id"),
+    stringField(currentLocation?.data ?? {}, "map_marker_id"),
+  ].filter((value): value is string => Boolean(value))), [currentLocation]);
+
   const selected = markers.find((marker) => marker.id === selectedId) ?? null;
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const reclamp = () => setPan((current) => clampPanToWorld(current, zoom, viewportRef.current, imageRef.current));
+    const observer = new ResizeObserver(reclamp);
+    observer.observe(viewport);
+    document.addEventListener("fullscreenchange", reclamp);
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("fullscreenchange", reclamp);
+    };
+  }, [zoom]);
 
   function setZoomSafe(next: number) {
     const value = Math.max(1, Math.min(6, Number(next.toFixed(2))));
     setZoom(value);
-    if (value === 1) setPan({ x: 0, y: 0 });
+    setPan((current) => clampPanToWorld(current, value, viewportRef.current, imageRef.current));
   }
 
   function reset() {
@@ -86,7 +131,11 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
       onPointerMove={(event) => {
         const drag = dragRef.current;
         if (!drag || drag.pointerId !== event.pointerId || zoom <= 1) return;
-        setPan({ x: drag.origin.x + event.clientX - drag.startX, y: drag.origin.y + event.clientY - drag.startY });
+        const next = {
+          x: drag.origin.x + event.clientX - drag.startX,
+          y: drag.origin.y + event.clientY - drag.startY,
+        };
+        setPan(clampPanToWorld(next, zoom, viewportRef.current, imageRef.current));
       }}
       onPointerUp={(event) => {
         if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
@@ -95,11 +144,17 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
       onPointerCancel={() => { dragRef.current = null; }}
     >
       <div className="interactive-map-stage" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
-        <img src={imageUrl} alt="Carte physique interactive de Kitaba" draggable={false} />
+        <img
+          ref={imageRef}
+          src={imageUrl}
+          alt="Carte physique interactive de Kitaba"
+          draggable={false}
+          onLoad={() => setPan((current) => clampPanToWorld(current, zoom, viewportRef.current, imageRef.current))}
+        />
         {markers.map((marker) => {
           const x = (numberField(marker.data, "x", "map_x") ?? 0) * 100;
           const y = (numberField(marker.data, "y", "map_y") ?? 0) * 100;
-          const current = marker.entity_type === "current_location" || marker.data.current === true;
+          const current = marker.entity_type === "current_location" || marker.data.current === true || currentLinkedIds.has(marker.id);
           const label = markerLabel(marker);
           return <button
             key={marker.id}
