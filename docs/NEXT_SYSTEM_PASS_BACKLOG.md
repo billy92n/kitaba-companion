@@ -34,17 +34,19 @@ Already carried by 0.1.5 contract and still under playtest:
 
 Next work:
 
-- [ ] Add explicit pacing profiles for exploration, dialogue, tension/combat and emotional scenes.
+- [x] Add explicit pacing profiles for exploration, dialogue, tension/combat and emotional scenes.
 - [ ] Define chapter/scene editorial capture for future readable story export without storing a verbatim chat transcript as canon.
 
 ## P1 — visual continuity
 
-- [ ] Stable visual identity record linked to each important PC/NPC/place.
-- [ ] Reference-image binding from media assets to campaign entities.
-- [ ] State variants for the same character: normal, wounded, sick, exhausted, ceremonial, heroic, deceased where appropriate.
-- [ ] Multi-character scene reference set so known characters remain visually consistent in group illustrations.
-- [ ] Campaign-level art-direction profile for consistent fantasy-anime/isekai visual language without copying a specific copyrighted production.
-- [ ] Illustration priority policy for home, starting settlement, close relations and major locations/scenes.
+- [x] Define a stable `visual_identity` record linked to each important PC/NPC/place without requiring a schema migration.
+- [x] Define a no-schema reference-image binding model using existing generic entities/assets.
+- [x] Define state variants for the same character: normal, wounded, sick, exhausted, ceremonial, heroic, deceased where appropriate.
+- [x] Define multi-character scene reference sets so known characters remain visually consistent in group illustrations.
+- [x] Define a campaign-level art-direction profile for consistent fantasy-anime/isekai visual language without copying a specific copyrighted production.
+- [x] Define an illustration priority policy for home, starting settlement, close relations and major locations/scenes.
+- [ ] Implement Companion UI for binding imported local assets to visual identities.
+- [ ] Show primary visual references/variants directly on linked character and place views.
 
 ## P1 — living atlas
 
@@ -56,9 +58,10 @@ Next work:
 - [x] Multi-scale detail: less-important labels/markers appear only as the player zooms in.
 - [x] Nearby markers automatically cluster and split when zooming in.
 - [x] Player/MJ layer separation remains enforced by the existing PLAYER/GM entity boundary.
-- [ ] Geography-placement contract: biome, climate, rivers, terrain, economy and known demographics constrain new settlements before coordinates are persisted.
-- [ ] Region/state/route polygon or path layers in addition to point markers.
-- [ ] Formal discovery states: known-by-name, approximately located, precisely located and visited.
+- [x] Geography-placement contract: biome, climate, rivers, terrain, economy and known demographics constrain new settlements before coordinates are persisted.
+- [x] Region/state polygons and route paths supported as scalable map overlays in addition to point markers.
+- [x] Formal discovery states defined: unknown location, approximate location, exact location, rumor/known/visited/current.
+- [ ] Add optional approximate-area rendering rather than a dashed point when the known position is genuinely broad.
 
 ## P1 — MVP presentation
 
