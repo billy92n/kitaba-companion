@@ -63,6 +63,13 @@ Next work:
 - [x] Formal discovery states defined: unknown location, approximate location, exact location, rumor/known/visited/current.
 - [ ] Add optional approximate-area rendering rather than a dashed point when the known position is genuinely broad.
 
+## P1 — adaptive ambience
+
+- [x] Define stable scene-level `music_state` categories and transition semantics.
+- [x] Add executable anti-churn transition logic so ambience does not change every message.
+- [x] Allow immediate transition for real scene changes or large tonal jumps while requiring confirmation for small fluctuations.
+- [ ] Connect the state contract to a real playback path after validating the available ChatGPT/Companion integration surface.
+
 ## P1 — MVP presentation
 
 - [x] Define a presentation scope and 10–15 minute demonstration flow.
@@ -77,12 +84,6 @@ Next work:
 - [ ] Travel model: distance, terrain, weather, pace, fatigue, camp, food/water and meaningful encounter frequency.
 - [ ] Equipment/crafting: quality, durability, repair, materials and encumbrance without inventory micromanagement overload.
 - [ ] Relationship/reputation evolution: local memory, rumor spread, favors, debts, fear, trust and conflicting dimensions.
-
-## P2 — adaptive ambience
-
-- [ ] Scene-level `music_state` contract with stable ambience categories and transition rules.
-- [ ] Do not switch music on every message; transition only on meaningful scene-tone changes.
-- [ ] Evaluate delivery path: ChatGPT-compatible music integration where available versus a future Companion-native player.
 
 ## P2 — final story/book
 
