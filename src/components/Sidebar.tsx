@@ -40,7 +40,9 @@ function text(data: Record<string, unknown>, ...keys: string[]) {
 export function Sidebar({ campaign, entities, active, onNavigate, portraitUrl, mobileOpen = false, onCloseMobile }: Props) {
   const pcEntity = entities.find((e) => e.entity_type === "player_character");
   const pc = pcEntity?.data ?? {};
-  const firstName = text(pc, "first_name", "prenom", "name") ?? (campaign ? "Sully" : "—");
+  const firstName = text(pc, "first_name", "prenom", "name");
+  const displayName = firstName ?? (campaign ? "Personnage à créer" : "—");
+  const portraitInitial = firstName ? firstName.slice(0, 1).toUpperCase() : "?";
   const species = text(pc, "species", "espece");
   const age = text(pc, "age");
   const rank = text(pc, "official_rank", "rank") ?? "—";
@@ -52,9 +54,9 @@ export function Sidebar({ campaign, entities, active, onNavigate, portraitUrl, m
   return (
     <aside className={`sidebar ${mobileOpen ? "mobile-open" : ""}`} aria-label="Navigation de campagne">
       <div className="brand">KITABA</div>
-      {portraitUrl ? <img className="portrait-image" src={portraitUrl} alt={`Portrait de ${firstName}`} /> : <div className="portrait-placeholder">{firstName.slice(0, 1).toUpperCase()}</div>}
+      {portraitUrl ? <img className="portrait-image" src={portraitUrl} alt={firstName ? `Portrait de ${firstName}` : "Portrait du personnage"} /> : <div className="portrait-placeholder">{portraitInitial}</div>}
       <div className="identity">
-        <strong>{firstName}</strong>
+        <strong>{displayName}</strong>
         <span>{species !== null || age !== null ? `${species ?? "Espèce non renseignée"}${age !== null ? ` • ${age} ans` : ""}` : "Personnage non initialisé"}</span>
       </div>
       <div className="sidebar-stat"><span>Rang</span><strong>{rank}</strong></div>
