@@ -21,8 +21,22 @@ def test_interactive_map_is_zoomable_pannable_and_clickable():
 def test_map_remains_player_knowledge_gated():
     component = _read("src/components/InteractiveMap.tsx")
     sidebar = _read("src/components/Sidebar.tsx")
-    assert "La carte révèle uniquement les lieux présents dans le canon joueur" in component
+    assert "La carte reste verrouillée sur les limites du monde" in component
+    assert "révèle uniquement les lieux présents dans le canon joueur" in component
     assert 'map: ["place", "map_marker", "map", "current_location", "settlement", "state", "region", "route", "dungeon"]' in sidebar
+
+
+def test_interactive_map_clamps_pan_and_prevents_black_borders():
+    component = _read("src/components/InteractiveMap.tsx")
+    assert "measureWorld" in component
+    assert "minimumZoom" in component
+    assert "clampPanToWorld" in component
+    assert "Math.max(-maxX, Math.min(maxX, next.x))" in component
+    assert "Math.max(-maxY, Math.min(maxY, next.y))" in component
+    assert "ResizeObserver" in component
+    assert 'document.addEventListener("fullscreenchange", synchronizeGeometry)' in component
+    assert "geometry.offsetX + normalizedX * geometry.fittedWidth" in component
+    assert "geometry.offsetY + normalizedY * geometry.fittedHeight" in component
 
 
 def test_visual_continuity_guidance_is_in_companion():
