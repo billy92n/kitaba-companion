@@ -1,9 +1,9 @@
-name: Build Windows
+name: Build Windows Direct Source
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [source-cleanup-v2]
 
 jobs:
   build-windows:
@@ -43,10 +43,22 @@ jobs:
       - name: Build Tauri Windows installer
         run: npm run tauri build
 
+      - name: Verify Windows GUI subsystem
+        shell: pwsh
+        run: |
+          $exe = 'src-tauri/target/release/kitaba-companion.exe'
+          if (-not (Test-Path $exe)) { throw 'Release executable missing.' }
+          $bytes = [IO.File]::ReadAllBytes($exe)
+          $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+          if ([Text.Encoding]::ASCII.GetString($bytes, $peOffset, 4) -ne "PE`0`0") { throw 'Invalid PE signature.' }
+          $optionalHeaderOffset = $peOffset + 24
+          $subsystem = [BitConverter]::ToUInt16($bytes, $optionalHeaderOffset + 68)
+          if ($subsystem -ne 2) { throw "Release executable is not a Windows GUI application. PE subsystem=$subsystem" }
+
       - name: Upload Windows bundles
         uses: actions/upload-artifact@v4
         with:
-          name: kitaba-companion-windows
+          name: kitaba-companion-windows-direct-source
           path: |
             src-tauri/target/release/bundle/nsis/*.exe
             src-tauri/target/release/kitaba-companion.exe
