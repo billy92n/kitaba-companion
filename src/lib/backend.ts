@@ -11,6 +11,7 @@ import type {
   RestPointSummary,
   RollbackResult,
   UpdatePreview,
+  VisualAssetBinding,
 } from "./types";
 
 export const backend = {
@@ -35,6 +36,25 @@ export const backend = {
     invoke<AssetSummary>("import_campaign_asset", { campaignId, kind, inputPath }),
   readAssetDataUrl: (campaignId: string, assetId: string) =>
     invoke<string>("read_asset_data_url", { campaignId, assetId }),
+  listVisualAssetBindings: (campaignId: string) =>
+    invoke<VisualAssetBinding[]>("list_visual_asset_bindings", { campaignId }),
+  bindVisualAsset: (
+    campaignId: string,
+    assetId: string,
+    subjectEntityId: string,
+    role: string,
+    visualState = "normal",
+    caption?: string,
+  ) => invoke<VisualAssetBinding>("bind_visual_asset", {
+    campaignId,
+    assetId,
+    subjectEntityId,
+    role,
+    visualState,
+    caption: caption ?? null,
+  }),
+  unbindVisualAsset: (campaignId: string, assetId: string) =>
+    invoke<void>("unbind_visual_asset", { campaignId, assetId }),
   manualPatchEntity: (campaignId: string, entityId: string, patch: Record<string, unknown>, expectedEntityVersion: number, reason: string, visibility: "PLAYER" | "GM", overrideImmutable = false) =>
     invoke<ManualCorrectionResult>("manual_patch_entity", { campaignId, entityId, patch, expectedEntityVersion, reason, visibility, overrideImmutable }),
   listRestPoints: (campaignId: string) =>
