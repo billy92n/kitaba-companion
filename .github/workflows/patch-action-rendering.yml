@@ -1,0 +1,57 @@
+name: Patch concise action rendering
+
+on:
+  push:
+    branches: [immersive-patch-v015]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: immersive-patch-v015
+          fetch-depth: 0
+      - name: Add concise player-intent rendering rule
+        shell: python
+        run: |
+          from pathlib import Path
+
+          paths = [Path('src-tauri/src/db.rs'), Path('reference/engine.py')]
+          anchor = '"Prefer frequent playable beats over long passive narration: use a few salient sensory details, then return control to the player; action and dialogue beats should be especially concise."'
+          rule = '"When player input is brief or underspecified, treat it as intent and render the protagonist\'s execution with a few concrete physical, sensory and emotional details consistent with established personality and current state. Do not require micromanagement; never invent a materially different choice, strategic commitment, consent, hidden knowledge or fixed inner decision. Keep the embellishment concise and return control quickly."'
+          for path in paths:
+              text = path.read_text(encoding='utf-8')
+              if rule in text:
+                  continue
+              pos = text.find(anchor)
+              if pos < 0:
+                  raise SystemExit(f'anchor not found in {path}')
+              end = pos + len(anchor)
+              text = text[:end] + ',\n                ' + rule + text[end:]
+              path.write_text(text, encoding='utf-8')
+      - name: Extend regression test
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('reference/tests/test_immersive_patch.py')
+          text = path.read_text(encoding='utf-8')
+          old = '        "Prefer frequent playable beats over long passive narration",\n'
+          new = old + '        "When player input is brief or underspecified",\n'
+          if 'When player input is brief or underspecified' not in text:
+              if old not in text:
+                  raise SystemExit('test anchor missing')
+              text = text.replace(old, new, 1)
+              path.write_text(text, encoding='utf-8')
+      - name: Commit rule
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src-tauri/src/db.rs reference/engine.py reference/tests/test_immersive_patch.py
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Render terse player actions concisely and evocatively"
+          git push origin immersive-patch-v015
