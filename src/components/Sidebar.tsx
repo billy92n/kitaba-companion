@@ -39,7 +39,7 @@ const discoveryTypes: Partial<Record<SectionKey, string[]>> = {
   magic: ["magic", "spell", "affinity", "invocation", "contract", "enchantment", "known_aptitude"],
   missions: ["mission", "quest"],
   world: ["faction", "organization", "settlement", "state", "market", "economy_state", "conflict", "world_event", "environment_state", "resource_state", "infrastructure", "law", "political_state"],
-  map: ["place", "map_marker", "map", "current_location"],
+  map: ["place", "map_marker", "map", "current_location", "settlement", "state", "region", "route", "dungeon"],
   timeline: ["timeline_event", "historical_event"],
   adventurer_card: ["adventurer_card", "evaluation", "certification"],
 };
