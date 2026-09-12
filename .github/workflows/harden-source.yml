@@ -1,0 +1,41 @@
+name: Harden Direct Source
+
+on:
+  push:
+    branches: [source-cleanup-v2]
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    if: ${{ !contains(github.event.head_commit.message, '[source-hardened]') }}
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply source hardening
+        run: python scripts/harden_source.py
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate package lock
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Commit hardened source
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src-tauri/src/db.rs src-tauri/src/lib.rs package-lock.json
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "[source-hardened] Own restore path and lock dependencies"
+            git push origin source-cleanup-v2
+          }
