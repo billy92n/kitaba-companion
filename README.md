@@ -27,7 +27,7 @@ Implemented and covered by automated verification:
 - generic fresh-campaign creation with an explicit pre-narration character-creation gate
 - self-describing onboarding rules requiring diegetic introduction of world terminology and canon-before-image discipline
 
-The production Windows pipeline now runs the Python reference suite, reproducible frontend installation/build, Rust tests, Tauri packaging, PE GUI-subsystem verification, and artifact upload. The 0.1.4 Windows build must pass the same gates before release.
+The production Windows pipeline runs the Python reference suite, reproducible frontend installation/build, Rust tests, Tauri packaging, PE GUI-subsystem verification, and artifact upload. A clean 0.1.4 release candidate passed every gate; distribution of `main` is conditioned on the latest `main` workflow passing the same gates.
 
 ## Core invariants
 
