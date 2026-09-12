@@ -7,6 +7,17 @@ type Props = {
 };
 
 type Pan = { x: number; y: number };
+type WorldGeometry = {
+  viewportWidth: number;
+  viewportHeight: number;
+  fittedWidth: number;
+  fittedHeight: number;
+  offsetX: number;
+  offsetY: number;
+  minimumZoom: number;
+};
+
+const MAX_ZOOM = 6;
 
 function numberField(data: Record<string, unknown>, ...keys: string[]) {
   for (const key of keys) {
@@ -29,11 +40,11 @@ function markerLabel(entity: EntityDocument) {
   return stringField(entity.data, "name", "label", "known_name", "title") ?? (entity.entity_type === "current_location" ? "Position actuelle" : "Lieu connu");
 }
 
-function clampPanToWorld(next: Pan, zoom: number, viewport: HTMLDivElement | null, image: HTMLImageElement | null): Pan {
-  if (!viewport || zoom <= 1) return { x: 0, y: 0 };
+function measureWorld(viewport: HTMLDivElement | null, image: HTMLImageElement | null): WorldGeometry | null {
+  if (!viewport) return null;
 
   const { width, height } = viewport.getBoundingClientRect();
-  if (width <= 0 || height <= 0) return next;
+  if (width <= 0 || height <= 0) return null;
 
   const naturalAspect = image?.naturalWidth && image?.naturalHeight
     ? image.naturalWidth / image.naturalHeight
@@ -42,8 +53,27 @@ function clampPanToWorld(next: Pan, zoom: number, viewport: HTMLDivElement | nul
 
   const fittedWidth = viewportAspect > naturalAspect ? height * naturalAspect : width;
   const fittedHeight = viewportAspect > naturalAspect ? height : width / naturalAspect;
-  const maxX = Math.max(0, (fittedWidth * zoom - width) / 2);
-  const maxY = Math.max(0, (fittedHeight * zoom - height) / 2);
+  const offsetX = (width - fittedWidth) / 2;
+  const offsetY = (height - fittedHeight) / 2;
+  const minimumZoom = Math.max(1, width / fittedWidth, height / fittedHeight);
+
+  return {
+    viewportWidth: width,
+    viewportHeight: height,
+    fittedWidth,
+    fittedHeight,
+    offsetX,
+    offsetY,
+    minimumZoom,
+  };
+}
+
+function clampPanToWorld(next: Pan, zoom: number, geometry: WorldGeometry | null): Pan {
+  if (!geometry) return next;
+
+  const effectiveZoom = Math.max(zoom, geometry.minimumZoom);
+  const maxX = Math.max(0, (geometry.fittedWidth * effectiveZoom - geometry.viewportWidth) / 2);
+  const maxY = Math.max(0, (geometry.fittedHeight * effectiveZoom - geometry.viewportHeight) / 2);
 
   return {
     x: Math.max(-maxX, Math.min(maxX, next.x)),
@@ -57,6 +87,7 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
   const dragRef = useRef<{ pointerId: number; startX: number; startY: number; origin: Pan } | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState<Pan>({ x: 0, y: 0 });
+  const [geometry, setGeometry] = useState<WorldGeometry | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const markers = useMemo(() => entities.filter((entity) => {
@@ -74,29 +105,45 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
 
   const selected = markers.find((marker) => marker.id === selectedId) ?? null;
 
+  function synchronizeGeometry() {
+    const nextGeometry = measureWorld(viewportRef.current, imageRef.current);
+    if (!nextGeometry) return;
+
+    setGeometry(nextGeometry);
+    setZoom((currentZoom) => {
+      const nextZoom = Math.max(nextGeometry.minimumZoom, Math.min(MAX_ZOOM, currentZoom));
+      setPan((currentPan) => clampPanToWorld(currentPan, nextZoom, nextGeometry));
+      return nextZoom;
+    });
+  }
+
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
 
-    const reclamp = () => setPan((current) => clampPanToWorld(current, zoom, viewportRef.current, imageRef.current));
-    const observer = new ResizeObserver(reclamp);
+    const observer = new ResizeObserver(synchronizeGeometry);
     observer.observe(viewport);
-    document.addEventListener("fullscreenchange", reclamp);
+    document.addEventListener("fullscreenchange", synchronizeGeometry);
+    synchronizeGeometry();
 
     return () => {
       observer.disconnect();
-      document.removeEventListener("fullscreenchange", reclamp);
+      document.removeEventListener("fullscreenchange", synchronizeGeometry);
     };
-  }, [zoom]);
+  }, []);
 
   function setZoomSafe(next: number) {
-    const value = Math.max(1, Math.min(6, Number(next.toFixed(2))));
+    const latestGeometry = measureWorld(viewportRef.current, imageRef.current) ?? geometry;
+    const minimumZoom = latestGeometry?.minimumZoom ?? 1;
+    const value = Math.max(minimumZoom, Math.min(MAX_ZOOM, Number(next.toFixed(2))));
     setZoom(value);
-    setPan((current) => clampPanToWorld(current, value, viewportRef.current, imageRef.current));
+    setPan((current) => clampPanToWorld(current, value, latestGeometry));
   }
 
   function reset() {
-    setZoom(1);
+    const latestGeometry = measureWorld(viewportRef.current, imageRef.current) ?? geometry;
+    const minimumZoom = latestGeometry?.minimumZoom ?? 1;
+    setZoom(minimumZoom);
     setPan({ x: 0, y: 0 });
     setSelectedId(null);
   }
@@ -105,13 +152,15 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
     await viewportRef.current?.requestFullscreen();
   }
 
+  const minimumZoom = geometry?.minimumZoom ?? 1;
+
   return <div className="interactive-map-shell">
     <div className="interactive-map-toolbar">
       <div><strong>Carte interactive</strong><span>{markers.length} lieu(x) positionné(s)</span></div>
       <div className="map-controls">
-        <button className="ghost small" onClick={() => setZoomSafe(zoom - .25)} disabled={zoom <= 1}>−</button>
+        <button className="ghost small" onClick={() => setZoomSafe(zoom - .25)} disabled={zoom <= minimumZoom + .001}>−</button>
         <button className="ghost small" onClick={reset}>{Math.round(zoom * 100)} %</button>
-        <button className="ghost small" onClick={() => setZoomSafe(zoom + .25)} disabled={zoom >= 6}>+</button>
+        <button className="ghost small" onClick={() => setZoomSafe(zoom + .25)} disabled={zoom >= MAX_ZOOM}>+</button>
         <button className="secondary small" onClick={() => fullscreen().catch(() => undefined)}>Plein écran</button>
       </div>
     </div>
@@ -130,12 +179,12 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
       }}
       onPointerMove={(event) => {
         const drag = dragRef.current;
-        if (!drag || drag.pointerId !== event.pointerId || zoom <= 1) return;
+        if (!drag || drag.pointerId !== event.pointerId || zoom <= minimumZoom) return;
         const next = {
           x: drag.origin.x + event.clientX - drag.startX,
           y: drag.origin.y + event.clientY - drag.startY,
         };
-        setPan(clampPanToWorld(next, zoom, viewportRef.current, imageRef.current));
+        setPan(clampPanToWorld(next, zoom, geometry));
       }}
       onPointerUp={(event) => {
         if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
@@ -149,17 +198,20 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
           src={imageUrl}
           alt="Carte physique interactive de Kitaba"
           draggable={false}
-          onLoad={() => setPan((current) => clampPanToWorld(current, zoom, viewportRef.current, imageRef.current))}
+          onLoad={synchronizeGeometry}
         />
         {markers.map((marker) => {
-          const x = (numberField(marker.data, "x", "map_x") ?? 0) * 100;
-          const y = (numberField(marker.data, "y", "map_y") ?? 0) * 100;
+          const normalizedX = numberField(marker.data, "x", "map_x") ?? 0;
+          const normalizedY = numberField(marker.data, "y", "map_y") ?? 0;
           const current = marker.entity_type === "current_location" || marker.data.current === true || currentLinkedIds.has(marker.id);
           const label = markerLabel(marker);
+          const markerStyle = geometry
+            ? { left: `${geometry.offsetX + normalizedX * geometry.fittedWidth}px`, top: `${geometry.offsetY + normalizedY * geometry.fittedHeight}px` }
+            : { left: `${normalizedX * 100}%`, top: `${normalizedY * 100}%` };
           return <button
             key={marker.id}
             className={`interactive-map-marker ${current ? "current" : ""} ${selectedId === marker.id ? "selected" : ""}`}
-            style={{ left: `${x}%`, top: `${y}%` }}
+            style={markerStyle}
             onClick={(event) => { event.stopPropagation(); setSelectedId(marker.id); }}
             title={label}
             aria-label={`Ouvrir ${label}`}
@@ -181,6 +233,6 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
         {stringField(selected.data, "status", "known_status") && <div><dt>Statut connu</dt><dd>{stringField(selected.data, "status", "known_status")}</dd></div>}
       </dl>
       <button className="ghost small" onClick={() => setSelectedId(null)}>Fermer</button>
-    </article> : <p className="interactive-map-hint">Molette : zoom · cliquer-glisser : déplacer · cliquer sur un lieu : ouvrir sa fiche. La carte révèle uniquement les lieux présents dans le canon joueur.</p>}
+    </article> : <p className="interactive-map-hint">Molette : zoom · cliquer-glisser : déplacer · cliquer sur un lieu : ouvrir sa fiche. La carte reste verrouillée sur les limites du monde et révèle uniquement les lieux présents dans le canon joueur.</p>}
   </div>;
 }
