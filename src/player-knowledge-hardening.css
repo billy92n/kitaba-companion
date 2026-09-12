@@ -14,3 +14,13 @@
 .hero-panel .hero-stats {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* During R0 character creation, only the canonical world map may be imported.
+ * Portraits/illustrations wait until the represented appearance/content exists
+ * in player-visible canon after the initialization update.
+ */
+main:has(.onboarding-panel) .asset-panel .asset-actions button:nth-child(1),
+main:has(.onboarding-panel) .asset-panel .asset-actions button:nth-child(3),
+main:has(.onboarding-panel) .asset-panel .asset-actions button:nth-child(4) {
+  display: none;
+}
