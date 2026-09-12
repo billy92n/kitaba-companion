@@ -24,7 +24,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Bump npm version and lockfile
         run: npm version 0.1.2 --no-git-tag-version
-      - name: Bump Tauri and Rust versions and release workflow
+      - name: Bump Tauri and Rust versions
         shell: pwsh
         run: |
           $cargoPath = 'src-tauri/Cargo.toml'
@@ -36,12 +36,6 @@ jobs:
           $tauri = Get-Content $tauriPath -Raw
           if (-not $tauri.Contains('"version": "0.1.1"')) { throw 'Tauri version 0.1.1 not found' }
           Set-Content -Path $tauriPath -Value ($tauri.Replace('"version": "0.1.1"', '"version": "0.1.2"')) -NoNewline
-
-          $workflowPath = '.github/workflows/build-windows.yml'
-          $workflow = Get-Content $workflowPath -Raw
-          $workflow = $workflow.Replace('branches: [source-cleanup-v2]', 'branches: [main, source-cleanup-v2]')
-          $workflow = $workflow.Replace('name: kitaba-companion-windows-direct-source', 'name: kitaba-companion-windows-0.1.2')
-          Set-Content -Path $workflowPath -Value $workflow -NoNewline
       - name: Refresh Cargo.lock
         run: cargo generate-lockfile --manifest-path src-tauri/Cargo.toml
       - name: Commit release preparation
@@ -49,7 +43,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.conf.json .github/workflows/build-windows.yml
+          git add package.json package-lock.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.conf.json
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
             git commit -m "[release-0.1.2] Prepare hardened direct-source build"
