@@ -5,6 +5,7 @@ from reference.world_systems import (
     estimate_travel,
     quote_price,
     relative_affordability,
+    route_distance_km,
 )
 
 
@@ -32,6 +33,14 @@ def test_monster_and_dungeon_trade_uses_locked_guild_channel():
     assert quote_price("common_tool", origin="ordinary").legal_channel == "ordinary_market"
     assert quote_price("common_tool", origin="monster").legal_channel == "guild_network"
     assert quote_price("common_tool", origin="dungeon").legal_channel == "guild_network"
+
+
+def test_route_distance_is_explicit_and_never_derived_from_map_coordinates():
+    assert route_distance_km({"distance_km": 42.5, "x": .1, "y": .9}) == 42.5
+    with pytest.raises(ValueError, match="explicit numeric distance_km"):
+        route_distance_km({"x": .1, "y": .9, "path": [[.1, .9], [.8, .2]]})
+    with pytest.raises(ValueError):
+        route_distance_km({"distance_km": -1})
 
 
 def test_travel_pace_is_terrain_weather_and_mode_sensitive():
