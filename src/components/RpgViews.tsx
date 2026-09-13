@@ -1,4 +1,5 @@
 import type { EntityDocument } from "../lib/types";
+import { VisualReferenceGallery } from "./VisualReferenceGallery";
 
 function text(value: unknown, fallback = "—"): string {
   if (value === null || value === undefined || value === "") return fallback;
@@ -27,8 +28,14 @@ function visualIdentitySummary(value: unknown): string {
   return parts.join(" · ");
 }
 
+function currentVisualState(data: Record<string, unknown>) {
+  const value = data.current_visual_state ?? data.visual_state;
+  return typeof value === "string" ? value : null;
+}
+
 export function CharacterView({ entities }: { entities: EntityDocument[] }) {
-  const pc = entities.find((e) => e.entity_type === "player_character")?.data ?? {};
+  const pcEntity = entities.find((e) => e.entity_type === "player_character");
+  const pc = pcEntity?.data ?? {};
   const awakening = entities.find((e) => e.entity_type === "awakening")?.data;
   const characteristics = entities.filter((e) => e.entity_type === "characteristic");
   const specialized = entities.filter((e) => e.entity_type === "specialized_stat");
@@ -45,6 +52,7 @@ export function CharacterView({ entities }: { entities: EntityDocument[] }) {
     <section className="panel character-identity">
       <div className="eyebrow">Identité</div>
       <h2>{text(pc.first_name ?? pc.name, "Personnage")}</h2>
+      {pcEntity && <VisualReferenceGallery subjectEntityId={pcEntity.id} currentState={currentVisualState(pc)} limit={3} />}
       <div className="identity-grid">
         <div><span>Espèce</span><strong>{text(pc.species)}</strong></div>
         <div><span>Âge</span><strong>{text(pc.age)}</strong></div>
@@ -139,7 +147,7 @@ export function RelationsView({ entities }: { entities: EntityDocument[] }) {
     <section className="panel full-span"><h2>Personnes connues</h2>{npcs.length === 0 ? <div className="empty-inline">Personne enregistrée.</div> : <div className="npc-grid">{npcs.map((e) => {
       const visualIdentity = visualIdentitySummary(e.data.visual_identity);
       const visualState = text(e.data.visual_state ?? e.data.current_visual_state, "");
-      return <article className="npc-card" key={e.id}><div className="npc-avatar">{labelFromData(e.data, "?").slice(0,1).toUpperCase()}</div><div><strong>{labelFromData(e.data, "Personne inconnue")}</strong><span>{[text(e.data.species, ""), text(e.data.profession, "")].filter(Boolean).join(" · ")}</span><p>{text(e.data.player_impression ?? e.data.known_information ?? e.data.description, "Aucune impression particulière.")}</p>{visualIdentity && <p className="visual-identity-summary"><b>Référence visuelle</b><span>{visualIdentity}{visualState ? ` · État : ${visualState}` : ""}</span></p>}</div></article>;
+      return <article className="npc-card" key={e.id}><div className="npc-avatar">{labelFromData(e.data, "?").slice(0,1).toUpperCase()}</div><div><strong>{labelFromData(e.data, "Personne inconnue")}</strong><span>{[text(e.data.species, ""), text(e.data.profession, "")].filter(Boolean).join(" · ")}</span><p>{text(e.data.player_impression ?? e.data.known_information ?? e.data.description, "Aucune impression particulière.")}</p>{visualIdentity && <p className="visual-identity-summary"><b>Référence visuelle</b><span>{visualIdentity}{visualState ? ` · État : ${visualState}` : ""}</span></p>}</div><VisualReferenceGallery subjectEntityId={e.id} currentState={currentVisualState(e.data)} compact limit={3} /></article>;
     })}</div>}</section>
     <section className="panel"><h2>Relations perçues</h2><CompactEntities entities={relations} empty="Aucune relation explicitement perçue." /></section>
     <section className="panel"><h2>Réputation</h2><CompactEntities entities={reps} empty="Aucune réputation enregistrée." /></section>
