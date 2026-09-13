@@ -76,7 +76,7 @@ function selectBindings(bindings: VisualAssetBinding[], subjectEntityId: string,
       if (binding.role !== "state_variant") return true;
       return Boolean(currentState) && normalize(binding.state) === currentState;
     })
-    .sort((a, b) => bindingPriority(a, currentState) - bindingPriority(b, currentState) || a.updated_at.localeCompare(b.updated_at))
+    .sort((a, b) => bindingPriority(a, currentState) - bindingPriority(b, currentState) || b.updated_at.localeCompare(a.updated_at))
     .slice(0, limit);
 }
 
@@ -91,8 +91,16 @@ export function VisualReferenceGallery({ subjectEntityId, currentState, compact 
       bindingRequest = null;
       setRefreshToken((value) => value + 1);
     };
+    const refreshOnCampaignChange = (event: Event) => {
+      const target = event.target;
+      if (target instanceof HTMLSelectElement && target.classList.contains("campaign-select")) refresh();
+    };
     window.addEventListener(VISUAL_BINDINGS_CHANGED_EVENT, refresh);
-    return () => window.removeEventListener(VISUAL_BINDINGS_CHANGED_EVENT, refresh);
+    document.addEventListener("change", refreshOnCampaignChange);
+    return () => {
+      window.removeEventListener(VISUAL_BINDINGS_CHANGED_EVENT, refresh);
+      document.removeEventListener("change", refreshOnCampaignChange);
+    };
   }, []);
 
   useEffect(() => {
