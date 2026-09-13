@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { backend } from "../lib/backend";
+import { fieldLabelFr, valueFr } from "../lib/frenchUi";
 import type { VisualAssetBinding } from "../lib/types";
 import "../visual-reference-gallery.css";
 
@@ -62,11 +63,11 @@ function bindingPriority(binding: VisualAssetBinding, currentState: string) {
 
 function roleLabel(binding: VisualAssetBinding) {
   if (binding.role === "primary_reference") return "Référence principale";
-  if (binding.role === "state_variant") return binding.state && binding.state !== "normal" ? `État · ${binding.state}` : "Variante d'état";
+  if (binding.role === "state_variant") return binding.state && binding.state !== "normal" ? `État · ${valueFr(binding.state)}` : "Variante d'état";
   if (binding.role === "place_reference") return "Référence du lieu";
   if (binding.role === "scene_reference") return "Scène liée";
   if (binding.role === "historical_reference") return "Référence historique";
-  return binding.role.replaceAll("_", " ");
+  return fieldLabelFr(binding.role);
 }
 
 function selectBindings(bindings: VisualAssetBinding[], subjectEntityId: string, currentState: string, limit: number) {
