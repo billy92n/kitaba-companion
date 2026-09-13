@@ -10,39 +10,39 @@ type Props = {
   onCloseMobile?: () => void;
 };
 
-const nav: Array<[SectionKey, string]> = [
-  ["overview", "Vue d'ensemble"],
-  ["character", "Personnage"],
-  ["skills", "Compétences"],
-  ["magic", "Magie"],
-  ["inventory", "Inventaire"],
-  ["relations", "Relations"],
-  ["journal", "Journal"],
-  ["missions", "Missions"],
-  ["knowledge", "Connaissances"],
-  ["world", "Monde"],
-  ["media", "Médiathèque"],
-  ["map", "Carte"],
-  ["timeline", "Chronologie"],
-  ["adventurer_card", "Carte d'aventurier"],
-  ["checkpoints", "Checkpoints"],
-  ["sync", "Synchronisation"],
+type NavItem = [SectionKey, string, "play" | "memory" | "manage"];
+
+const nav: NavItem[] = [
+  ["overview", "Accueil", "play"],
+  ["character", "Personnage", "play"],
+  ["inventory", "Inventaire", "play"],
+  ["skills", "Compétences", "play"],
+  ["magic", "Magie", "play"],
+  ["relations", "Relations", "memory"],
+  ["journal", "Journal", "memory"],
+  ["missions", "Missions", "memory"],
+  ["map", "Carte", "memory"],
+  ["media", "Portraits & images", "manage"],
+  ["sync", "Mettre à jour la partie", "manage"],
 ];
 
-const preCreationNav: Array<[SectionKey, string]> = [
-  ["overview", "Vue d'ensemble"],
-  ["sync", "Synchronisation"],
+const preCreationNav: NavItem[] = [
+  ["overview", "Accueil", "play"],
+  ["sync", "Mettre à jour la partie", "manage"],
 ];
 
 const discoveryTypes: Partial<Record<SectionKey, string[]>> = {
   skills: ["skill", "mastery", "characteristic", "specialized_stat"],
   magic: ["magic", "spell", "affinity", "invocation", "contract", "enchantment", "known_aptitude"],
   missions: ["mission", "quest"],
-  world: ["faction", "organization", "settlement", "state", "market", "economy_state", "conflict", "world_event", "environment_state", "resource_state", "infrastructure", "law", "political_state"],
   map: ["place", "map_marker", "map", "current_location", "settlement", "state", "region", "route", "dungeon"],
-  timeline: ["timeline_event", "historical_event"],
-  adventurer_card: ["adventurer_card", "evaluation", "certification"],
 };
+
+const groupLabels = {
+  play: "Jouer",
+  memory: "Mémoire",
+  manage: "Gestion",
+} as const;
 
 function text(data: Record<string, unknown>, ...keys: string[]) {
   for (const key of keys) {
@@ -70,9 +70,12 @@ export function Sidebar({ campaign, entities, active, onNavigate, portraitUrl, m
     const required = discoveryTypes[key];
     if (!required) return true;
     if (key === "magic" && (manaCurrent !== null || manaMax !== null)) return true;
-    if (key === "adventurer_card" && rank !== null) return true;
     return required.some((type) => entityTypes.has(type));
   }) : preCreationNav;
+
+  const groups = (["play", "memory", "manage"] as const)
+    .map((group) => ({ group, items: navigation.filter(([, , itemGroup]) => itemGroup === group) }))
+    .filter(({ items }) => items.length > 0);
 
   return (
     <aside className={`sidebar ${mobileOpen ? "mobile-open" : ""}`} aria-label="Navigation de campagne">
@@ -88,11 +91,14 @@ export function Sidebar({ campaign, entities, active, onNavigate, portraitUrl, m
       <div className="sidebar-stat"><span>Révision</span><strong>{campaign?.current_revision ?? "—"}</strong></div>
       <div className="sidebar-stat"><span>Temps en jeu</span><strong>{campaign?.game_time ?? "—"}</strong></div>
       <nav>
-        {navigation.map(([key, label]) => (
-          <button key={key} className={`nav-item ${active === key ? "active" : ""}`} onClick={() => { onNavigate(key); onCloseMobile?.(); }}>
-            {label}
-          </button>
-        ))}
+        {groups.map(({ group, items }) => <div className="nav-group" key={group}>
+          <div className="nav-group-title">{groupLabels[group]}</div>
+          {items.map(([key, label]) => (
+            <button key={key} className={`nav-item ${active === key ? "active" : ""}`} onClick={() => { onNavigate(key); onCloseMobile?.(); }}>
+              {label}
+            </button>
+          ))}
+        </div>)}
       </nav>
       {pcEntity && <button className={`gm-entry ${active === "gm_vault" ? "active" : ""}`} onClick={() => { onNavigate("gm_vault"); onCloseMobile?.(); }}>Coffre MJ</button>}
     </aside>
