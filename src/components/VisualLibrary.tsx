@@ -18,7 +18,7 @@ type Props = {
 };
 
 const ROLE_OPTIONS = [
-  ["primary_reference", "Référence principale"],
+  ["primary_reference", "Portrait / référence principale"],
   ["state_variant", "Variante d’état"],
   ["scene_reference", "Scène / souvenir"],
   ["place_reference", "Référence de lieu"],
@@ -52,7 +52,7 @@ function subjectLabel(entity: EntityDocument) {
 function assetLabel(asset: AssetSummary) {
   const labels: Record<string, string> = {
     player_portrait: "Portrait du personnage",
-    npc_portrait: "Portrait PNJ",
+    npc_portrait: "Portrait de PNJ",
     other_image: "Illustration",
     world_map: "Carte du monde",
   };
@@ -114,7 +114,7 @@ export function VisualLibrary({ campaignId, entities, assets, previewUrl, previe
       setBindings((current) => [...current.filter((binding) => binding.asset_id !== result.asset_id), result]);
       setBindingAssetId(null);
       notifyVisualBindingsChanged(campaignId);
-      onStatus("Référence visuelle associée. Elle sera conservée dans les sauvegardes .kitaba sans modifier le canon narratif.");
+      onStatus("Image associée. Cette référence sera conservée dans les sauvegardes .kitaba sans modifier le canon narratif.");
     } catch (error) {
       onStatus(`Association visuelle impossible : ${String(error)}`);
     } finally {
@@ -129,7 +129,7 @@ export function VisualLibrary({ campaignId, entities, assets, previewUrl, previe
       setBindings((current) => current.filter((binding) => binding.asset_id !== assetId));
       if (bindingAssetId === assetId) setBindingAssetId(null);
       notifyVisualBindingsChanged(campaignId);
-      onStatus("Association visuelle retirée. L’image reste dans la médiathèque.");
+      onStatus("Association retirée. L’image reste conservée dans la campagne.");
     } catch (error) {
       onStatus(`Impossible de retirer l’association : ${String(error)}`);
     } finally {
@@ -139,32 +139,32 @@ export function VisualLibrary({ campaignId, entities, assets, previewUrl, previe
 
   return <div className="media-stack">
     <section className="panel visual-continuity">
-      <div className="eyebrow">Continuité visuelle</div>
-      <h2>Références de campagne</h2>
-      <p>Une image peut être reliée à un personnage ou à un lieu connu. La référence principale fixe son identité visuelle ; les variantes conservent cette identité et ne changent que l’état justifié par l’histoire.</p>
-      <div className="visual-rule-grid"><span><b>1.</b> Identité textuelle canonique</span><span><b>2.</b> Référence visuelle associée</span><span><b>3.</b> Variantes = même identité</span><span><b>4.</b> Scènes de groupe = références réutilisées</span></div>
+      <div className="eyebrow">Portraits & images</div>
+      <h2>Références visuelles de la campagne</h2>
+      <p>Les portraits principaux des personnes se gèrent directement dans <b>Relations</b>. Cet écran sert surtout à retrouver les images, gérer des variantes d’état et relier des illustrations ou des lieux.</p>
+      <div className="visual-rule-grid"><span><b>Portrait</b> Identité stable</span><span><b>Variante</b> Même personne, nouvel état</span><span><b>Scène</b> Illustration d’un moment</span><span><b>Lieu</b> Référence d’un endroit connu</span></div>
     </section>
 
     <section className="panel">
-      <div className="visual-library-head"><div><h2>Médiathèque de campagne</h2><p className="muted">Les associations restent locales, sont incluses dans les sauvegardes techniques et ne peuvent cibler que des entités visibles du joueur.</p></div><div className="action-row"><button className="secondary" onClick={() => onImport("npc_portrait")}>Ajouter portrait PNJ</button><button className="secondary" onClick={() => onImport("other_image")}>Ajouter illustration</button><button className="ghost" onClick={() => onImport("player_portrait")}>Portrait du personnage</button></div></div>
+      <div className="visual-library-head"><div><h2>Images de la campagne</h2><p className="muted">Les images sont conservées localement et incluses dans les sauvegardes. Les associations ne ciblent que des éléments déjà visibles du joueur.</p></div><div className="action-row"><button className="secondary" onClick={() => onImport("npc_portrait")}>Importer un portrait</button><button className="secondary" onClick={() => onImport("other_image")}>Importer une illustration</button><button className="ghost" onClick={() => onImport("player_portrait")}>Portrait du personnage</button></div></div>
 
       {bindableAssets.length === 0 ? <div className="empty-inline">Aucun portrait ou illustration importé.</div> : <div className="visual-asset-grid">{bindableAssets.map((asset) => {
         const binding = bindingsByAsset.get(asset.id);
         const subject = binding ? subjectsById.get(binding.subject_entity_id) : null;
         return <article className={`visual-asset-card ${binding ? "bound" : ""}`} key={asset.id}>
           <div><strong>{assetLabel(asset)}</strong><span>{new Date(asset.created_at).toLocaleString("fr-FR")}</span></div>
-          {binding ? <div className="visual-binding-summary"><b>{subject ? subjectLabel(subject) : "Sujet indisponible"}</b><span>{roleLabel(binding.role)} · {valueFr(binding.state)}</span>{binding.caption && <small>{binding.caption}</small>}</div> : <div className="visual-unbound">Non associée — l’image n’a pas encore d’identité persistante.</div>}
-          <div className="action-row"><button className="ghost small" onClick={() => onPreview(asset)}>{previewAssetId === asset.id ? "Actualiser" : "Voir"}</button><button className="secondary small" disabled={subjects.length === 0 || busy} onClick={() => startBinding(asset)}>{binding ? "Modifier l’association" : "Associer à…"}</button>{binding && <button className="ghost small" disabled={busy} onClick={() => removeBinding(asset.id)}>Dissocier</button>}</div>
+          {binding ? <div className="visual-binding-summary"><b>{subject ? subjectLabel(subject) : "Sujet indisponible"}</b><span>{roleLabel(binding.role)} · {valueFr(binding.state)}</span>{binding.caption && <small>{binding.caption}</small>}</div> : <div className="visual-unbound">Non associée — cette image n’est encore liée à personne ni à aucun lieu.</div>}
+          <div className="action-row"><button className="ghost small" onClick={() => onPreview(asset)}>{previewAssetId === asset.id ? "Actualiser" : "Voir"}</button><button className="secondary small" disabled={subjects.length === 0 || busy} onClick={() => startBinding(asset)}>{binding ? "Modifier" : "Associer"}</button>{binding && <button className="ghost small" disabled={busy} onClick={() => removeBinding(asset.id)}>Dissocier</button>}</div>
         </article>;
       })}</div>}
 
       {bindingAssetId && <div className="visual-binding-editor">
         <div><div className="eyebrow">Association visuelle</div><h3>{assetLabel(assets.find((asset) => asset.id === bindingAssetId) ?? { kind: "other_image" } as AssetSummary)}</h3></div>
-        <label>Sujet connu<select value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>{subjects.map((entity) => <option value={entity.id} key={entity.id}>{subjectLabel(entity)}</option>)}</select></label>
-        <label>Rôle<select value={role} onChange={(event) => setRole(event.target.value)}>{ROLE_OPTIONS.map(([key, label]) => <option value={key} key={key}>{label}</option>)}</select></label>
-        <label>État visuel<input value={visualState} onChange={(event) => setVisualState(event.target.value)} placeholder="normal, blessé, malade…" maxLength={80} /></label>
-        <label className="visual-binding-caption">Légende / précision<input value={caption} onChange={(event) => setCaption(event.target.value)} placeholder="Ex. tenue habituelle, après le combat…" maxLength={240} /></label>
-        <div className="action-row"><button onClick={saveBinding} disabled={busy || !subjectId}>Enregistrer la référence</button><button className="ghost" onClick={() => setBindingAssetId(null)} disabled={busy}>Annuler</button></div>
+        <label>À qui / à quoi appartient cette image ?<select value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>{subjects.map((entity) => <option value={entity.id} key={entity.id}>{subjectLabel(entity)}</option>)}</select></label>
+        <label>Usage de l’image<select value={role} onChange={(event) => setRole(event.target.value)}>{ROLE_OPTIONS.map(([key, label]) => <option value={key} key={key}>{label}</option>)}</select></label>
+        <label>État représenté<input value={visualState} onChange={(event) => setVisualState(event.target.value)} placeholder="normal, blessé, malade…" maxLength={80} /></label>
+        <label className="visual-binding-caption">Note facultative<input value={caption} onChange={(event) => setCaption(event.target.value)} placeholder="Ex. tenue habituelle, après le combat…" maxLength={240} /></label>
+        <div className="action-row"><button onClick={saveBinding} disabled={busy || !subjectId}>Enregistrer</button><button className="ghost" onClick={() => setBindingAssetId(null)} disabled={busy}>Annuler</button></div>
       </div>}
 
       {previewUrl && <div className="media-preview"><img src={previewUrl} alt="Prévisualisation du visuel sélectionné" /></div>}
