@@ -125,8 +125,6 @@ def test_world_state_remains_supported_without_duplicate_world_navigation():
     rust = _read("src-tauri/src/db.rs")
     py = _read("reference/engine.py")
 
-    # World data remains fully supported by the persistence contract, but the player no
-    # longer has a competing generic "Monde" destination next to Carte/Encyclopédie.
     assert '["world", "Monde"' not in sidebar
     assert '["knowledge", "Connaissances"' not in sidebar
     assert 'world: ["faction", "organization", "settlement"' in app
@@ -135,6 +133,38 @@ def test_world_state_remains_supported_without_duplicate_world_navigation():
     assert 'label: "Monde & histoire"' in encyclopedia
     assert '"world": ["faction", "organization", "settlement"' in rust
     assert '"world": ["faction", "organization", "settlement"' in py
+
+
+def test_primary_navigation_uses_player_task_hubs_instead_of_technical_subsections():
+    sidebar = _read("src/components/Sidebar.tsx")
+    rpg = _read("src/components/RpgViews.tsx")
+    encyclopedia_dock = _read("src/components/EncyclopediaDock.tsx")
+
+    for row in [
+        '["overview", "Accueil", "play"]',
+        '["character", "Personnage", "play"]',
+        '["relations", "Relations", "memory"]',
+        '["journal", "Journal & quêtes", "memory"]',
+        '["map", "Carte", "memory"]',
+        '["media", "Portraits & images", "manage"]',
+        '["sync", "Mettre à jour la partie", "manage"]',
+    ]:
+        assert row in sidebar
+
+    for obsolete_primary in [
+        '["inventory", "Inventaire"',
+        '["skills", "Compétences"',
+        '["magic", "Magie"',
+        '["missions", "Missions"',
+    ]:
+        assert obsolete_primary not in sidebar
+
+    assert 'className="encyclopedia-nav-slot"' in sidebar
+    assert 'querySelector<HTMLElement>(".encyclopedia-nav-slot")' in encyclopedia_dock
+    assert 'type CharacterTab = "profile" | "inventory" | "skills" | "magic" | "card"' in rpg
+    assert 'type JournalTab = "journal" | "missions" | "timeline"' in rpg
+    assert 'aria-label="Rubriques du personnage"' in rpg
+    assert 'aria-label="Journal et quêtes"' in rpg
 
 
 def test_fresh_campaign_ui_is_generic_and_requires_character_creation_before_play():
