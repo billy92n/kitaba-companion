@@ -17,6 +17,7 @@ def test_character_and_reference_images_open_in_global_lightbox():
     assert ".sidebar > .portrait-image" in component
     assert ".visual-reference-card img" in component
     assert ".media-preview img" in component
+    assert ".npc-avatar-image" in component
     assert "createPortal" in component
     assert 'event.key === "Escape"' in component
     assert 'event.key !== "Enter" && event.key !== " "' in component
