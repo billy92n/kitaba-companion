@@ -16,12 +16,8 @@ type NavItem = [SectionKey, string, "play" | "memory" | "manage"];
 const nav: NavItem[] = [
   ["overview", "Accueil", "play"],
   ["character", "Personnage", "play"],
-  ["inventory", "Inventaire", "play"],
-  ["skills", "Compétences", "play"],
-  ["magic", "Magie", "play"],
   ["relations", "Relations", "memory"],
-  ["journal", "Journal", "memory"],
-  ["missions", "Missions", "memory"],
+  ["journal", "Journal & quêtes", "memory"],
   ["map", "Carte", "memory"],
   ["media", "Portraits & images", "manage"],
   ["sync", "Mettre à jour la partie", "manage"],
@@ -33,9 +29,6 @@ const preCreationNav: NavItem[] = [
 ];
 
 const discoveryTypes: Partial<Record<SectionKey, string[]>> = {
-  skills: ["skill", "mastery", "characteristic", "specialized_stat"],
-  magic: ["magic", "spell", "affinity", "invocation", "contract", "enchantment", "known_aptitude"],
-  missions: ["mission", "quest"],
   map: ["place", "map_marker", "map", "current_location", "settlement", "state", "region", "route", "dungeon"],
 };
 
@@ -70,7 +63,6 @@ export function Sidebar({ campaign, entities, active, onNavigate, portraitUrl, m
   const navigation = pcEntity ? nav.filter(([key]) => {
     const required = discoveryTypes[key];
     if (!required) return true;
-    if (key === "magic" && (manaCurrent !== null || manaMax !== null)) return true;
     return required.some((type) => entityTypes.has(type));
   }) : preCreationNav;
 
@@ -99,6 +91,7 @@ export function Sidebar({ campaign, entities, active, onNavigate, portraitUrl, m
               {label}
             </button>
           ))}
+          {group === "memory" && <div className="encyclopedia-nav-slot" />}
         </div>)}
       </nav>
       {pcEntity && <button className={`gm-entry ${active === "gm_vault" ? "active" : ""}`} onClick={() => { onNavigate("gm_vault"); onCloseMobile?.(); }}>Coffre MJ</button>}
