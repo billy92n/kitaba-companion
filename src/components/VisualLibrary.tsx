@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { AssetSummary, EntityDocument, VisualAssetBinding } from "../lib/types";
 import { backend } from "../lib/backend";
+import { fieldLabelFr, valueFr } from "../lib/frenchUi";
 import "../visual-library-mvp.css";
 
 type VisualKind = "world_map" | "player_portrait" | "npc_portrait" | "other_image";
@@ -45,7 +46,7 @@ function subjectLabel(entity: EntityDocument) {
     region: "Région",
     state: "État",
   };
-  return `${kind[entity.entity_type] ?? entity.entity_type} · ${name}`;
+  return `${kind[entity.entity_type] ?? fieldLabelFr(entity.entity_type)} · ${name}`;
 }
 
 function assetLabel(asset: AssetSummary) {
@@ -55,11 +56,11 @@ function assetLabel(asset: AssetSummary) {
     other_image: "Illustration",
     world_map: "Carte du monde",
   };
-  return labels[asset.kind] ?? asset.kind.replaceAll("_", " ");
+  return labels[asset.kind] ?? fieldLabelFr(asset.kind);
 }
 
 function roleLabel(role: string) {
-  return ROLE_OPTIONS.find(([key]) => key === role)?.[1] ?? role;
+  return ROLE_OPTIONS.find(([key]) => key === role)?.[1] ?? fieldLabelFr(role);
 }
 
 function notifyVisualBindingsChanged(campaignId: string) {
@@ -140,7 +141,7 @@ export function VisualLibrary({ campaignId, entities, assets, previewUrl, previe
     <section className="panel visual-continuity">
       <div className="eyebrow">Continuité visuelle</div>
       <h2>Références de campagne</h2>
-      <p>Une image peut maintenant être reliée à un personnage ou à un lieu connu. La référence principale fixe son identité visuelle ; les variantes conservent cette identité et ne changent que l’état justifié par l’histoire.</p>
+      <p>Une image peut être reliée à un personnage ou à un lieu connu. La référence principale fixe son identité visuelle ; les variantes conservent cette identité et ne changent que l’état justifié par l’histoire.</p>
       <div className="visual-rule-grid"><span><b>1.</b> Identité textuelle canonique</span><span><b>2.</b> Référence visuelle associée</span><span><b>3.</b> Variantes = même identité</span><span><b>4.</b> Scènes de groupe = références réutilisées</span></div>
     </section>
 
@@ -152,7 +153,7 @@ export function VisualLibrary({ campaignId, entities, assets, previewUrl, previe
         const subject = binding ? subjectsById.get(binding.subject_entity_id) : null;
         return <article className={`visual-asset-card ${binding ? "bound" : ""}`} key={asset.id}>
           <div><strong>{assetLabel(asset)}</strong><span>{new Date(asset.created_at).toLocaleString("fr-FR")}</span></div>
-          {binding ? <div className="visual-binding-summary"><b>{subject ? subjectLabel(subject) : "Sujet indisponible"}</b><span>{roleLabel(binding.role)} · {binding.state}</span>{binding.caption && <small>{binding.caption}</small>}</div> : <div className="visual-unbound">Non associée — l’image n’a pas encore d’identité persistante.</div>}
+          {binding ? <div className="visual-binding-summary"><b>{subject ? subjectLabel(subject) : "Sujet indisponible"}</b><span>{roleLabel(binding.role)} · {valueFr(binding.state)}</span>{binding.caption && <small>{binding.caption}</small>}</div> : <div className="visual-unbound">Non associée — l’image n’a pas encore d’identité persistante.</div>}
           <div className="action-row"><button className="ghost small" onClick={() => onPreview(asset)}>{previewAssetId === asset.id ? "Actualiser" : "Voir"}</button><button className="secondary small" disabled={subjects.length === 0 || busy} onClick={() => startBinding(asset)}>{binding ? "Modifier l’association" : "Associer à…"}</button>{binding && <button className="ghost small" disabled={busy} onClick={() => removeBinding(asset.id)}>Dissocier</button>}</div>
         </article>;
       })}</div>}
@@ -161,7 +162,7 @@ export function VisualLibrary({ campaignId, entities, assets, previewUrl, previe
         <div><div className="eyebrow">Association visuelle</div><h3>{assetLabel(assets.find((asset) => asset.id === bindingAssetId) ?? { kind: "other_image" } as AssetSummary)}</h3></div>
         <label>Sujet connu<select value={subjectId} onChange={(event) => setSubjectId(event.target.value)}>{subjects.map((entity) => <option value={entity.id} key={entity.id}>{subjectLabel(entity)}</option>)}</select></label>
         <label>Rôle<select value={role} onChange={(event) => setRole(event.target.value)}>{ROLE_OPTIONS.map(([key, label]) => <option value={key} key={key}>{label}</option>)}</select></label>
-        <label>État visuel<input value={visualState} onChange={(event) => setVisualState(event.target.value)} placeholder="normal, wounded, sick…" maxLength={80} /></label>
+        <label>État visuel<input value={visualState} onChange={(event) => setVisualState(event.target.value)} placeholder="normal, blessé, malade…" maxLength={80} /></label>
         <label className="visual-binding-caption">Légende / précision<input value={caption} onChange={(event) => setCaption(event.target.value)} placeholder="Ex. tenue habituelle, après le combat…" maxLength={240} /></label>
         <div className="action-row"><button onClick={saveBinding} disabled={busy || !subjectId}>Enregistrer la référence</button><button className="ghost" onClick={() => setBindingAssetId(null)} disabled={busy}>Annuler</button></div>
       </div>}
