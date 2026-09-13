@@ -9,11 +9,19 @@ def _read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
-def test_fixed_visual_slots_center_crop_without_distortion():
+def test_image_slots_preserve_expected_aspect_behavior():
     main = _read("src/main.tsx")
     css = _read("src/image-fit-hardening.css")
     assert 'import "./image-fit-hardening.css"' in main
-    assert ".portrait-image" in css
+    # Sidebar portrait must show the complete source image, reduced without square stretching/cropping.
+    assert ".sidebar > .portrait-image" in css
+    sidebar_rule = css.split(".sidebar > .portrait-image", 1)[1].split("}", 1)[0]
+    assert "width: 78px" in sidebar_rule
+    assert "height: auto" in sidebar_rule
+    assert "object-fit: contain" in sidebar_rule
+    assert "object-fit: cover" not in sidebar_rule
+    # Fixed visual cards may use centered crop; large previews/maps keep the whole source.
+    assert ".portrait-frame > .portrait-image" in css
     assert "object-fit: cover" in css
     assert "object-position: 50% 50%" in css
     assert ".visual-reference-card img" in css
