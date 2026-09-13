@@ -7,8 +7,9 @@ currencies remain open in the stable world canon.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from math import ceil, floor
+from math import ceil, floor, isfinite
 
 
 # Internal purchasing-value anchors. A region may later express these in its own
@@ -117,6 +118,22 @@ def relative_affordability(item_value: int, daily_income: int) -> float:
     if daily_income <= 0:
         raise ValueError("daily_income must be positive")
     return item_value / daily_income
+
+
+def route_distance_km(route: Mapping[str, object]) -> float:
+    """Read the explicit fictional route distance used by travel calculations.
+
+    Map x/y coordinates are presentation coordinates only and are intentionally
+    ignored here. A route without a persisted distance must remain uncalibrated
+    rather than silently converting screen geometry into kilometres.
+    """
+    value = route.get("distance_km")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError("route requires an explicit numeric distance_km")
+    distance = float(value)
+    if not isfinite(distance) or distance < 0:
+        raise ValueError("distance_km must be finite and non-negative")
+    return distance
 
 
 def estimate_travel(
