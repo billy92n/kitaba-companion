@@ -229,7 +229,7 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
   const selected = markers.find((marker) => marker.entity.id === selectedId)?.entity ?? null;
   const filteredMarkers = useMemo(() => markers.filter((marker) => layers[marker.layer] && visibleAtZoom(marker, zoom)), [markers, layers, zoom]);
   const clusters = useMemo(() => clusterMarkers(filteredMarkers, zoom), [filteredMarkers, zoom]);
-  const uncertaintyMarkers = useMemo(() => markers.filter((marker) => layers[marker.layer] && isApproximate(marker.entity)), [markers, layers]);
+  const uncertaintyMarkers = useMemo(() => markers.filter((marker) => layers[marker.layer] && visibleAtZoom(marker, zoom) && isApproximate(marker.entity)), [markers, layers, zoom]);
 
   const searchResults = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("fr");
