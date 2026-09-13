@@ -12,19 +12,19 @@ def _read(path: str) -> str:
 def test_image_slots_preserve_expected_aspect_behavior():
     main = _read("src/main.tsx")
     css = _read("src/image-fit-hardening.css")
+    sidebar = _read("src/components/Sidebar.tsx")
     assert 'import "./image-fit-hardening.css"' in main
     # Sidebar portrait must show the complete source image, reduced without square stretching/cropping.
+    assert 'className="portrait-frame"' not in sidebar
     assert ".sidebar > .portrait-image" in css
     sidebar_rule = css.split(".sidebar > .portrait-image", 1)[1].split("}", 1)[0]
     assert "width: 78px" in sidebar_rule
     assert "height: auto" in sidebar_rule
     assert "object-fit: contain" in sidebar_rule
     assert "object-fit: cover" not in sidebar_rule
-    # Fixed visual cards may use centered crop; large previews/maps keep the whole source.
-    assert ".portrait-frame > .portrait-image" in css
-    assert "object-fit: cover" in css
-    assert "object-position: 50% 50%" in css
+    # Fixed reference cards may still crop consistently; large previews/maps keep their source ratio.
     assert ".visual-reference-card img" in css
+    assert "object-position: 50% 50%" in css
     assert ".media-preview img" in css
     assert "object-fit: contain" in css
     assert ".interactive-map-stage > img" in css
@@ -70,7 +70,7 @@ def test_map_drag_relies_on_clamping_even_at_cover_minimum_zoom():
     component = _read("src/components/InteractiveMap.tsx")
     assert 'if (!drag || drag.pointerId !== event.pointerId) return;' in component
     assert 'if (!drag || drag.pointerId !== event.pointerId || zoom <= minimumZoom) return;' not in component
-    assert "clampPanToWorld(next, zoom, geometry)" in component
+    assert "clampPanToWorld(next, zoomRef.current, geometryRef.current)" in component
 
 
 def test_016_keeps_015_persistence_schema_and_backup_contract():
