@@ -1,11 +1,10 @@
 import type { EntityDocument } from "../lib/types";
+import { valueFr } from "../lib/frenchUi";
 
 function text(value: unknown, fallback = "—"): string {
   if (value === null || value === undefined || value === "") return fallback;
-  if (typeof value === "boolean") return value ? "Oui" : "Non";
-  if (Array.isArray(value)) return value.map((v) => text(v, "")).filter(Boolean).join(", ") || fallback;
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
+  const localized = valueFr(value);
+  return localized === "—" ? fallback : localized;
 }
 
 function label(data: Record<string, unknown>, fallback: string) {
