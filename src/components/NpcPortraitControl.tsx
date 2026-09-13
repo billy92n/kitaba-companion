@@ -9,6 +9,7 @@ const VISUAL_BINDINGS_CHANGED_EVENT = "kitaba-visual-bindings-changed";
 type Props = {
   subjectEntityId: string;
   name: string;
+  currentState?: string | null;
 };
 
 type Candidate = {
@@ -23,13 +24,29 @@ async function resolveCampaignId(): Promise<string | null> {
   return campaigns[0]?.id ?? null;
 }
 
-function latestPrimary(bindings: VisualAssetBinding[], subjectEntityId: string) {
-  return bindings
-    .filter((row) => row.subject_entity_id === subjectEntityId && row.role === "primary_reference")
+function normalize(value: string | null | undefined) {
+  return (value ?? "").trim().toLocaleLowerCase("fr");
+}
+
+function displayedPortrait(bindings: VisualAssetBinding[], subjectEntityId: string, currentState?: string | null) {
+  const subject = bindings.filter((row) => row.subject_entity_id === subjectEntityId);
+  const normalizedState = normalize(currentState);
+  if (normalizedState && normalizedState !== "normal") {
+    const matchingVariant = subject
+      .filter((row) => row.role === "state_variant" && normalize(row.state) === normalizedState)
+      .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
+    if (matchingVariant) return matchingVariant;
+  }
+  return subject
+    .filter((row) => row.role === "primary_reference")
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0];
 }
 
-export function NpcPortraitControl({ subjectEntityId, name }: Props) {
+function hasPrimaryPortrait(bindings: VisualAssetBinding[], subjectEntityId: string) {
+  return bindings.some((row) => row.subject_entity_id === subjectEntityId && row.role === "primary_reference");
+}
+
+export function NpcPortraitControl({ subjectEntityId, name, currentState }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [hasPortrait, setHasPortrait] = useState(false);
@@ -44,20 +61,18 @@ export function NpcPortraitControl({ subjectEntityId, name }: Props) {
       return;
     }
     const bindings = await backend.listVisualAssetBindings(campaignId);
-    const binding = latestPrimary(bindings, subjectEntityId);
+    setHasPortrait(hasPrimaryPortrait(bindings, subjectEntityId));
+    const binding = displayedPortrait(bindings, subjectEntityId, currentState);
     if (!binding) {
       setUrl(null);
-      setHasPortrait(false);
       return;
     }
     try {
       setUrl(await backend.readAssetDataUrl(campaignId, binding.asset_id));
-      setHasPortrait(true);
     } catch {
       setUrl(null);
-      setHasPortrait(false);
     }
-  }, [subjectEntityId]);
+  }, [subjectEntityId, currentState]);
 
   useEffect(() => {
     reload().catch(() => undefined);
@@ -152,9 +167,11 @@ export function NpcPortraitControl({ subjectEntityId, name }: Props) {
     }
   }
 
+  const stateLabel = currentState && normalize(currentState) !== "normal" ? ` · ${currentState}` : "";
+
   return <div className="npc-portrait-control">
     {url
-      ? <img className="npc-avatar-image" src={url} alt={`Portrait de ${name}`} />
+      ? <img className="npc-avatar-image" src={url} alt={`Portrait de ${name}${stateLabel}`} />
       : <div className="npc-avatar" aria-label={`Aucun portrait pour ${name}`}>{name.slice(0, 1).toUpperCase()}</div>}
     <button className="ghost small npc-portrait-action" onClick={choosePortrait} disabled={busy}>
       {hasPortrait ? "Changer" : "Ajouter un portrait"}
