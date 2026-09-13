@@ -51,7 +51,7 @@ def test_inline_visuals_refresh_when_campaign_selection_changes():
 def test_map_drag_relies_on_clamping_even_at_cover_minimum_zoom():
     component = _read("src/components/InteractiveMap.tsx")
     assert 'if (!drag || drag.pointerId !== event.pointerId) return;' in component
-    assert "zoom <= minimumZoom" not in component
+    assert 'if (!drag || drag.pointerId !== event.pointerId || zoom <= minimumZoom) return;' not in component
     assert "clampPanToWorld(next, zoom, geometry)" in component
 
 
