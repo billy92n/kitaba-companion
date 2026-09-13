@@ -47,7 +47,25 @@ Open the campaign and show:
 
 Key message: this is not a fresh prompt reconstructed from memory; it is persistent campaign state.
 
-## 3:00–5:00 — Living world
+Briefly explain character development:
+
+- the player may start with a light personality anchor or leave it OPEN;
+- the protagonist's nature emerges through choices and costly decisions rather than a fixed morality slider;
+- reputation is separate from internal nature;
+- observed traits never take control of voluntary player actions.
+
+## 3:00–4:00 — Guided freedom
+
+Show or describe one player decision using the Kitaba **3+1** pattern:
+
+1. three short contextual suggestions;
+2. one permanent free-input path.
+
+Make the point explicit: the suggestions reduce blank-page paralysis but are not exhaustive actions. The player may rewrite, combine or ignore them.
+
+For the 0.1.6 prototype, this behavior can be demonstrated in the current ChatGPT play surface. Native clickable 3+1 controls belong to the future in-app API play loop and must not be claimed as already implemented in 0.1.6.
+
+## 4:00–6:00 — Living world
 
 Open the map:
 
@@ -59,7 +77,7 @@ Open the map:
 
 Avoid spending time showing every map control.
 
-## 5:00–6:30 — Visual continuity
+## 6:00–7:30 — Visual continuity
 
 Show one known subject with its persistent reference directly in the normal view.
 
@@ -70,7 +88,7 @@ Then open Media / visual continuity only if needed to show that:
 - images preserve proportions and do not distort the UI;
 - visual identity follows already-established canon.
 
-## 6:30–9:00 — The continuity loop
+## 7:30–10:00 — The continuity loop
 
 Apply the prepared update.
 
@@ -85,7 +103,7 @@ Then return to the map or relevant entity and show the new/repositioned informat
 
 This is the core proof: narrative output becomes controlled persistent world state.
 
-## 9:00–10:30 — Recovery / trust
+## 10:00–11:30 — Recovery / trust
 
 Show synchronization/integrity:
 
@@ -98,7 +116,7 @@ If time permits and the demonstration copy is prepared for it, restore a backup 
 
 Do not attempt an unpracticed destructive restore during a pitch.
 
-## 10:30–12:00 — Studio adaptation boundary
+## 11:30–13:00 — Studio adaptation boundary
 
 Explain in under 90 seconds:
 
@@ -106,11 +124,12 @@ Explain in under 90 seconds:
 - the Companion persistence model is not tied conceptually to ChatGPT;
 - a studio can replace the narrative/runtime side with its own LLM stack, rules engine or game backend;
 - the future target is to put the whole play surface inside the Companion via a controlled API adapter;
-- the same canonical validation remains between model output and saved game state.
+- the same canonical validation remains between model output and saved game state;
+- the 3+1 suggestions are presentation data that a studio UI can render as quick actions without restricting free-form input.
 
 Reference `ARCHITECTURE.md`, `STUDIO_ADAPTATION_GUIDE.md` and `API_INTEGRATION_TARGET.md` if technical follow-up is requested.
 
-## Optional 12:00–15:00 — Questions / deeper proof
+## Optional 13:00–15:00 — Questions / deeper proof
 
 Only if useful:
 
@@ -118,7 +137,8 @@ Only if useful:
 - show backup/integrity metadata;
 - discuss no-schema extensible entity documents;
 - discuss timeline rollback / stale update rejection;
-- show route distance versus map presentation coordinates.
+- show route distance versus map presentation coordinates;
+- explain that 0.1.5 and 0.1.6 deliberately share the same persistence schema/backup implementation, while final lived-save compatibility is still verified on a disposable real campaign copy.
 
 ## Claims that are safe for the 0.1.6 MVP
 
@@ -128,6 +148,8 @@ Only if useful:
 - technical backup/restore and integrity diagnostics;
 - living player-knowledge map;
 - persistent visual-reference continuity;
+- guided 3+1 player choices in the current game contract, while preserving unrestricted free input;
+- optional initial character anchor plus emergent character development in the current game contract;
 - Windows desktop prototype;
 - architecture designed so a future API runtime can replace manual exchange.
 
@@ -136,6 +158,7 @@ Only if useful:
 Do not claim the MVP already has:
 
 - integrated OpenAI/other API gameplay inside the app;
+- native clickable 3+1 controls inside the Companion;
 - production cloud sync;
 - multiplayer concurrency;
 - Unity/Unreal SDK;
