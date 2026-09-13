@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { EntityDocument } from "../lib/types";
+import { entityTypeLabelFr, valueFr } from "../lib/frenchUi";
 import "../interactive-map-mvp.css";
 
 type Props = {
@@ -23,7 +24,7 @@ type MarkerCluster = { id: string; x: number; y: number; markers: PositionedMark
 type NormalizedPoint = { x: number; y: number };
 type VectorFeature = { entity: EntityDocument; layer: "political" | "routes"; points: NormalizedPoint[]; closed: boolean };
 
-const MAX_ZOOM = 6;
+const MAX_ZOOM = 12;
 const LAYERS: Array<{ key: LayerKey; label: string }> = [
   { key: "settlements", label: "Lieux" },
   { key: "political", label: "Régions" },
@@ -158,7 +159,7 @@ function clampPanToWorld(next: Pan, zoom: number, geometry: WorldGeometry | null
 }
 
 function clusterMarkers(markers: PositionedMarker[], zoom: number): MarkerCluster[] {
-  const radius = 0.075 / Math.max(1, zoom);
+  const radius = 0.07 / Math.max(1, zoom);
   const clusters: MarkerCluster[] = [];
   const sorted = [...markers].sort((a, b) => b.priority - a.priority);
 
@@ -180,16 +181,36 @@ function clusterMarkers(markers: PositionedMarker[], zoom: number): MarkerCluste
   return clusters;
 }
 
+function worldRect(geometry: WorldGeometry | null, zoom: number, pan: Pan) {
+  if (!geometry) return null;
+  const width = geometry.fittedWidth * zoom;
+  const height = geometry.fittedHeight * zoom;
+  return {
+    width,
+    height,
+    left: (geometry.viewportWidth - width) / 2 + pan.x,
+    top: (geometry.viewportHeight - height) / 2 + pan.y,
+  };
+}
+
 export function InteractiveMap({ imageUrl, entities }: Props) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const dragRef = useRef<{ pointerId: number; startX: number; startY: number; origin: Pan } | null>(null);
+  const zoomRef = useRef(1);
+  const panRef = useRef<Pan>({ x: 0, y: 0 });
+  const geometryRef = useRef<WorldGeometry | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState<Pan>({ x: 0, y: 0 });
   const [geometry, setGeometry] = useState<WorldGeometry | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>({ settlements: true, political: true, routes: true, dungeons: true, other: true });
+
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  useEffect(() => { panRef.current = pan; }, [pan]);
+  useEffect(() => { geometryRef.current = geometry; }, [geometry]);
 
   const rawMarkers = useMemo(() => entities.filter((entity) => {
     const x = numberField(entity.data, "x", "map_x");
@@ -229,15 +250,16 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
   const selected = markers.find((marker) => marker.entity.id === selectedId)?.entity ?? null;
   const filteredMarkers = useMemo(() => markers.filter((marker) => layers[marker.layer] && visibleAtZoom(marker, zoom)), [markers, layers, zoom]);
   const clusters = useMemo(() => clusterMarkers(filteredMarkers, zoom), [filteredMarkers, zoom]);
+  const selectedCluster = selectedClusterId ? clusters.find((cluster) => cluster.id === selectedClusterId) ?? null : null;
   const uncertaintyMarkers = useMemo(() => markers.filter((marker) => layers[marker.layer] && visibleAtZoom(marker, zoom) && isApproximate(marker.entity)), [markers, layers, zoom]);
 
   const searchResults = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("fr");
     if (!normalized) return [];
     return markers.filter((marker) => {
-      const haystack = `${markerLabel(marker.entity)} ${marker.entity.entity_type} ${stringField(marker.entity.data, "region", "realm", "kingdom", "summary", "description") ?? ""}`.toLocaleLowerCase("fr");
+      const haystack = `${markerLabel(marker.entity)} ${entityTypeLabelFr(marker.entity.entity_type)} ${stringField(marker.entity.data, "region", "realm", "kingdom", "summary", "description") ?? ""}`.toLocaleLowerCase("fr");
       return haystack.includes(normalized);
-    }).slice(0, 6);
+    }).slice(0, 8);
   }, [markers, query]);
 
   const layerCounts = useMemo(() => {
@@ -255,15 +277,49 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
     };
   }, [markers, vectors]);
 
+  const rendered = worldRect(geometry, zoom, pan);
+
+  function applyView(nextZoom: number, nextPan: Pan, nextGeometry: WorldGeometry | null) {
+    const clampedZoom = nextGeometry ? Math.max(nextGeometry.minimumZoom, Math.min(MAX_ZOOM, nextZoom)) : Math.max(1, Math.min(MAX_ZOOM, nextZoom));
+    const clampedPan = clampPanToWorld(nextPan, clampedZoom, nextGeometry);
+    zoomRef.current = clampedZoom;
+    panRef.current = clampedPan;
+    setZoom(clampedZoom);
+    setPan(clampedPan);
+  }
+
   function synchronizeGeometry() {
     const nextGeometry = measureWorld(viewportRef.current, imageRef.current);
     if (!nextGeometry) return;
+    geometryRef.current = nextGeometry;
     setGeometry(nextGeometry);
-    setZoom((currentZoom) => {
-      const nextZoom = Math.max(nextGeometry.minimumZoom, Math.min(MAX_ZOOM, currentZoom));
-      setPan((currentPan) => clampPanToWorld(currentPan, nextZoom, nextGeometry));
-      return nextZoom;
-    });
+    applyView(zoomRef.current, panRef.current, nextGeometry);
+  }
+
+  function setZoomAt(next: number, anchorClientX?: number, anchorClientY?: number) {
+    const viewport = viewportRef.current;
+    const latestGeometry = measureWorld(viewport, imageRef.current) ?? geometryRef.current;
+    if (!latestGeometry || !viewport) return;
+    const currentZoom = Math.max(latestGeometry.minimumZoom, zoomRef.current);
+    const nextZoom = Math.max(latestGeometry.minimumZoom, Math.min(MAX_ZOOM, Number(next.toFixed(3))));
+    if (Math.abs(nextZoom - currentZoom) < 0.0001) return;
+
+    const rect = viewport.getBoundingClientRect();
+    const anchorX = anchorClientX == null ? latestGeometry.viewportWidth / 2 : anchorClientX - rect.left;
+    const anchorY = anchorClientY == null ? latestGeometry.viewportHeight / 2 : anchorClientY - rect.top;
+    const before = worldRect(latestGeometry, currentZoom, panRef.current);
+    if (!before) return;
+    const normalizedX = Math.max(0, Math.min(1, (anchorX - before.left) / before.width));
+    const normalizedY = Math.max(0, Math.min(1, (anchorY - before.top) / before.height));
+    const nextWidth = latestGeometry.fittedWidth * nextZoom;
+    const nextHeight = latestGeometry.fittedHeight * nextZoom;
+    const centeredLeft = (latestGeometry.viewportWidth - nextWidth) / 2;
+    const centeredTop = (latestGeometry.viewportHeight - nextHeight) / 2;
+    const nextPan = {
+      x: anchorX - normalizedX * nextWidth - centeredLeft,
+      y: anchorY - normalizedY * nextHeight - centeredTop,
+    };
+    applyView(nextZoom, nextPan, latestGeometry);
   }
 
   useEffect(() => {
@@ -272,48 +328,57 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
     const observer = new ResizeObserver(synchronizeGeometry);
     observer.observe(viewport);
     document.addEventListener("fullscreenchange", synchronizeGeometry);
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const delta = Math.max(-120, Math.min(120, event.deltaY));
+      const factor = Math.exp(-delta * 0.0022);
+      setZoomAt(zoomRef.current * factor, event.clientX, event.clientY);
+    };
+    viewport.addEventListener("wheel", onWheel, { passive: false });
     synchronizeGeometry();
     return () => {
       observer.disconnect();
       document.removeEventListener("fullscreenchange", synchronizeGeometry);
+      viewport.removeEventListener("wheel", onWheel);
     };
   }, []);
 
   function setZoomSafe(next: number) {
-    const latestGeometry = measureWorld(viewportRef.current, imageRef.current) ?? geometry;
-    const minimumZoom = latestGeometry?.minimumZoom ?? 1;
-    const value = Math.max(minimumZoom, Math.min(MAX_ZOOM, Number(next.toFixed(2))));
-    setZoom(value);
-    setPan((current) => clampPanToWorld(current, value, latestGeometry));
+    setZoomAt(next);
   }
 
-  function focusNormalized(x: number, y: number, requestedZoom = Math.max(2, zoom)) {
-    const latestGeometry = measureWorld(viewportRef.current, imageRef.current) ?? geometry;
+  function focusNormalized(x: number, y: number, requestedZoom = Math.max(2, zoomRef.current)) {
+    const latestGeometry = measureWorld(viewportRef.current, imageRef.current) ?? geometryRef.current;
     if (!latestGeometry) return;
     const nextZoom = Math.max(latestGeometry.minimumZoom, Math.min(MAX_ZOOM, requestedZoom));
-    const baseX = latestGeometry.offsetX + x * latestGeometry.fittedWidth;
-    const baseY = latestGeometry.offsetY + y * latestGeometry.fittedHeight;
     const desired = {
-      x: -(baseX - latestGeometry.viewportWidth / 2) * nextZoom,
-      y: -(baseY - latestGeometry.viewportHeight / 2) * nextZoom,
+      x: (0.5 - x) * latestGeometry.fittedWidth * nextZoom,
+      y: (0.5 - y) * latestGeometry.fittedHeight * nextZoom,
     };
-    setZoom(nextZoom);
-    setPan(clampPanToWorld(desired, nextZoom, latestGeometry));
+    applyView(nextZoom, desired, latestGeometry);
   }
 
   function focusMarker(marker: PositionedMarker) {
     setLayers((current) => ({ ...current, [marker.layer]: true }));
+    setSelectedClusterId(null);
     setSelectedId(marker.entity.id);
     setQuery("");
-    focusNormalized(marker.x, marker.y, Math.max(2.25, zoom));
+    focusNormalized(marker.x, marker.y, Math.max(2.25, zoomRef.current));
+  }
+
+  function openCluster(cluster: MarkerCluster) {
+    setSelectedId(null);
+    setSelectedClusterId(cluster.id);
+    focusNormalized(cluster.x, cluster.y, Math.min(MAX_ZOOM, Math.max(2.4, zoomRef.current + 0.65)));
   }
 
   function reset() {
-    const latestGeometry = measureWorld(viewportRef.current, imageRef.current) ?? geometry;
+    const latestGeometry = measureWorld(viewportRef.current, imageRef.current) ?? geometryRef.current;
     const minimumZoom = latestGeometry?.minimumZoom ?? 1;
-    setZoom(minimumZoom);
-    setPan({ x: 0, y: 0 });
+    applyView(minimumZoom, { x: 0, y: 0 }, latestGeometry);
     setSelectedId(null);
+    setSelectedClusterId(null);
   }
 
   async function fullscreen() {
@@ -328,9 +393,9 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
       <div><strong>Carte interactive</strong><span>{markers.length} repère(s) · {vectors.length} tracé(s) · {filteredMarkers.length} repère(s) visible(s){unpositionedCount ? ` · ${unpositionedCount} connu(s) non localisé(s)` : ""}</span></div>
       <div className="map-controls">
         {currentMarker && <button className="secondary small" onClick={() => focusMarker(currentMarker)}>Ma position</button>}
-        <button className="ghost small" onClick={() => setZoomSafe(zoom - .25)} disabled={zoom <= minimumZoom + .001}>−</button>
+        <button className="ghost small" onClick={() => setZoomSafe(zoom / 1.25)} disabled={zoom <= minimumZoom + .001}>−</button>
         <button className="ghost small" onClick={reset}>{Math.round(zoom * 100)} %</button>
-        <button className="ghost small" onClick={() => setZoomSafe(zoom + .25)} disabled={zoom >= MAX_ZOOM}>+</button>
+        <button className="ghost small" onClick={() => setZoomSafe(zoom * 1.25)} disabled={zoom >= MAX_ZOOM - .001}>+</button>
         <button className="secondary small" onClick={() => fullscreen().catch(() => undefined)}>Plein écran</button>
       </div>
     </div>
@@ -349,7 +414,7 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Trouver un lieu connu…" aria-label="Trouver un lieu connu sur la carte" />
         {searchResults.length > 0 && <div className="map-search-results">
           {searchResults.map((marker) => <button key={marker.entity.id} onClick={() => focusMarker(marker)}>
-            <strong>{markerLabel(marker.entity)}</strong><span>{marker.entity.entity_type}</span>
+            <strong>{markerLabel(marker.entity)}</strong><span>{entityTypeLabelFr(marker.entity.entity_type)}</span>
           </button>)}
         </div>}
       </div>
@@ -358,32 +423,39 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
     <div
       ref={viewportRef}
       className={`interactive-map-viewport ${dragRef.current ? "dragging" : ""}`}
-      onWheel={(event) => {
-        event.preventDefault();
-        setZoomSafe(zoom + (event.deltaY < 0 ? .2 : -.2));
-      }}
       onPointerDown={(event) => {
         if ((event.target as HTMLElement).closest(".interactive-map-marker, .interactive-map-cluster")) return;
-        dragRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, origin: pan };
+        dragRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, origin: panRef.current };
         event.currentTarget.setPointerCapture(event.pointerId);
       }}
       onPointerMove={(event) => {
         const drag = dragRef.current;
         if (!drag || drag.pointerId !== event.pointerId) return;
         const next = { x: drag.origin.x + event.clientX - drag.startX, y: drag.origin.y + event.clientY - drag.startY };
-        setPan(clampPanToWorld(next, zoom, geometry));
+        const clamped = clampPanToWorld(next, zoomRef.current, geometryRef.current);
+        panRef.current = clamped;
+        setPan(clamped);
       }}
       onPointerUp={(event) => {
         if (dragRef.current?.pointerId === event.pointerId) dragRef.current = null;
-        try { event.currentTarget.releasePointerCapture(event.pointerId); } catch { /* no-op */ }
+        try { event.currentTarget.releasePointerCapture(event.pointerId); } catch { /* aucun effet */ }
       }}
       onPointerCancel={() => { dragRef.current = null; }}
     >
-      <div className="interactive-map-stage" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, ["--map-marker-scale" as string]: zoom }}>
-        <img ref={imageRef} src={imageUrl} alt="Carte physique interactive de Kitaba" draggable={false} onLoad={synchronizeGeometry} />
-        {geometry && <svg
+      <div className="interactive-map-stage">
+        {rendered && <img
+          ref={imageRef}
+          src={imageUrl}
+          alt="Carte physique interactive de Kitaba"
+          draggable={false}
+          decoding="async"
+          onLoad={synchronizeGeometry}
+          style={{ left: `${rendered.left}px`, top: `${rendered.top}px`, width: `${rendered.width}px`, height: `${rendered.height}px` }}
+        />}
+        {!rendered && <img ref={imageRef} src={imageUrl} alt="Carte physique interactive de Kitaba" draggable={false} decoding="async" onLoad={synchronizeGeometry} />}
+        {rendered && <svg
           className="interactive-map-vector-layer"
-          style={{ left: `${geometry.offsetX}px`, top: `${geometry.offsetY}px`, width: `${geometry.fittedWidth}px`, height: `${geometry.fittedHeight}px` }}
+          style={{ left: `${rendered.left}px`, top: `${rendered.top}px`, width: `${rendered.width}px`, height: `${rendered.height}px` }}
           viewBox="0 0 1000 500"
           preserveAspectRatio="none"
           aria-hidden="true"
@@ -394,7 +466,7 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
             return <polyline key={feature.entity.id} className="map-vector-route" points={points} />;
           })}
           {uncertaintyMarkers.map((marker) => <ellipse
-            key={`uncertainty:${marker.entity.id}`}
+            key={`incertitude:${marker.entity.id}`}
             className={`map-uncertainty-area ${marker.entity.id === selectedId ? "selected" : ""}`}
             cx={marker.x * 1000}
             cy={marker.y * 500}
@@ -403,14 +475,14 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
           />)}
         </svg>}
         {clusters.map((cluster) => {
-          const left = geometry ? geometry.offsetX + cluster.x * geometry.fittedWidth : cluster.x * 100;
-          const top = geometry ? geometry.offsetY + cluster.y * geometry.fittedHeight : cluster.y * 100;
-          const markerStyle = geometry ? { left: `${left}px`, top: `${top}px` } : { left: `${left}%`, top: `${top}%` };
+          const left = rendered ? rendered.left + cluster.x * rendered.width : cluster.x * 100;
+          const top = rendered ? rendered.top + cluster.y * rendered.height : cluster.y * 100;
+          const markerStyle = rendered ? { left: `${left}px`, top: `${top}px` } : { left: `${left}%`, top: `${top}%` };
           if (cluster.markers.length > 1) {
-            return <button key={cluster.id} className="interactive-map-cluster" style={markerStyle} onClick={(event) => {
+            return <button key={cluster.id} className={`interactive-map-cluster ${selectedClusterId === cluster.id ? "selected" : ""}`} style={markerStyle} onClick={(event) => {
               event.stopPropagation();
-              focusNormalized(cluster.x, cluster.y, Math.min(MAX_ZOOM, zoom + 1));
-            }} title={`${cluster.markers.length} lieux proches — cliquer pour zoomer`} aria-label={`${cluster.markers.length} lieux proches, zoomer`}>
+              openCluster(cluster);
+            }} title={`${cluster.markers.length} lieux proches — ouvrir la liste`} aria-label={`${cluster.markers.length} lieux proches, ouvrir la liste`}>
               <span>{cluster.markers.length}</span>
             </button>;
           }
@@ -424,7 +496,7 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
             key={marker.entity.id}
             className={`interactive-map-marker layer-${marker.layer} ${marker.current ? "current" : ""} ${selectedId === marker.entity.id ? "selected" : ""} ${knowledge.includes("rumeur") || knowledge.includes("rumor") ? "rumor" : ""} ${precision.includes("approx") ? "approximate" : ""}`}
             style={markerStyle}
-            onClick={(event) => { event.stopPropagation(); setSelectedId(marker.entity.id); }}
+            onClick={(event) => { event.stopPropagation(); setSelectedClusterId(null); setSelectedId(marker.entity.id); }}
             title={label}
             aria-label={`Ouvrir ${label}`}
           ><span className="marker-dot" />{showLabel && <b>{label}</b>}</button>;
@@ -432,21 +504,29 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
       </div>
     </div>
 
+    {selectedCluster && <article className="interactive-map-cluster-details">
+      <div className="map-details-head"><div><span className="eyebrow">Plusieurs repères</span><h3>Lieux à cet endroit</h3></div><button className="ghost small" onClick={() => setSelectedClusterId(null)}>Fermer</button></div>
+      <div className="map-cluster-choice-list">{selectedCluster.markers.map((marker) => <button key={marker.entity.id} onClick={() => focusMarker(marker)}>
+        <span><strong>{markerLabel(marker.entity)}</strong><small>{entityTypeLabelFr(marker.entity.entity_type)}</small></span>
+        <em>{stringField(marker.entity.data, "summary", "known_description", "description") ?? "Ouvrir la fiche"}</em>
+      </button>)}</div>
+    </article>}
+
     {selected ? <article className="interactive-map-details">
       <div>
-        <span className="eyebrow">{stringField(selected.data, "category", "type", "kind") ?? "Lieu découvert"}</span>
+        <span className="eyebrow">{valueFr(stringField(selected.data, "category", "type", "kind") ?? entityTypeLabelFr(selected.entity_type))}</span>
         <h3>{markerLabel(selected)}</h3>
         <p>{stringField(selected.data, "summary", "description", "known_description", "player_description") ?? "Aucune description supplémentaire enregistrée."}</p>
       </div>
       <dl>
-        {stringField(selected.data, "realm", "kingdom", "state_name") && <div><dt>Royaume / État</dt><dd>{stringField(selected.data, "realm", "kingdom", "state_name")}</dd></div>}
-        {stringField(selected.data, "region", "region_name", "continent") && <div><dt>Région</dt><dd>{stringField(selected.data, "region", "region_name", "continent")}</dd></div>}
-        {stringField(selected.data, "location_precision", "map_precision") && <div><dt>Précision</dt><dd>{stringField(selected.data, "location_precision", "map_precision")}</dd></div>}
+        {stringField(selected.data, "realm", "kingdom", "state_name") && <div><dt>Royaume / État</dt><dd>{valueFr(stringField(selected.data, "realm", "kingdom", "state_name"))}</dd></div>}
+        {stringField(selected.data, "region", "region_name", "continent") && <div><dt>Région</dt><dd>{valueFr(stringField(selected.data, "region", "region_name", "continent"))}</dd></div>}
+        {stringField(selected.data, "location_precision", "map_precision") && <div><dt>Précision</dt><dd>{valueFr(stringField(selected.data, "location_precision", "map_precision"))}</dd></div>}
         {selectedRouteDistance !== null && <div><dt>Distance de route</dt><dd>{selectedRouteDistance} km</dd></div>}
-        {stringField(selected.data, "discovered_at", "first_known_at") && <div><dt>Découvert</dt><dd>{stringField(selected.data, "discovered_at", "first_known_at")}</dd></div>}
-        {stringField(selected.data, "status", "known_status", "knowledge_state") && <div><dt>Statut connu</dt><dd>{stringField(selected.data, "status", "known_status", "knowledge_state")}</dd></div>}
+        {stringField(selected.data, "discovered_at", "first_known_at") && <div><dt>Découvert</dt><dd>{valueFr(stringField(selected.data, "discovered_at", "first_known_at"))}</dd></div>}
+        {stringField(selected.data, "status", "known_status", "knowledge_state") && <div><dt>Statut connu</dt><dd>{valueFr(stringField(selected.data, "status", "known_status", "knowledge_state"))}</dd></div>}
       </dl>
       <button className="ghost small" onClick={() => setSelectedId(null)}>Fermer</button>
-    </article> : <p className="interactive-map-hint">Molette : zoom · cliquer-glisser : déplacer · un groupe numéroté se sépare en zoomant. Les régions et routes connues peuvent se révéler comme couches cartographiques, tandis que les détails apparaissent progressivement.</p>}
+    </article> : !selectedCluster && <p className="interactive-map-hint">Molette sur la carte : zoom sous le curseur · cliquer-glisser : déplacer · cliquer sur un groupe numéroté : choisir le lieu. Le zoom n'entraîne jamais le défilement de la page.</p>}
   </div>;
 }
