@@ -19,8 +19,8 @@ def test_normal_player_views_surface_persisted_visual_bindings():
     assert "normalize(binding.state) === currentState" in gallery
 
     assert "subjectEntityId={pcEntity.id}" in rpg
-    assert "subjectEntityId={e.id}" in rpg
-    assert "currentState={currentVisualState(e.data)}" in rpg
+    assert "<NpcPortraitControl subjectEntityId={e.id}" in rpg
+    assert "currentState={visualState}" in rpg
 
     assert '"place"' in entity_list
     assert '"settlement"' in entity_list
@@ -83,3 +83,12 @@ def test_relations_can_reuse_unbound_npc_portraits_imported_before_bindings_exis
     assert "readAssetDataUrl" in control
     assert "Choisis une image déjà importée" in control
     assert "chooseExisting(asset.id)" in control
+
+
+def test_relation_avatar_prefers_matching_current_state_variant_then_primary_portrait():
+    control = source("src/components/NpcPortraitControl.tsx")
+
+    assert "function displayedPortrait" in control
+    assert 'row.role === "state_variant"' in control
+    assert "normalize(row.state) === normalizedState" in control
+    assert 'row.role === "primary_reference"' in control
