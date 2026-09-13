@@ -7,7 +7,7 @@ type LightboxImage = {
   alt: string;
 };
 
-const ENLARGEABLE_IMAGE_SELECTOR = ".sidebar > .portrait-image, .visual-reference-card img, .media-preview img";
+const ENLARGEABLE_IMAGE_SELECTOR = ".sidebar > .portrait-image, .visual-reference-card img, .media-preview img, .npc-avatar-image";
 
 function matchingImage(target: EventTarget | null): HTMLImageElement | null {
   if (!(target instanceof Element)) return null;
