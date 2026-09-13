@@ -118,13 +118,21 @@ def test_sync_ui_masks_raw_update_payload_by_default():
     assert "Mode collage manuel" in app
 
 
-def test_world_state_has_dedicated_player_ui_and_contract():
+def test_world_state_remains_supported_without_duplicate_world_navigation():
     app = _read("src/App.tsx")
     sidebar = _read("src/components/Sidebar.tsx")
+    encyclopedia = _read("src/components/EncyclopediaView.tsx")
     rust = _read("src-tauri/src/db.rs")
     py = _read("reference/engine.py")
-    assert '["world", "Monde"]' in sidebar
+
+    # World data remains fully supported by the persistence contract, but the player no
+    # longer has a competing generic "Monde" destination next to Carte/Encyclopédie.
+    assert '["world", "Monde"' not in sidebar
+    assert '["knowledge", "Connaissances"' not in sidebar
     assert 'world: ["faction", "organization", "settlement"' in app
+    assert 'label: "Colonies & lieux"' in encyclopedia
+    assert 'label: "Royaumes & factions"' in encyclopedia
+    assert 'label: "Monde & histoire"' in encyclopedia
     assert '"world": ["faction", "organization", "settlement"' in rust
     assert '"world": ["faction", "organization", "settlement"' in py
 
@@ -151,7 +159,8 @@ def test_player_knowledge_ui_hides_undiscovered_resource_and_lore_surfaces():
     progression = _read("src/components/ProgressionViews.tsx")
     main = _read("src/main.tsx")
     hardening_css = _read("src/player-knowledge-hardening.css")
-    assert '["overview", "Vue d\'ensemble"],\n  ["sync", "Synchronisation"]' in sidebar
+    assert '["overview", "Accueil", "play"]' in sidebar
+    assert '["sync", "Mettre à jour la partie", "manage"]' in sidebar
     assert 'discoveryTypes' in sidebar
     assert 'awakening && <section' in rpg
     assert 'hasMana && <Resource label="Mana"' in rpg
