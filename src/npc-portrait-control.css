@@ -1,0 +1,36 @@
+.npc-portrait-control {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 7px;
+  min-width: 72px;
+}
+
+.npc-avatar-image,
+.npc-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid #46505f;
+  background: #202631;
+}
+
+.npc-avatar-image {
+  display: block;
+  object-fit: cover;
+  cursor: zoom-in;
+}
+
+.npc-avatar {
+  display: grid;
+  place-items: center;
+  color: #d7c89d;
+  font-weight: 800;
+}
+
+.npc-portrait-action {
+  max-width: 92px;
+  padding: 5px 7px;
+  font-size: 10px;
+  line-height: 1.15;
+}
