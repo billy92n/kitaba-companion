@@ -48,12 +48,12 @@ def test_visual_dock_keeps_canon_before_image_gate():
     assert "setAssets([])" in dock
 
 
-def test_visual_reference_launcher_only_lives_in_media_flow():
+def test_visual_reference_launcher_only_lives_in_portraits_and_images_flow():
     dock = _read("src/components/VisualReferenceDock.tsx")
     css = _read("src/visual-reference-dock.css")
     assert 'createPortal' in dock
     assert 'document.querySelector<HTMLElement>(".media-stack .visual-continuity")' in dock
-    assert "Gérer les références visuelles" in dock
+    assert "Ouvrir les portraits & images" in dock
     assert ".visual-reference-launcher{display:inline-flex" in css
     assert ".visual-reference-launcher{position:fixed" not in css
 
