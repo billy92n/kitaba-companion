@@ -369,7 +369,7 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
       }}
       onPointerMove={(event) => {
         const drag = dragRef.current;
-        if (!drag || drag.pointerId !== event.pointerId || zoom <= minimumZoom) return;
+        if (!drag || drag.pointerId !== event.pointerId) return;
         const next = { x: drag.origin.x + event.clientX - drag.startX, y: drag.origin.y + event.clientY - drag.startY };
         setPan(clampPanToWorld(next, zoom, geometry));
       }}

@@ -131,4 +131,4 @@ Additional MVP work:
 
 ## Release rule
 
-No item moves to stable merely parce qu'il existe on this branch. Before release: version separation → automated tests → Windows build → artifact/version verification → migration-copy compatibility → human map/visual/update smoke tests → integrity check → then merge/freeze and user migration instructions. The existing live campaign remains the compatibility priority.
+No item moves to stable merely because it exists on this branch. Before release: version separation → automated tests → Windows build → artifact/version verification → migration-copy compatibility → human map/visual/update smoke tests → integrity check → then merge/freeze and user migration instructions. The existing live campaign remains the compatibility priority.
