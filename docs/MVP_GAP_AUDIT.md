@@ -1,64 +1,58 @@
 # Kitaba 0.1.6 MVP — gap audit
 
-Status: **working audit**. Created after a deliberate pre-freeze review; this list exists specifically to prevent a green CI build from being mistaken for a complete/presentable MVP.
+Status: **release-hardening audit**. This list prevents a green CI build from being mistaken for a complete/presentable MVP. Each item is either resolved for 0.1.6 or deliberately classified outside the frozen MVP scope.
 
-## Already covered well enough for candidate testing
+## Covered for the 0.1.6 candidate
 
 - existing-campaign preservation strategy: schema remains v4 and release validation is performed on a backup copy first;
-- interactive atlas core: pan/zoom/fullscreen bounds implementation, search, filters, clustering, current position, points/routes/regions;
+- interactive atlas core: strict pan/zoom/fullscreen bounds, search, filters, clustering, current position, points/routes/regions and broad uncertainty areas;
 - player/GM separation for map and visual-binding subjects;
 - concise interactive MJ pacing contract and terse-action enrichment without stealing player agency;
-- hidden uncertainty-resolution and skill-progression candidates with calibration tests;
-- combat/mana/recovery and economy/travel reference candidates kept explicitly PROPOSAL;
 - visual-reference sidecar is checksum-protected and included in `.kitaba` backups;
-- story/editorial separation and safe HTML-rendering foundation.
+- primary/current-state visual references are surfaced in ordinary PC/NPC/place views;
+- fixed portrait/reference slots preserve aspect ratio and center-crop rather than stretching oversized images;
+- map coordinates remain presentation-only and route distance uses explicit `distance_km`;
+- release identity is aligned to 0.1.6 in npm/Tauri/Rust metadata, lockfiles and Windows artifact naming;
+- story/editorial separation and safe HTML-rendering foundation remain available without being advertised as a finished in-app export feature.
 
-## Gaps that must not be hidden by the MVP label
+## Deliberately outside the frozen 0.1.6 MVP
 
-### 1. Visual continuity across ChatGPT conversations
+### Visual handoff into new ChatGPT conversations
 
-The Companion can now remember that an imported local asset belongs to a PLAYER subject, but ChatGPT does not automatically receive the image bytes when a new conversation starts. Before claiming full visual memory, define and test a player-safe exported visual manifest plus a reliable reference-image handoff path.
+The Companion persists local visual references, but a new ChatGPT conversation does not automatically receive the image bytes. A future player-safe visual manifest/reference handoff can be designed with the post-MVP source/prompt package. The 0.1.6 claim is therefore **Companion continuity**, not automatic cross-chat image transport.
 
-### 2. Wrong/obsolete illustration cleanup
+### Permanent deletion of individual media assets
 
-The current image library can unbind a reference but still lacks a first-class safe per-asset delete flow. Now that illustrations are a major product pillar, the MVP should either add backed-up deletion with binding cleanup or clearly defer it while ensuring obsolete images cannot be mistaken for active references.
+0.1.6 supports association, reassociation and unbinding. An unbound/obsolete image remains visibly unbound in the media library and cannot masquerade as the active reference. Destructive per-asset deletion, including backup/audit semantics, is deferred rather than added during release hardening.
 
-### 3. References in ordinary character/place views
+### Full leveling/combat simulation contract
 
-A separate visual-reference tool exists, but a polished experience should surface the primary image/current state directly where the player views the relevant NPC/place. This is more important for presentation than a hidden technical binding screen.
+Skill progression, characteristic growth, bleeding/stabilization, surrender, disengage/flee, non-lethal combat, recovery/camp pressure and economy/travel calibration remain **PROPOSAL**. They are reference/test candidates, not promises of the 0.1.6 client and not canon until explicitly promoted into a later MASTER/MJ contract.
 
-### 4. Leveling is not yet the whole progression system
+### Automatic adaptive music
 
-Skill mastery has a calibrated candidate. Long-term growth of underlying characteristics/capacity is not yet calibrated and must remain separate from skill XP. Do not imply that the entire leveling system is final until this exists and is tested.
+The `music_state` and anti-churn model remain prototype foundations. Automatic ChatGPT-controlled playback is not part of the 0.1.6 MVP until a real control surface is validated end-to-end.
 
-### 5. Combat critical states
+### In-app `Exporter mon histoire`
 
-Damage/armor/injury/mana models exist, but bleeding/stabilization, surrender, disengage/flee and explicit non-lethal resolution still require validation before combat mechanics become canon.
+The safe editorial model/HTML renderer remains a tested foundation. Persistence of editorial scenes and a user-facing export action are post-MVP so they do not introduce a new persistence/asset surface during migration hardening.
 
-### 6. Broad geographic uncertainty
+### Project Sources / live-chat migration package
 
-`approximate` markers exist, but a genuinely broad known area still needs uncertainty-area rendering so the UI does not visually imply precision the character does not possess.
+The live 0.1.5 campaign continues to use only the current MASTER source plus the physical map. A next MASTER, LIVE_PATCH, fresh-campaign prompt and concise migration guide are prepared only after the 0.1.6 client candidate passes migration-copy/client testing. Development drafts, installers and campaign exports are never Project Sources.
 
-### 7. Map coordinates are not physical distance
+## Gates that still require a real client/campaign copy
 
-Normalized x/y are presentation coordinates only. Travel duration must rely on an explicit route/world distance model. Never infer kilometers directly from pixel distance without a separately locked world scale/projection.
+Automated tests can validate contracts, builds and artifact metadata, but they cannot substitute for interaction with the user's real Windows installation and campaign data. Before merge/live upgrade, a COPY of a real 0.1.5 `.kitaba` must still pass:
 
-### 8. Adaptive music is not end-to-end yet
-
-The scene-state/anti-churn model exists, but automatic ChatGPT-controlled playback has not been validated. Keep it labelled prototype until the actual playback surface is proven; do not simulate success in text.
-
-### 9. `Exporter mon histoire` is foundation-only
-
-The editorial scene model and HTML renderer are tested, but the Companion does not yet expose the complete in-app export pipeline. Either wire a basic HTML export into the MVP or present it explicitly as the next step rather than a finished feature.
-
-### 10. Release/version hygiene
-
-0.1.6 is now separated from stable 0.1.5. Before freeze, confirm installer metadata/artifact name and reconcile informational root-version metadata in lockfiles where practical. Production hashes must come from the final `main` build, not an earlier candidate.
-
-### 11. Current-project source discipline
-
-The live 0.1.5 campaign still needs only MASTER v1.4 + the physical map in Project Sources. The future 0.1.6 migration will require a deliberately prepared next MASTER/LIVE_PATCH/prompt package, but draft development documents must never be added to Project Sources.
+1. restore/open + revision/timeline continuity + integrity;
+2. map edges at multiple zooms/fullscreen with no exposed black background;
+3. search/layers/current-location plus a reveal/reposition update;
+4. oversized portrait/reference fitting with no stretching;
+5. primary NPC portrait + current-state variant + scene reference where applicable;
+6. backup → restore → integrity with visual bindings preserved;
+7. close/reopen + final integrity spot check.
 
 ## Freeze decision
 
-The MVP is presentation-ready only when every **P0 release gate** is green and each gap above is either implemented/tested or explicitly labelled out-of-scope in the presentation. No ambiguous half-feature is marketed as complete.
+The code candidate is ready for client validation only after the **final branch HEAD** passes the full Windows pipeline and its produced installer is independently checked as 0.1.6. The PR remains draft and must not merge before the real-save-copy gates above are green.
