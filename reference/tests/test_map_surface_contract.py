@@ -48,3 +48,38 @@ def test_successful_update_reloads_campaign_entities_used_by_atlas():
     assert "const mapEntities = entities.filter" in app
     assert "<InteractiveMap imageUrl={worldMapUrl" in app
     assert "entities={mapEntities}" in app
+
+
+def test_map_wheel_is_consumed_by_map_and_does_not_scroll_page():
+    component = source("src/components/InteractiveMap.tsx")
+    css = source("src/interactive-map-mvp.css")
+
+    assert 'viewport.addEventListener("wheel", onWheel, { passive: false })' in component
+    assert "event.preventDefault();" in component
+    assert "event.stopPropagation();" in component
+    assert "overscroll-behavior:contain" in css
+
+
+def test_overlapping_locations_open_a_real_choice_list():
+    component = source("src/components/InteractiveMap.tsx")
+    css = source("src/interactive-map-mvp.css")
+
+    assert "selectedClusterId" in component
+    assert "openCluster(cluster)" in component
+    assert "Lieux à cet endroit" in component
+    assert "map-cluster-choice-list" in component
+    assert "selectedCluster.markers.map" in component
+    assert ".map-cluster-choice-list" in css
+
+
+def test_map_uses_high_zoom_and_resizes_raster_instead_of_css_scaling():
+    component = source("src/components/InteractiveMap.tsx")
+    css = source("src/interactive-map-mvp.css")
+
+    assert "const MAX_ZOOM = 12;" in component
+    assert 'width: `${rendered.width}px`' in component
+    assert 'height: `${rendered.height}px`' in component
+    assert ".interactive-map-stage {" in css
+    stage_rule = css.split(".interactive-map-stage {", 1)[1].split("}", 1)[0]
+    assert "transform:none !important" in stage_rule
+    assert "image-rendering:auto" in css
