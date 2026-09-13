@@ -46,16 +46,16 @@ def test_visual_gallery_does_not_load_entity_or_gm_data():
     assert "listVisualAssetBindings" in gallery
 
 
-def test_sidebar_portrait_uses_aspect_safe_crop_instead_of_stretching():
+def test_sidebar_portrait_shows_complete_source_without_crop_or_stretch():
     sidebar = source("src/components/Sidebar.tsx")
     css = source("src/image-fit-hardening.css")
 
-    assert 'className="portrait-frame"' in sidebar
+    assert 'className="portrait-frame"' not in sidebar
     assert 'className="portrait-image"' in sidebar
-    assert ".portrait-frame > .portrait-image" in css
-    assert "object-fit: cover" in css
-    assert "object-position: 50% 50%" in css
-    assert "width: 100%" in css
-    assert "height: 100%" in css
-    assert "aspect-ratio: 1 / 1" in css
-    assert "transform: none" in css
+    assert ".sidebar > .portrait-image" in css
+    rule = css.split(".sidebar > .portrait-image", 1)[1].split("}", 1)[0]
+    assert "width: 78px" in rule
+    assert "height: auto" in rule
+    assert "object-fit: contain" in rule
+    assert "object-fit: cover" not in rule
+    assert "transform: none" in rule
