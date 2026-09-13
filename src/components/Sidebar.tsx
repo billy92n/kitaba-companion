@@ -1,4 +1,5 @@
 import type { CampaignSummary, EntityDocument, SectionKey } from "../lib/types";
+import "../sidebar-nav-simplification.css";
 
 type Props = {
   campaign: CampaignSummary | null;
