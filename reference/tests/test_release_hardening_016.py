@@ -1,0 +1,56 @@
+import json
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def _read(path: str) -> str:
+    return (ROOT / path).read_text(encoding="utf-8")
+
+
+def test_fixed_visual_slots_center_crop_without_distortion():
+    main = _read("src/main.tsx")
+    css = _read("src/image-fit-hardening.css")
+    assert 'import "./image-fit-hardening.css"' in main
+    assert ".portrait-image" in css
+    assert "object-fit: cover" in css
+    assert "object-position: 50% 50%" in css
+    assert ".visual-reference-card img" in css
+    assert ".media-preview img" in css
+    assert "object-fit: contain" in css
+    assert ".interactive-map-stage > img" in css
+
+
+def test_visual_dock_keeps_canon_before_image_gate():
+    dock = _read("src/components/VisualReferenceDock.tsx")
+    assert 'entity.entity_type === "player_character"' in dock
+    assert 'kind !== "world_map" && !characterInitialized' in dock
+    assert "une image ne doit jamais inventer une apparence indécidée" in dock
+    assert "setEntities([])" in dock
+    assert "setAssets([])" in dock
+
+
+def test_inline_visuals_refresh_when_campaign_selection_changes():
+    gallery = _read("src/components/VisualReferenceGallery.tsx")
+    assert 'document.addEventListener("change", refreshOnCampaignChange)' in gallery
+    assert 'target.classList.contains("campaign-select")' in gallery
+    assert 'document.removeEventListener("change", refreshOnCampaignChange)' in gallery
+    assert "bindingCache = null" in gallery
+
+
+def test_all_release_metadata_identifies_016():
+    package = json.loads(_read("package.json"))
+    package_lock = json.loads(_read("package-lock.json"))
+    tauri = json.loads(_read("src-tauri/tauri.conf.json"))
+    cargo_toml = _read("src-tauri/Cargo.toml")
+    cargo_lock = _read("src-tauri/Cargo.lock")
+    workflow = _read(".github/workflows/build-windows.yml")
+
+    assert package["version"] == "0.1.6"
+    assert package_lock["version"] == "0.1.6"
+    assert package_lock["packages"][""]["version"] == "0.1.6"
+    assert tauri["version"] == "0.1.6"
+    assert re.search(r'(?m)^version = "0\.1\.6"$', cargo_toml)
+    assert re.search(r'\[\[package\]\]\s+name = "kitaba-companion"\s+version = "0\.1\.6"', cargo_lock)
+    assert "kitaba-companion-windows-0.1.6" in workflow
