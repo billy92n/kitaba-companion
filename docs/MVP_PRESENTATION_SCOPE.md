@@ -21,14 +21,23 @@ Pour une présentation studio, le message central n’est pas « voici une appli
 - reprise d’une campagne existante après mise à jour de l’application ;
 - continuité indépendante de la durée de vie d’un chat particulier.
 
-### 2. Jeu interactif
+### 2. Jeu interactif et liberté guidée
 - réponses MJ courtes et jouables plutôt que murs de texte ;
 - enrichissement léger des actions brèves du joueur sans lui voler ses décisions ;
 - réactions des PNJ et résultats du monde restent sous contrôle de l’autorité narrative ;
-- action incertaine = résolution réelle en privé, avec possibilité d’échec, réussite partielle ou réussite.
+- action incertaine = résolution réelle en privé, avec possibilité d’échec, réussite partielle ou réussite ;
+- lorsqu’une nouvelle décision est attendue, trois pistes contextuelles peuvent orienter le joueur sans fermer l’espace d’action ;
+- une quatrième voie libre reste toujours disponible pour écrire, modifier, combiner ou ignorer les suggestions ;
+- une suggestion affichée n’est jamais un choix canonique tant que le joueur ne l’a pas réellement adoptée.
 
-### 3. Personnage et progression
+Le principe à vendre n’est pas « choix multiples ». C’est **liberté totale avec réduction de l’effet page blanche**.
+
+### 3. Personnage, nature et progression
 - fiche personnage, caractéristiques, blessures, ressources et relations visibles quand elles sont connues ;
+- possibilité d’un ancrage initial de caractère très léger, ou de laisser explicitement ce champ OPEN ;
+- nature du protagoniste qui émerge surtout de choix répétés, décisions coûteuses, habitudes et contradictions ;
+- distinction entre nature réelle, image de soi et réputation publique ;
+- aucun trait observé ne peut décider une action volontaire à la place du joueur ;
 - compétences présentées qualitativement ;
 - progression cachée non linéaire en cours de calibration ;
 - rang officiel E→S clairement séparé de la puissance/maîtrise réelle ;
@@ -68,6 +77,7 @@ La démonstration doit permettre d’expliquer clairement :
 - que le studio peut substituer son propre orchestrateur IA, moteur de règles ou runtime ;
 - que SQLite/Tauri/React sont les implémentations actuelles, pas des contraintes commerciales obligatoires ;
 - que les invariants à conserver sont surtout identité, révision, timeline, visibilité, mutation atomique, contexte, sauvegarde et provenance ;
+- que le guidage 3+1 est une couche de présentation portable, pas une limitation du moteur d’actions ;
 - que la couche peut être reskinnée ou intégrée à un client de jeu sans perdre le modèle de continuité.
 
 ## Ce qui peut rester hors du MVP sans bloquer la démonstration
@@ -80,7 +90,8 @@ La démonstration doit permettre d’expliquer clairement :
 - application mobile native ;
 - SDK Unity/Unreal prêt à livrer ;
 - cloud/multijoueur de production ;
-- abstraction multi-fournisseur IA déjà implémentée en code.
+- abstraction multi-fournisseur IA déjà implémentée en code ;
+- interface 3+1 native cliquable dans le Companion 0.1.6 (le contrat existe côté jeu, l’intégration UI est post-MVP/API).
 
 Ces éléments sont des extensions après preuve du cœur produit.
 
@@ -103,7 +114,7 @@ Un build peut être qualifié **MVP présentable** seulement si :
 
 ## Démonstration cible 10–15 minutes
 
-Scénario recommandé : partir d’une campagne déjà vécue. Montrer le personnage et un proche important, une référence visuelle persistante et le journal. Ouvrir la carte, recentrer la position actuelle, rechercher un lieu et afficher les couches. Appliquer ensuite un update préparé qui révèle ou repositionne un lieu, constater son apparition dans les surfaces normales, puis afficher révision/timeline et diagnostic d’intégrité. Une sauvegarde/restauration sur copie peut être montrée si le timing le permet.
+Scénario recommandé : partir d’une campagne déjà vécue. Montrer le personnage et un proche important, une référence visuelle persistante et le journal. Montrer brièvement que le joueur n’est pas enfermé dans un menu : trois pistes peuvent l’orienter, mais une action libre reste toujours possible. Ouvrir la carte, recentrer la position actuelle, rechercher un lieu et afficher les couches. Appliquer ensuite un update préparé qui révèle ou repositionne un lieu, constater son apparition dans les surfaces normales, puis afficher révision/timeline et diagnostic d’intégrité. Une sauvegarde/restauration sur copie peut être montrée si le timing le permet.
 
 La démonstration doit vendre la sensation : **« le modèle peut changer, le chat peut se terminer, l’application peut redémarrer — le monde sait toujours ce qui est vrai. »**
 
