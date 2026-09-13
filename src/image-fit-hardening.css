@@ -1,7 +1,24 @@
 /* 0.1.6 image-fit hardening
- * Fixed visual slots crop around the image center without distortion.
+ * Sidebar protagonist portrait preserves the complete source image at a reduced size.
+ * Fixed reference-card slots may crop around the center when a consistent card ratio is needed.
  * Large previews and maps preserve the whole image instead of cropping it.
  */
+
+/* The sidebar portrait is NOT a square crop. Keep the source aspect ratio and simply scale it down. */
+.sidebar > .portrait-image {
+  width: 78px;
+  height: auto;
+  max-width: 78px;
+  max-height: none;
+  display: block;
+  object-fit: contain;
+  object-position: 50% 50%;
+  transform: none;
+  image-rendering: auto;
+  border-radius: 18px;
+}
+
+/* Generic framed slots can still use a centered crop when the UI explicitly requires a fixed ratio. */
 .portrait-frame {
   width: 96px;
   height: 96px;
