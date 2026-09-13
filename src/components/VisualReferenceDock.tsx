@@ -94,7 +94,7 @@ export function VisualReferenceDock() {
       if (!path || Array.isArray(path)) return;
       await backend.importCampaignAsset(campaignId, kind, path);
       await loadCampaignData(campaignId);
-      setStatus("Visuel importé. Associe-le à un personnage ou un lieu pour en faire une référence persistante.");
+      setStatus("Image importée. Tu peux maintenant l’associer à une personne ou à un lieu.");
     } catch (error) {
       setStatus(`Import impossible : ${String(error)}`);
     }
@@ -110,14 +110,14 @@ export function VisualReferenceDock() {
     }
   }
 
-  const launcher = <button className="visual-reference-launcher secondary" onClick={openPanel} aria-label="Ouvrir les références visuelles">Gérer les références visuelles</button>;
+  const launcher = <button className="visual-reference-launcher secondary" onClick={openPanel} aria-label="Ouvrir les portraits et images">Ouvrir les portraits & images</button>;
 
   return <>
     {launcherTarget ? createPortal(launcher, launcherTarget) : null}
-    {openDock && <div className="visual-reference-overlay" role="dialog" aria-modal="true" aria-label="Références visuelles de campagne">
+    {openDock && <div className="visual-reference-overlay" role="dialog" aria-modal="true" aria-label="Portraits et images de campagne">
       <div className="visual-reference-modal">
         <header className="visual-reference-modal-head">
-          <div><div className="eyebrow">MVP · continuité visuelle</div><h2>Identités & illustrations</h2></div>
+          <div><div className="eyebrow">Campagne</div><h2>Portraits & images</h2></div>
           <div className="action-row">
             {campaigns.length > 1 && <select value={campaignId} onChange={(event) => setCampaignId(event.target.value)}>{campaigns.map((campaign) => <option key={campaign.id} value={campaign.id}>{campaign.name}</option>)}</select>}
             <button className="ghost" onClick={() => setOpenDock(false)}>Fermer</button>
@@ -125,8 +125,8 @@ export function VisualReferenceDock() {
         </header>
         {!campaignId ? <div className="empty-inline">Aucune campagne active.</div> : !characterInitialized ? <section className="panel">
           <div className="eyebrow">Canon avant image</div>
-          <h3>Références visuelles verrouillées pour l'instant</h3>
-          <p className="muted">Crée et initialise d'abord le personnage avec le MJ. Les portraits et illustrations deviennent disponibles une fois leur sujet établi dans le canon joueur ; une image ne doit jamais inventer une apparence indécidée.</p>
+          <h3>Portraits et images indisponibles pour l'instant</h3>
+          <p className="muted">Crée et initialise d'abord le personnage avec le MJ. Les portraits et illustrations deviennent disponibles une fois leur sujet établi dans le canon joueur.</p>
         </section> : <VisualLibrary
           campaignId={campaignId}
           entities={entities}
