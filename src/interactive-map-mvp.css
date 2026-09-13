@@ -13,6 +13,8 @@
 .interactive-map-vector-layer { position:absolute; z-index:1; overflow:visible; pointer-events:none; }
 .map-vector-route { fill:none; stroke:rgba(225,205,155,.82); stroke-width:2.2; vector-effect:non-scaling-stroke; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 1px 1px rgba(0,0,0,.7)); }
 .map-vector-region { fill:rgba(157,132,81,.12); stroke:rgba(211,188,133,.72); stroke-width:1.5; vector-effect:non-scaling-stroke; stroke-dasharray:6 4; }
+.map-uncertainty-area { fill:rgba(225,203,141,.14); stroke:rgba(240,219,159,.78); stroke-width:1.8; vector-effect:non-scaling-stroke; stroke-dasharray:5 4; }
+.map-uncertainty-area.selected { fill:rgba(225,203,141,.22); stroke:rgba(255,235,177,.95); stroke-width:2.4; }
 .interactive-map-cluster { position:absolute; transform:translate(-50%,-50%) scale(calc(1 / var(--map-marker-scale, 1))); width:2.05rem; height:2.05rem; border-radius:50%; border:2px solid #dbc27e; background:#1b1d1fe8; color:#f7efd8; display:grid; place-items:center; box-shadow:0 0 0 .24rem #1118,0 0 .85rem #d9bf7066; z-index:4; padding:0; }
 .interactive-map-cluster span { font-size:.74rem; font-weight:900; }
 .interactive-map-marker { transform:translate(-50%,-50%) scale(calc(1 / var(--map-marker-scale, 1))); }
