@@ -59,3 +59,16 @@ def test_sidebar_portrait_shows_complete_source_without_crop_or_stretch():
     assert "object-fit: contain" in rule
     assert "object-fit: cover" not in rule
     assert "transform: none" in rule
+
+
+def test_relations_can_assign_a_primary_npc_portrait_directly():
+    control = source("src/components/NpcPortraitControl.tsx")
+    rpg = source("src/components/RpgViews.tsx")
+
+    assert "NpcPortraitControl" in rpg
+    assert 'importCampaignAsset(campaignId, "npc_portrait", path)' in control
+    assert '"primary_reference"' in control
+    assert "bindVisualAsset" in control
+    assert 'hasPortrait ? "Changer" : "Ajouter un portrait"' in control
+    assert "kitaba-visual-bindings-changed" in control
+    assert 'className="npc-avatar-image"' in control
