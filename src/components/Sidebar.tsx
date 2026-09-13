@@ -77,7 +77,7 @@ export function Sidebar({ campaign, entities, active, onNavigate, portraitUrl, m
   return (
     <aside className={`sidebar ${mobileOpen ? "mobile-open" : ""}`} aria-label="Navigation de campagne">
       <div className="brand">KITABA</div>
-      {portraitUrl ? <img className="portrait-image" src={portraitUrl} alt={firstName ? `Portrait de ${firstName}` : "Portrait du personnage"} /> : <div className="portrait-placeholder">{portraitInitial}</div>}
+      {portraitUrl ? <div className="portrait-frame"><img className="portrait-image" src={portraitUrl} alt={firstName ? `Portrait de ${firstName}` : "Portrait du personnage"} /></div> : <div className="portrait-placeholder">{portraitInitial}</div>}
       <div className="identity">
         <strong>{displayName}</strong>
         <span>{species !== null || age !== null ? `${species ?? "Espèce non renseignée"}${age !== null ? ` • ${age} ans` : ""}` : "Personnage non initialisé"}</span>
