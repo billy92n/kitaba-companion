@@ -15,7 +15,10 @@
   object-position: 50% 50%;
   transform: none;
   image-rendering: auto;
+  border: 1px solid #4a4133;
   border-radius: 18px;
+  margin-bottom: 14px;
+  background: #11151a;
 }
 
 /* Generic framed slots can still use a centered crop when the UI explicitly requires a fixed ratio. */
