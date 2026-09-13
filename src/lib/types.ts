@@ -129,6 +129,7 @@ export type SectionKey =
   | "journal"
   | "missions"
   | "knowledge"
+  | "encyclopedia"
   | "world"
   | "media"
   | "map"
