@@ -64,11 +64,12 @@ def test_dense_atlas_has_layers_search_clustering_current_position_and_overlap_p
 def test_map_raster_is_resized_directly_instead_of_gpu_scaling_whole_stage():
     component = _read("src/components/InteractiveMap.tsx")
     css = _read("src/interactive-map-mvp.css")
+    compact_css = css.replace(" ", "")
     assert "worldRect" in component
     assert 'style={{ left: `${rendered.left}px`, top: `${rendered.top}px`, width: `${rendered.width}px`, height: `${rendered.height}px` }}' in component
-    assert "transform:none !important" in css.replace(" ", "")
-    assert "max-width:none" in css.replace(" ", "")
-    assert "image-rendering:auto" in css.replace(" ", "")
+    assert "transform:none!important" in compact_css
+    assert "max-width:none" in compact_css
+    assert "image-rendering:auto" in compact_css
 
 
 def test_atlas_supports_routes_regions_and_approximate_positions_without_schema_change():
