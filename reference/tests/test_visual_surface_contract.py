@@ -72,3 +72,14 @@ def test_relations_can_assign_a_primary_npc_portrait_directly():
     assert 'hasPortrait ? "Changer" : "Ajouter un portrait"' in control
     assert "kitaba-visual-bindings-changed" in control
     assert 'className="npc-avatar-image"' in control
+
+
+def test_relations_can_reuse_unbound_npc_portraits_imported_before_bindings_existed():
+    control = source("src/components/NpcPortraitControl.tsx")
+
+    assert "backend.listAssets(campaignId)" in control
+    assert 'asset.kind === "npc_portrait"' in control
+    assert "boundElsewhere" in control
+    assert "readAssetDataUrl" in control
+    assert "Choisis une image déjà importée" in control
+    assert "chooseExisting(asset.id)" in control
