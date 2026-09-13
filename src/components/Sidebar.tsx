@@ -77,13 +77,13 @@ export function Sidebar({ campaign, entities, active, onNavigate, portraitUrl, m
   return (
     <aside className={`sidebar ${mobileOpen ? "mobile-open" : ""}`} aria-label="Navigation de campagne">
       <div className="brand">KITABA</div>
-      {portraitUrl ? <div className="portrait-frame"><img className="portrait-image" src={portraitUrl} alt={firstName ? `Portrait de ${firstName}` : "Portrait du personnage"} /></div> : <div className="portrait-placeholder">{portraitInitial}</div>}
+      {portraitUrl ? <img className="portrait-image" src={portraitUrl} alt={firstName ? `Portrait de ${firstName}` : "Portrait du personnage"} /> : <div className="portrait-placeholder">{portraitInitial}</div>}
       <div className="identity">
         <strong>{displayName}</strong>
         <span>{species !== null || age !== null ? `${species ?? "Espèce non renseignée"}${age !== null ? ` • ${age} ans` : ""}` : "Personnage non initialisé"}</span>
       </div>
       {rank !== null && <div className="sidebar-stat"><span>Rang</span><strong>{rank}</strong></div>}
-      {(hpCurrent !== null || hpMax !== null) && <div className="sidebar-stat"><span>HP</span><strong>{hpCurrent ?? "—"}{hpMax !== null ? ` / ${hpMax}` : ""}</strong></div>}
+      {(hpCurrent !== null || hpMax !== null) && <div className="sidebar-stat"><span>PV</span><strong>{hpCurrent ?? "—"}{hpMax !== null ? ` / ${hpMax}` : ""}</strong></div>}
       {(manaCurrent !== null || manaMax !== null) && <div className="sidebar-stat"><span>Mana</span><strong>{manaCurrent ?? "—"}{manaMax !== null ? ` / ${manaMax}` : ""}</strong></div>}
       <div className="sidebar-stat"><span>Révision</span><strong>{campaign?.current_revision ?? "—"}</strong></div>
       <div className="sidebar-stat"><span>Temps en jeu</span><strong>{campaign?.game_time ?? "—"}</strong></div>
