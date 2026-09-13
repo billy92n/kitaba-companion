@@ -25,6 +25,7 @@ const ROLE_OPTIONS = [
 ] as const;
 
 const BINDABLE_TYPES = new Set(["player_character", "npc", "place", "settlement", "region", "state"]);
+const VISUAL_BINDINGS_CHANGED_EVENT = "kitaba-visual-bindings-changed";
 
 function textField(entity: EntityDocument, ...keys: string[]) {
   for (const key of keys) {
@@ -59,6 +60,10 @@ function assetLabel(asset: AssetSummary) {
 
 function roleLabel(role: string) {
   return ROLE_OPTIONS.find(([key]) => key === role)?.[1] ?? role;
+}
+
+function notifyVisualBindingsChanged(campaignId: string) {
+  window.dispatchEvent(new CustomEvent(VISUAL_BINDINGS_CHANGED_EVENT, { detail: { campaignId } }));
 }
 
 export function VisualLibrary({ campaignId, entities, assets, previewUrl, previewAssetId, onImport, onPreview, onStatus }: Props) {
@@ -107,6 +112,7 @@ export function VisualLibrary({ campaignId, entities, assets, previewUrl, previe
       const result = await backend.bindVisualAsset(campaignId, bindingAssetId, subjectId, role, visualState.trim() || "normal", caption.trim() || undefined);
       setBindings((current) => [...current.filter((binding) => binding.asset_id !== result.asset_id), result]);
       setBindingAssetId(null);
+      notifyVisualBindingsChanged(campaignId);
       onStatus("Référence visuelle associée. Elle sera conservée dans les sauvegardes .kitaba sans modifier le canon narratif.");
     } catch (error) {
       onStatus(`Association visuelle impossible : ${String(error)}`);
@@ -121,6 +127,7 @@ export function VisualLibrary({ campaignId, entities, assets, previewUrl, previe
       await backend.unbindVisualAsset(campaignId, assetId);
       setBindings((current) => current.filter((binding) => binding.asset_id !== assetId));
       if (bindingAssetId === assetId) setBindingAssetId(null);
+      notifyVisualBindingsChanged(campaignId);
       onStatus("Association visuelle retirée. L’image reste dans la médiathèque.");
     } catch (error) {
       onStatus(`Impossible de retirer l’association : ${String(error)}`);
