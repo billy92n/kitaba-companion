@@ -45,7 +45,7 @@ export function EncyclopediaDock() {
 
   useEffect(() => {
     const locateTargets = () => {
-      setNavTarget(document.querySelector<HTMLElement>(".sidebar nav"));
+      setNavTarget(document.querySelector<HTMLElement>(".encyclopedia-nav-slot"));
       setPageTarget(document.querySelector<HTMLElement>("main"));
     };
     locateTargets();
