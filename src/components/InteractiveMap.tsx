@@ -82,6 +82,20 @@ function visibleAtZoom(marker: PositionedMarker, zoom: number) {
   return zoom >= 2.2;
 }
 
+function isApproximate(entity: EntityDocument) {
+  const precision = (stringField(entity.data, "location_precision", "map_precision") ?? "exact").toLocaleLowerCase("fr");
+  return precision.includes("approx");
+}
+
+function uncertaintyRadius(entity: EntityDocument, axis: "x" | "y") {
+  const specific = axis === "x"
+    ? numberField(entity.data, "uncertainty_radius_x", "map_uncertainty_x")
+    : numberField(entity.data, "uncertainty_radius_y", "map_uncertainty_y");
+  const shared = numberField(entity.data, "uncertainty_radius", "map_uncertainty_radius");
+  const fallback = axis === "x" ? 0.035 : 0.025;
+  return Math.max(0.005, Math.min(0.25, specific ?? shared ?? fallback));
+}
+
 function parseNormalizedPoints(value: unknown): NormalizedPoint[] {
   if (!Array.isArray(value)) return [];
   const points: NormalizedPoint[] = [];
@@ -215,6 +229,7 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
   const selected = markers.find((marker) => marker.entity.id === selectedId)?.entity ?? null;
   const filteredMarkers = useMemo(() => markers.filter((marker) => layers[marker.layer] && visibleAtZoom(marker, zoom)), [markers, layers, zoom]);
   const clusters = useMemo(() => clusterMarkers(filteredMarkers, zoom), [filteredMarkers, zoom]);
+  const uncertaintyMarkers = useMemo(() => markers.filter((marker) => layers[marker.layer] && isApproximate(marker.entity)), [markers, layers]);
 
   const searchResults = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("fr");
@@ -306,6 +321,7 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
   }
 
   const minimumZoom = geometry?.minimumZoom ?? 1;
+  const selectedRouteDistance = selected?.entity_type === "route" ? numberField(selected.data, "distance_km") : null;
 
   return <div className="interactive-map-shell">
     <div className="interactive-map-toolbar">
@@ -377,6 +393,14 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
             if (feature.closed) return <polygon key={feature.entity.id} className="map-vector-region" points={points} />;
             return <polyline key={feature.entity.id} className="map-vector-route" points={points} />;
           })}
+          {uncertaintyMarkers.map((marker) => <ellipse
+            key={`uncertainty:${marker.entity.id}`}
+            className={`map-uncertainty-area ${marker.entity.id === selectedId ? "selected" : ""}`}
+            cx={marker.x * 1000}
+            cy={marker.y * 500}
+            rx={uncertaintyRadius(marker.entity, "x") * 1000}
+            ry={uncertaintyRadius(marker.entity, "y") * 500}
+          />)}
         </svg>}
         {clusters.map((cluster) => {
           const left = geometry ? geometry.offsetX + cluster.x * geometry.fittedWidth : cluster.x * 100;
@@ -418,6 +442,7 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
         {stringField(selected.data, "realm", "kingdom", "state_name") && <div><dt>Royaume / État</dt><dd>{stringField(selected.data, "realm", "kingdom", "state_name")}</dd></div>}
         {stringField(selected.data, "region", "region_name", "continent") && <div><dt>Région</dt><dd>{stringField(selected.data, "region", "region_name", "continent")}</dd></div>}
         {stringField(selected.data, "location_precision", "map_precision") && <div><dt>Précision</dt><dd>{stringField(selected.data, "location_precision", "map_precision")}</dd></div>}
+        {selectedRouteDistance !== null && <div><dt>Distance de route</dt><dd>{selectedRouteDistance} km</dd></div>}
         {stringField(selected.data, "discovered_at", "first_known_at") && <div><dt>Découvert</dt><dd>{stringField(selected.data, "discovered_at", "first_known_at")}</dd></div>}
         {stringField(selected.data, "status", "known_status", "knowledge_state") && <div><dt>Statut connu</dt><dd>{stringField(selected.data, "status", "known_status", "knowledge_state")}</dd></div>}
       </dl>
