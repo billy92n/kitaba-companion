@@ -26,19 +26,30 @@ Visual-reference bindings are implemented as campaign-managed metadata inside th
 
 A restored 0.1.5 campaign therefore does not need pre-existing visual-binding metadata. It may acquire that metadata only after the player begins using the new visual-reference features.
 
-## CI regression lock
+## Automated compatibility coverage
 
-`reference/tests/test_release_hardening_016.py` now fails if the 0.1.6 branch silently:
+`reference/tests/test_release_hardening_016.py` fails if the 0.1.6 branch silently:
 
 - changes `CURRENT_SCHEMA_VERSION` away from 4;
 - adds an unreviewed migration beyond `0004`;
 - loses the technical backup/restore/integrity entry points.
 
-This is a release guard, not a substitute for using a real save copy.
+The Rust visual-continuity suite additionally covers a **legacy-style campaign with no `visual-bindings.json` at all**:
+
+1. create a campaign using the existing v4 persistence model;
+2. keep visual bindings absent, matching a 0.1.5 campaign;
+3. create a `.kitaba` technical backup;
+4. restore it into a fresh database/storage root;
+5. verify the new visual-binding API returns an empty set rather than an error;
+6. run campaign integrity and require it to remain green.
+
+This specifically guards the additive 0.1.6 visual-reference feature against assuming that older campaigns already contain its metadata.
+
+These are release guards, not substitutes for using a real save copy.
 
 ## Why a human migration copy is still required
 
-Byte-identical persistence code substantially reduces migration risk, but a real installation can still reveal issues that repository-level tests cannot prove, for example:
+Byte-identical persistence code and compatibility tests substantially reduce migration risk, but a real installation can still reveal issues that repository-level tests cannot prove, for example:
 
 - application storage paths/permissions on the user's Windows machine;
 - interaction with an already-existing installed data directory;
@@ -58,6 +69,6 @@ Therefore the first upgrade of a lived campaign must remain:
 
 Safe wording for 0.1.6 before the real-save-copy gate is complete:
 
-> "0.1.6 preserves the 0.1.5 persistence schema and backup/restore implementation and has automated compatibility guards; final lived-save compatibility remains subject to the real-client copy test."
+> "0.1.6 preserves the 0.1.5 persistence schema and backup/restore implementation and has automated compatibility guards, including restore of a campaign with no 0.1.6 visual metadata; final lived-save compatibility remains subject to the real-client copy test."
 
 Do not claim a lived-save migration is proven until that client gate has actually passed.
