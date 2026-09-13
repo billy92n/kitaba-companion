@@ -1,0 +1,53 @@
+name: Sync 0.1.6 release metadata
+
+on:
+  push:
+    branches: [next-system-pass]
+    paths:
+      - .github/workflows/sync-release-metadata-016.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync-lock-metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: next-system-pass
+          fetch-depth: 0
+      - name: Align lockfile package versions
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          package_lock = Path("package-lock.json")
+          text = package_lock.read_text(encoding="utf-8")
+          old = '"version": "0.1.5"'
+          if text.count(old) < 2:
+              raise SystemExit("expected 0.1.5 package-lock metadata was not found twice")
+          text = text.replace(old, '"version": "0.1.6"', 2)
+          package_lock.write_text(text, encoding="utf-8")
+
+          cargo_lock = Path("src-tauri/Cargo.lock")
+          text = cargo_lock.read_text(encoding="utf-8")
+          old = 'name = "kitaba-companion"\nversion = "0.1.5"'
+          if text.count(old) != 1:
+              raise SystemExit("expected one kitaba-companion 0.1.5 Cargo.lock entry")
+          text = text.replace(old, 'name = "kitaba-companion"\nversion = "0.1.6"', 1)
+          cargo_lock.write_text(text, encoding="utf-8")
+          PY
+      - name: Commit synchronized metadata
+        shell: bash
+        run: |
+          if git diff --quiet -- package-lock.json src-tauri/Cargo.lock; then
+            echo "Lockfile metadata already aligned."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json src-tauri/Cargo.lock
+          git commit -m "Sync 0.1.6 lockfile metadata"
+          git push origin HEAD:next-system-pass
