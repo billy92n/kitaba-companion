@@ -22,6 +22,15 @@ def test_fixed_visual_slots_center_crop_without_distortion():
     assert ".interactive-map-stage > img" in css
 
 
+def test_shared_mvp_theme_tokens_are_defined_before_feature_css_uses_them():
+    main = _read("src/main.tsx")
+    theme = _read("src/mvp-theme-hardening.css")
+    assert 'import "./mvp-theme-hardening.css"' in main
+    assert "--border:" in theme
+    assert "--muted:" in theme
+    assert "--accent:" in theme
+
+
 def test_visual_dock_keeps_canon_before_image_gate():
     dock = _read("src/components/VisualReferenceDock.tsx")
     assert 'entity.entity_type === "player_character"' in dock
