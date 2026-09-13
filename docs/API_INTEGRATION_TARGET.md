@@ -9,10 +9,11 @@ The long-term target is that a player can perform the entire Kitaba loop from th
 1. open a campaign;
 2. type/speak an action in the app;
 3. receive streamed narration/dialogue in the app;
-4. let the narrative/gameplay authority read the required campaign context through a controlled backend interface;
-5. receive a structured canonical update;
-6. validate/apply that update atomically;
-7. refresh character, relations, journal, map and visual continuity without manual export/import.
+4. receive three contextual action suggestions plus a permanently available free-input path when a player decision is expected;
+5. let the narrative/gameplay authority read the required campaign context through a controlled backend interface;
+6. receive a structured canonical update;
+7. validate/apply that update atomically;
+8. refresh character, relations, journal, map and visual continuity without manual export/import.
 
 The current ChatGPT + file/clipboard workflow remains a valid prototype/fallback path. The API target exists to remove friction, not to invalidate existing campaigns.
 
@@ -35,6 +36,26 @@ Player input, streamed answer, optional voice and scene presentation.
 
 This layer never writes canonical state directly.
 
+When the authority genuinely hands control back to the player, the presentation layer should support the Kitaba **3+1 guidance contract**:
+
+- three short, context-aware suggestions with meaningfully different intentions where possible;
+- one always-available free input path (`Autre` / custom action);
+- suggestions are examples, never exhaustive legal moves;
+- the player may rewrite, combine or ignore them;
+- unselected suggestions are never persisted as player decisions;
+- suggestions must not leak hidden information, identify an optimal answer or promise success.
+
+This contract should be represented separately from narration text so a future UI can render quick-action buttons without parsing prose.
+
+Conceptual response shape may therefore include a player-safe presentation object such as:
+
+- `narration`;
+- `decision_expected`;
+- `suggested_actions[0..3]`;
+- `free_input_allowed=true`.
+
+The exact transport schema remains post-MVP and provider-neutral.
+
 ### 2. Narrative Runtime Adapter
 
 Provider-neutral interface between Kitaba and the selected narrative engine.
@@ -44,6 +65,7 @@ Conceptual operations:
 - `prepare_turn(campaign_id)` — obtain the minimum context projection needed for the next turn;
 - `submit_player_action(campaign_id, text, client_turn_id)` — send player intent;
 - `stream_narration(...)` — return prose/dialogue incrementally;
+- `propose_choices(...)` — return up to three player-safe contextual suggestions when a decision is expected;
 - `propose_update(...)` — return structured state mutations separate from prose;
 - `request_visual_intent(...)` — optional future visual-generation request derived from already-canonical identity/state;
 - `health/capabilities` — report which optional runtime features are available.
@@ -65,6 +87,8 @@ All proposed mutations pass through the existing Kitaba validation model:
 
 Only after validation does the Companion advance canonical state.
 
+A generated suggestion never enters canonical state merely because it was displayed. Only an actual player action and validated durable consequences may be persisted.
+
 ### 4. Context Projector
 
 Do not send the entire database blindly on every turn.
@@ -77,9 +101,25 @@ The projector should build context from:
 - relevant relations, missions, knowledge and recent events;
 - necessary hidden GM state for the authority only;
 - compact continuity summaries;
-- references to persistent visual identities when supported.
+- references to persistent visual identities when supported;
+- optional initial character anchor if the player explicitly created one;
+- durable character-development observations only when they are narratively established.
 
 Large historical material remains queryable rather than recopied into every request.
+
+## Protagonist nature and character development
+
+The future API runtime must not reduce the protagonist to a fixed personality label or moral alignment.
+
+Kitaba distinguishes:
+
+- an optional light **initial character anchor** chosen by the player;
+- the character that emerges through repeated choices, costly decisions, habits and contradictions;
+- public reputation, which depends only on what NPCs/world actors can actually know.
+
+The runtime may use established character-development context to improve continuity, but it must never turn an inferred trait into an automatic player action. Player agency remains authoritative over the protagonist's voluntary decisions.
+
+If no initial anchor exists, the runtime must treat that field as OPEN rather than inventing one retroactively.
 
 ## API-provider policy
 
@@ -113,7 +153,7 @@ Preferred flow:
 
 1. backend creates authority-only context;
 2. adapter sends it directly to the narrative runtime;
-3. runtime returns player prose + structured update proposal;
+3. runtime returns player prose + player-safe suggestions + structured update proposal;
 4. backend validates/applies;
 5. frontend receives only player-safe rendered output and player-safe refreshed entities.
 
@@ -139,12 +179,13 @@ The campaign must remain recoverable if the network/provider fails.
 - add provider settings/secure credential storage;
 - implement one `NarrativeRuntimeAdapter`;
 - send a controlled context projection;
-- receive prose + a structured update proposal;
+- receive narration + 3+1 presentation data + a structured update proposal;
 - require the same validation gate as imported `KITABA_UPDATE`.
 
 ### Phase C — in-app play loop
 
 - integrated chat/streaming UI;
+- quick-action rendering for the three suggested choices plus permanent free input;
 - automatic validated update application or explicit player confirmation according to chosen UX;
 - automatic refresh of all Companion surfaces;
 - recovery/retry/session continuity.
