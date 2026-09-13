@@ -56,6 +56,12 @@ export function EncyclopediaDock() {
   }, [refresh]);
 
   useEffect(() => {
+    if (ready) return;
+    const timer = window.setInterval(() => refresh(selectedCampaignId()).catch(() => undefined), 1500);
+    return () => window.clearInterval(timer);
+  }, [ready, refresh]);
+
+  useEffect(() => {
     const onChange = (event: Event) => {
       const target = event.target;
       if (target instanceof HTMLSelectElement && target.classList.contains("campaign-select")) {
@@ -87,6 +93,7 @@ export function EncyclopediaDock() {
     await refresh(campaignId);
     setLoading(false);
     setOpen(true);
+    document.querySelector<HTMLButtonElement>(".mobile-backdrop")?.click();
   }
 
   const navButton = navTarget && ready ? createPortal(
