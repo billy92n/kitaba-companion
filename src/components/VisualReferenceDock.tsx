@@ -126,7 +126,7 @@ export function VisualReferenceDock() {
         {!campaignId ? <div className="empty-inline">Aucune campagne active.</div> : !characterInitialized ? <section className="panel">
           <div className="eyebrow">Canon avant image</div>
           <h3>Portraits et images indisponibles pour l'instant</h3>
-          <p className="muted">Crée et initialise d'abord le personnage avec le MJ. Les portraits et illustrations deviennent disponibles une fois leur sujet établi dans le canon joueur.</p>
+          <p className="muted">Crée et initialise d'abord le personnage avec le MJ. Les portraits et illustrations deviennent disponibles une fois leur sujet établi dans le canon joueur ; une image ne doit jamais inventer une apparence indécidée.</p>
         </section> : <VisualLibrary
           campaignId={campaignId}
           entities={entities}
