@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.6 — MVP candidate / release hardening
+
+- atlas vivant renforcé : limites strictes de déplacement/zoom, plein écran, recherche, couches, clustering, position actuelle, régions, routes et détails selon le niveau de zoom ;
+- localisation incertaine rendue comme une véritable zone d'incertitude et distances de voyage lues depuis un champ fictionnel explicite `distance_km`, jamais depuis les coordonnées normalisées de présentation ;
+- continuité visuelle persistante : références principales, variantes d'état courant, références de scènes et de lieux, conservées dans les sauvegardes `.kitaba` sans nouvelle migration SQLite ;
+- références visuelles directement visibles dans les vues Personnage, Relations et lieux connus, avec rafraîchissement après association/dissociation et lors d'un changement de campagne ;
+- cadrage des images durci : les portraits et vignettes conservent leurs proportions, sont centrés et recadrés sans étirement ; les grandes prévisualisations et la carte restent affichées sans déformation ;
+- garde « canon avant image » étendue au panneau de références visuelles : aucune importation de portrait/illustration avant l'initialisation canonique du personnage ;
+- métadonnées de version harmonisées en `0.1.6` dans npm, Tauri, Rust, lockfiles et nom d'artefact Windows ;
+- fondations testées pour progression/résolution, combat/blessures/mana/récupération, économie/voyage, ambiance adaptative et export éditorial ; ces mécaniques restent **PROPOSAL** tant qu'elles ne sont pas explicitement promues dans le MASTER ;
+- export utilisateur du livre et contrôle musical automatique maintenus hors périmètre du MVP 0.1.6 afin de privilégier migration, intégrité, atlas et continuité visuelle ;
+- migration de la campagne live interdite avant validation sur une COPIE d'une sauvegarde réelle 0.1.5 et smoke tests humains complets.
+
 ## 0.1.5 — Immersion & interaction
 
 - carte du monde réellement interactive : zoom molette, déplacement par glisser, plein écran, marqueurs cliquables et fiche de lieu ;
