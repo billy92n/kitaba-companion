@@ -15,6 +15,7 @@ type Props = {
   limit?: number;
 };
 
+const VISUAL_BINDINGS_CHANGED_EVENT = "kitaba-visual-bindings-changed";
 let campaignRequest: Promise<string | null> | null = null;
 let bindingCache: { campaignId: string; rows: VisualAssetBinding[]; loadedAt: number } | null = null;
 let bindingRequest: { campaignId: string; promise: Promise<VisualAssetBinding[]> } | null = null;
@@ -81,7 +82,18 @@ function selectBindings(bindings: VisualAssetBinding[], subjectEntityId: string,
 
 export function VisualReferenceGallery({ subjectEntityId, currentState, compact = false, limit = 3 }: Props) {
   const [items, setItems] = useState<VisualItem[]>([]);
+  const [refreshToken, setRefreshToken] = useState(0);
   const normalizedState = normalize(currentState);
+
+  useEffect(() => {
+    const refresh = () => {
+      bindingCache = null;
+      bindingRequest = null;
+      setRefreshToken((value) => value + 1);
+    };
+    window.addEventListener(VISUAL_BINDINGS_CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(VISUAL_BINDINGS_CHANGED_EVENT, refresh);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,7 +121,7 @@ export function VisualReferenceGallery({ subjectEntityId, currentState, compact 
       if (!cancelled) setItems([]);
     });
     return () => { cancelled = true; };
-  }, [subjectEntityId, normalizedState, limit]);
+  }, [subjectEntityId, normalizedState, limit, refreshToken]);
 
   if (!items.length) return null;
   return <div className={`visual-reference-gallery ${compact ? "compact" : ""}`} aria-label="Références visuelles liées">
