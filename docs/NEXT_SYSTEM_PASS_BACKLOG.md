@@ -6,6 +6,8 @@ Status: working backlog for the post-0.1.5 development branch. The branch is int
 
 - [x] Reserve a new application/release version (`0.1.6`) instead of reusing stable `0.1.5` for a materially different build.
 - [x] Version package metadata, Tauri/NSIS metadata, Rust package metadata and Windows artifact naming as `0.1.6`.
+- [x] Align `package-lock.json` and `src-tauri/Cargo.lock` package metadata with the same `0.1.6` release identity and add regression coverage so version drift fails CI.
+- [x] Define the shared MVP theme tokens used by atlas/media surfaces instead of leaving CSS custom properties unresolved.
 - [x] Clamp interactive world-map pan so the image cannot be dragged beyond world bounds.
 - [x] Recompute bounds after zoom, resize and fullscreen changes.
 - [x] Keep map markers aligned with the actually rendered image area.
@@ -17,6 +19,7 @@ Status: working backlog for the post-0.1.5 development branch. The branch is int
 - [ ] Verify upgrade/restore compatibility on a COPY of a real 0.1.5 `.kitaba` backup; never use the live save as the first migration test.
 - [ ] Human smoke-test strict map edges at several zoom levels and fullscreen so no black background can be exposed.
 - [ ] Human smoke-test visual binding → backup → restore → integrity on the migration copy.
+- [ ] Human smoke-test an oversized portrait/illustration and confirm fixed image slots center-crop without stretching while previews remain uncropped.
 - [ ] Human smoke-test an update that reveals/repositions a place and confirm map/search/current-location behavior.
 
 ## P1 — core game mechanics
@@ -62,6 +65,9 @@ Additional MVP work:
 - [x] Implement backup-safe Companion backend for binding local image assets to visible campaign subjects without schema migration.
 - [x] Add MVP binding UI: associate imported portraits/illustrations with a known player-facing character/place, role and visual state; edit/remove association without deleting the image.
 - [x] Surface the primary visual reference and current-state variant directly in normal PC/NPC/place views so the player does not have to open a separate reference tool.
+- [x] Center and crop fixed portrait/reference slots with `object-fit: cover` so oversized images never stretch; keep full previews/map imagery on `contain`.
+- [x] Invalidate/reload inline visual references when the active campaign changes so a shared entity id cannot display an image from the previous campaign.
+- [x] Preserve the canon-before-image rule in the new visual-reference dock, including during campaign switching/loading.
 - [ ] Smoke-test a close NPC with primary portrait + wounded/sick variant + shared scene reference.
 
 ## P1 — living atlas
@@ -125,4 +131,4 @@ Additional MVP work:
 
 ## Release rule
 
-No item moves to stable merely because it exists on this branch. Before release: version separation → automated tests → Windows build → artifact/version verification → migration-copy compatibility → human map/visual/update smoke tests → integrity check → then merge/freeze and user migration instructions. The existing live campaign remains the compatibility priority.
+No item moves to stable merely parce qu'il existe on this branch. Before release: version separation → automated tests → Windows build → artifact/version verification → migration-copy compatibility → human map/visual/update smoke tests → integrity check → then merge/freeze and user migration instructions. The existing live campaign remains the compatibility priority.
