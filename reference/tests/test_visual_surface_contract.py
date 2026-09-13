@@ -27,6 +27,18 @@ def test_normal_player_views_surface_persisted_visual_bindings():
     assert "<VisualReferenceGallery" in entity_list
 
 
+def test_visual_gallery_refreshes_after_binding_edits():
+    gallery = source("src/components/VisualReferenceGallery.tsx")
+    library = source("src/components/VisualLibrary.tsx")
+
+    event_name = "kitaba-visual-bindings-changed"
+    assert event_name in gallery
+    assert event_name in library
+    assert "dispatchEvent" in library
+    assert "addEventListener" in gallery
+    assert "refreshToken" in gallery
+
+
 def test_visual_gallery_does_not_load_entity_or_gm_data():
     gallery = source("src/components/VisualReferenceGallery.tsx")
 
