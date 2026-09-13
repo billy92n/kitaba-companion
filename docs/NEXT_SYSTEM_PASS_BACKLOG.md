@@ -14,12 +14,14 @@ Status: working backlog for the post-0.1.5 development branch. The branch is int
 - [x] Highlight the current linked settlement/place when coordinates exist.
 - [x] Add regression coverage for map boundary behavior.
 - [x] Obtain at least one fully green Windows build of the feature branch before release hardening.
-- [ ] Obtain a fully green Windows build after the final 0.1.6 version/freeze changes.
-- [ ] Verify the final artifact name and installer product version are 0.1.6.
+- [x] Obtain a fully green Windows build after the final 0.1.6 code correction: run #175 / `34764023146` at `3e51dc4fcff402bbbff560d4b3244aa2ad65b18a`.
+- [x] Verify the corrected artifact name and installer product version are 0.1.6; artifact `kitaba-companion-windows-0.1.6`, GitHub digest `e1624e5a3a003126759a8f8ab28d419b8f74e3e209e9c2f665b90802eae53c46`.
+- [ ] Re-check newest PR-head CI after final documentation/freeze commits; documentation-only commits do not invalidate the last built binary, but merge still requires a green current HEAD.
 - [ ] Verify upgrade/restore compatibility on a COPY of a real 0.1.5 `.kitaba` backup; never use the live save as the first migration test.
 - [ ] Human smoke-test strict map edges at several zoom levels and fullscreen so no black background can be exposed.
 - [ ] Human smoke-test visual binding → backup → restore → integrity on the migration copy.
-- [ ] Human smoke-test an oversized portrait/illustration and confirm fixed image slots center-crop without stretching while previews remain uncropped.
+- [x] Client evidence: oversized protagonist portrait is no longer visibly stretched in the observed 0.1.6 surface; automated image-fit regression remains active.
+- [x] Client evidence: global floating `Références visuelles` launcher was identified, moved into Media/continuity, rebuilt green, and user confirmed the correction was satisfactory.
 - [ ] Human smoke-test an update that reveals/repositions a place and confirm map/search/current-location behavior.
 
 ## P1 — core game mechanics
@@ -68,7 +70,8 @@ Additional MVP work:
 - [x] Center and crop fixed portrait/reference slots with `object-fit: cover` so oversized images never stretch; keep full previews/map imagery on `contain`.
 - [x] Invalidate/reload inline visual references when the active campaign changes so a shared entity id cannot display an image from the previous campaign.
 - [x] Preserve the canon-before-image rule in the new visual-reference dock, including during campaign switching/loading.
-- [ ] Smoke-test a close NPC with primary portrait + wounded/sick variant + shared scene reference.
+- [x] Move the visual-reference launcher out of the global floating layer and into the Media/continuity page after client-smoke feedback.
+- [ ] Smoke-test a close NPC with primary portrait + wounded/sick variant + shared scene reference through backup/restore.
 
 ## P1 — living atlas
 
@@ -91,7 +94,7 @@ Additional MVP work:
 - [x] Define stable scene-level `music_state` categories and transition semantics.
 - [x] Add executable anti-churn transition logic so ambience does not change every message.
 - [x] Allow immediate transition for real scene changes/large tonal jumps while requiring confirmation for small fluctuations.
-- [ ] Validate the actual ChatGPT playback/control surface before promising automatic music switching.
+- [ ] Validate the actual playback/control surface before promising automatic music switching.
 - [x] Keep adaptive music explicitly prototype/post-MVP for 0.1.6 until a real playback/control surface is validated; Companion-native playback remains a fallback design, not a silently substituted feature.
 
 ## P1 — book/story foundation
@@ -101,7 +104,7 @@ Additional MVP work:
 - [x] Define meaningful scene boundaries instead of splitting by message count.
 - [x] Define safe editorial merging rules that never rewrite canon.
 - [x] Implement and test a safe reference HTML renderer with optional scene illustrations.
-- [ ] Persist editorial scene captures in Companion without bloating MJ context. Explicitly deferred post-MVP 0.1.6 by `MVP_0.1.6_SCOPE_FREEZE.md`.
+- [ ] Persist editorial scene captures in Companion without bloating authority context. Explicitly deferred post-MVP 0.1.6 by `MVP_0.1.6_SCOPE_FREEZE.md`.
 - [x] Decide the first HTML `Exporter mon histoire` action is post-MVP 0.1.6 rather than introducing a new persistence/asset surface during release hardening.
 
 ## P1 — economy / travel candidate
@@ -112,17 +115,26 @@ Additional MVP work:
 - [ ] Stress-test price anchors against adventurer/guild rewards and dungeon/monster trade before canon promotion.
 - [ ] Add camp, food/water, exhaustion and weather consequences to the recovery/travel calibration.
 
-## P1 — MVP presentation
+## P1 — MVP presentation / studio readiness
 
 - [x] Define a 10–15 minute presentation flow.
 - [x] Prove the branch can pass the full Windows pipeline before final freeze.
+- [x] Freeze presentation scope: direct linked illustrations are in 0.1.6; HTML story export, live API gameplay and automatic music playback are explicitly post-MVP until their persistence/control surfaces are proven.
+- [x] Document studio adaptation boundary so ChatGPT-specific prototype choices are not confused with product invariants.
+- [x] Document future in-app API target while preserving canonical validation as a separate authority boundary.
+- [x] Add deterministic studio demo runbook.
 - [ ] Complete the remaining P0 release gates on a real-save COPY.
-- [x] Freeze presentation scope: direct linked illustrations are in 0.1.6; HTML story export and automatic music playback are explicitly post-MVP until their persistence/control surfaces are proven.
-- [ ] Run the MVP demonstration checklist end-to-end on a migration copy of an existing campaign.
+- [ ] Run the MVP demonstration checklist end-to-end on a migration/demo copy of an existing campaign.
 - [ ] Freeze and merge only after all required presentation gates are green.
 
-## P2 — deeper simulation after the MVP gate
+## P2 — post-MVP productization
 
+- [ ] Build a provider-neutral `NarrativeRuntimeAdapter` and one real API implementation inside the Companion.
+- [ ] Add secure credential storage outside campaign backups/contexts/logs.
+- [ ] Add in-app player conversation/streaming surface.
+- [ ] Project only causal/relevant context to the narrative runtime instead of sending the full database each turn.
+- [ ] Keep model prose separate from structured canonical update proposals and validate all proposed mutations before commit.
+- [ ] Add robust retry/idempotency/failure behavior so a network/model failure never advances canon.
 - [ ] Equipment/crafting: quality, durability, repair, materials and encumbrance without inventory micromanagement overload.
 - [ ] Relationship/reputation evolution: local memory, rumor spread, favors, debts, fear, trust and conflicting dimensions.
 - [ ] Broader world-economy stress tests and regional price variation.
