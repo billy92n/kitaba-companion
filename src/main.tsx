@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import { VisualReferenceDock } from "./components/VisualReferenceDock";
 import "./player-knowledge-hardening.css";
+import "./mvp-theme-hardening.css";
 import "./image-fit-hardening.css";
 
 createRoot(document.getElementById("root")!).render(
