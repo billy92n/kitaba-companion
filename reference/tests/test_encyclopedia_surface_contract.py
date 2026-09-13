@@ -37,14 +37,16 @@ def test_encyclopedia_has_requested_discovery_categories_and_epistemic_labels():
     assert "known_strengths" not in view  # generic data rendering preserves fields without inventing special truth
 
 
-def test_encyclopedia_is_normal_navigation_not_floating_obstruction():
+def test_encyclopedia_is_normal_memory_navigation_not_floating_obstruction():
     main = read("src/main.tsx")
+    sidebar = read("src/components/Sidebar.tsx")
     dock = read("src/components/EncyclopediaDock.tsx")
     css = read("src/encyclopedia.css")
 
     assert 'import { EncyclopediaDock } from "./components/EncyclopediaDock"' in main
     assert 'import "./encyclopedia.css"' in main
-    assert 'document.querySelector<HTMLElement>(".sidebar nav")' in dock
+    assert 'className="encyclopedia-nav-slot"' in sidebar
+    assert 'document.querySelector<HTMLElement>(".encyclopedia-nav-slot")' in dock
     assert "encyclopedia-nav-item" in dock
     assert "position:fixed" not in css.replace(" ", "")
     assert "body.encyclopedia-open" in css
