@@ -1,0 +1,34 @@
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def source(path: str) -> str:
+    return (ROOT / path).read_text(encoding="utf-8")
+
+
+def test_normal_player_views_surface_persisted_visual_bindings():
+    gallery = source("src/components/VisualReferenceGallery.tsx")
+    rpg = source("src/components/RpgViews.tsx")
+    entity_list = source("src/components/EntityList.tsx")
+
+    assert "listVisualAssetBindings" in gallery
+    assert "readAssetDataUrl" in gallery
+    assert 'binding.role !== "state_variant"' in gallery
+    assert "normalize(binding.state) === currentState" in gallery
+
+    assert "subjectEntityId={pcEntity.id}" in rpg
+    assert "subjectEntityId={e.id}" in rpg
+    assert "currentState={currentVisualState(e.data)}" in rpg
+
+    assert '"place"' in entity_list
+    assert '"settlement"' in entity_list
+    assert "<VisualReferenceGallery" in entity_list
+
+
+def test_visual_gallery_does_not_load_entity_or_gm_data():
+    gallery = source("src/components/VisualReferenceGallery.tsx")
+
+    assert "listEntities" not in gallery
+    assert "listVisualAssetBindings" in gallery
