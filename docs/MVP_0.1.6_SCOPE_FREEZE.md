@@ -15,6 +15,8 @@ Le candidat 0.1.6 doit démontrer et préserver :
 - distances de voyage provenant d'un champ fictionnel explicite `distance_km`, jamais des coordonnées normalisées de la carte ;
 - continuité visuelle persistante : référence principale, variante correspondant à l'état visuel courant et références de scène liées aux entités PLAYER ;
 - affichage direct des références principales/variantes courantes dans les vues normales Personnage, Relations et lieux connus ;
+- cadrage cohérent des visuels : les portraits/vignettes fixes gardent leurs proportions et sont centrés/recadrés sans étirement, tandis que les grandes prévisualisations et la carte restent affichées sans déformation ;
+- garde « canon avant image » également appliquée au panneau de références visuelles ;
 - contrat MJ d'interaction courte déjà en playtest ;
 - version Windows 0.1.6 et migration depuis une COPIE d'une vraie sauvegarde 0.1.5 avant tout merge.
 
