@@ -183,6 +183,31 @@ mod tests {
     }
 
     #[test]
+    fn legacy_campaign_without_visual_metadata_restores_with_empty_bindings() {
+        let (conn, campaign_id, root) = setup();
+        let image_path = root.join(&campaign_id).join("asset-1.png");
+        std::fs::create_dir_all(image_path.parent().unwrap()).unwrap();
+        std::fs::write(&image_path, b"legacy-portrait-bytes").unwrap();
+        assert!(list_bindings(&conn, &campaign_id, &root).unwrap().is_empty());
+
+        let backup = std::env::temp_dir().join(format!("kitaba-legacy-visual-backup-{}.kitaba", Uuid::new_v4()));
+        db::create_technical_backup(&conn, Some(&campaign_id), &backup, "legacy-visual-compat-test", &root).unwrap();
+
+        let mut restored = Connection::open_in_memory().unwrap();
+        restored.execute_batch("PRAGMA foreign_keys=ON;").unwrap();
+        db::migrate(&restored).unwrap();
+        let restored_root = std::env::temp_dir().join(format!("kitaba-legacy-visual-restored-{}", Uuid::new_v4()));
+        db::restore_technical_backup(&mut restored, &backup, &restored_root).unwrap();
+
+        assert!(list_bindings(&restored, &campaign_id, &restored_root).unwrap().is_empty());
+        assert!(db::integrity_report(&restored, &campaign_id, &restored_root).unwrap().ok);
+
+        let _ = std::fs::remove_dir_all(root);
+        let _ = std::fs::remove_dir_all(restored_root);
+        let _ = std::fs::remove_file(backup);
+    }
+
+    #[test]
     fn binding_roundtrip_uses_player_entity_and_registered_asset() {
         let (conn, campaign_id, root) = setup();
         let bound = bind_asset(&conn, &campaign_id, "asset-1", "npc-1", "primary_reference", Some("normal"), Some("Référence"), &root).unwrap();
