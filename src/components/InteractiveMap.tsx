@@ -370,7 +370,8 @@ export function InteractiveMap({ imageUrl, entities }: Props) {
   function openCluster(cluster: MarkerCluster) {
     setSelectedId(null);
     setSelectedClusterId(cluster.id);
-    focusNormalized(cluster.x, cluster.y, Math.min(MAX_ZOOM, Math.max(2.4, zoomRef.current + 0.65)));
+    // Keep the cluster stable while the chooser is open. Auto-zoom would recluster the
+    // same markers and could erase the selected group before the player can choose one.
   }
 
   function reset() {
