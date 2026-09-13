@@ -1,0 +1,49 @@
+.visual-reference-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: .7rem;
+  margin-top: .85rem;
+  width: 100%;
+}
+
+.visual-reference-gallery.compact {
+  grid-template-columns: repeat(auto-fit, minmax(92px, 118px));
+  gap: .55rem;
+}
+
+.visual-reference-card {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .035);
+}
+
+.visual-reference-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background: rgba(0, 0, 0, .16);
+}
+
+.visual-reference-card figcaption {
+  display: grid;
+  gap: .16rem;
+  padding: .48rem .55rem .55rem;
+  font-size: .72rem;
+  line-height: 1.25;
+}
+
+.visual-reference-card figcaption strong {
+  font-size: .73rem;
+}
+
+.visual-reference-card figcaption span {
+  opacity: .72;
+}
+
+.npc-card .visual-reference-gallery,
+.entity-card .visual-reference-gallery {
+  grid-column: 1 / -1;
+}
