@@ -1,12 +1,11 @@
 import type { EntityDocument } from "../lib/types";
+import { valueFr } from "../lib/frenchUi";
 import { VisualReferenceGallery } from "./VisualReferenceGallery";
 
 function text(value: unknown, fallback = "—"): string {
   if (value === null || value === undefined || value === "") return fallback;
-  if (typeof value === "boolean") return value ? "Oui" : "Non";
-  if (Array.isArray(value)) return value.map((v) => text(v, "")).filter(Boolean).join(", ") || fallback;
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
+  const localized = valueFr(value);
+  return localized === "—" ? fallback : localized;
 }
 
 function labelFromData(data: Record<string, unknown>, fallback: string) {
@@ -14,7 +13,7 @@ function labelFromData(data: Record<string, unknown>, fallback: string) {
 }
 
 function visualIdentitySummary(value: unknown): string {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return typeof value === "string" ? value : "";
+  if (!value || typeof value !== "object" || Array.isArray(value)) return typeof value === "string" ? valueFr(value) : "";
   const identity = value as Record<string, unknown>;
   const parts = [
     identity.apparent_age,
@@ -68,7 +67,7 @@ export function CharacterView({ entities }: { entities: EntityDocument[] }) {
     {(hasHp || hasMana) && <section className="panel resource-panel">
       <h2>Ressources connues</h2>
       <div className="resource-bars">
-        {hasHp && <Resource label="HP" current={hpCurrent} max={hpMax} />}
+        {hasHp && <Resource label="PV" current={hpCurrent} max={hpMax} />}
         {hasMana && <Resource label="Mana" current={manaCurrent} max={manaMax} />}
       </div>
     </section>}
@@ -172,5 +171,5 @@ export function MissionsView({ entities }: { entities: EntityDocument[] }) {
 
 function CompactEntities({ entities, empty }: { entities: EntityDocument[]; empty: string }) {
   if (!entities.length) return <div className="empty-inline">{empty}</div>;
-  return <div className="compact-list">{entities.map((e) => <article key={e.id}><strong>{labelFromData(e.data, e.entity_type)}</strong><span>{text(e.data.player_impression ?? e.data.description ?? e.data.status ?? e.data.value)}</span></article>)}</div>;
+  return <div className="compact-list">{entities.map((e) => <article key={e.id}><strong>{labelFromData(e.data, "Élément")}</strong><span>{text(e.data.player_impression ?? e.data.description ?? e.data.status ?? e.data.value)}</span></article>)}</div>;
 }
