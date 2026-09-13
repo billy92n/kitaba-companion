@@ -61,7 +61,7 @@ Additional MVP work:
 - [x] Define an illustration priority policy for home, starting settlement, close relations and major locations/scenes.
 - [x] Implement backup-safe Companion backend for binding local image assets to visible campaign subjects without schema migration.
 - [x] Add MVP binding UI: associate imported portraits/illustrations with a known player-facing character/place, role and visual state; edit/remove association without deleting the image.
-- [ ] Surface the primary visual reference and current-state variant directly in normal PC/NPC/place views so the player does not have to open a separate reference tool.
+- [x] Surface the primary visual reference and current-state variant directly in normal PC/NPC/place views so the player does not have to open a separate reference tool.
 - [ ] Smoke-test a close NPC with primary portrait + wounded/sick variant + shared scene reference.
 
 ## P1 — living atlas
@@ -77,8 +77,8 @@ Additional MVP work:
 - [x] Geography-placement contract: biome, climate, rivers, terrain, economy and known demographics constrain new settlements before coordinates are persisted.
 - [x] Region/state polygons and route paths supported as scalable map overlays in addition to point markers.
 - [x] Formal discovery states: unknown location, approximate location, exact location, rumor/known/visited/current.
-- [ ] Render a true uncertainty area when a location is only broadly known, instead of implying a precise point.
-- [ ] Define/validate an explicit route-distance field for travel calculations; normalized x/y are presentation coordinates and must not silently become kilometers.
+- [x] Render a true uncertainty area when a location is only broadly known, instead of implying a precise point.
+- [x] Define/validate an explicit route-distance field for travel calculations; normalized x/y are presentation coordinates and must not silently become kilometers.
 
 ## P1 — adaptive ambience
 
@@ -86,7 +86,7 @@ Additional MVP work:
 - [x] Add executable anti-churn transition logic so ambience does not change every message.
 - [x] Allow immediate transition for real scene changes/large tonal jumps while requiring confirmation for small fluctuations.
 - [ ] Validate the actual ChatGPT playback/control surface before promising automatic music switching.
-- [ ] If direct ChatGPT control cannot be made reliable, keep adaptive music labeled prototype/post-MVP rather than faking automation; Companion-native playback remains a fallback design, not a silently substituted feature.
+- [x] Keep adaptive music explicitly prototype/post-MVP for 0.1.6 until a real playback/control surface is validated; Companion-native playback remains a fallback design, not a silently substituted feature.
 
 ## P1 — book/story foundation
 
@@ -95,8 +95,8 @@ Additional MVP work:
 - [x] Define meaningful scene boundaries instead of splitting by message count.
 - [x] Define safe editorial merging rules that never rewrite canon.
 - [x] Implement and test a safe reference HTML renderer with optional scene illustrations.
-- [ ] Persist editorial scene captures in Companion without bloating MJ context.
-- [ ] Connect a first HTML `Exporter mon histoire` action to Companion and campaign assets, or explicitly mark this as post-MVP before presentation freeze.
+- [ ] Persist editorial scene captures in Companion without bloating MJ context. Explicitly deferred post-MVP 0.1.6 by `MVP_0.1.6_SCOPE_FREEZE.md`.
+- [x] Decide the first HTML `Exporter mon histoire` action is post-MVP 0.1.6 rather than introducing a new persistence/asset surface during release hardening.
 
 ## P1 — economy / travel candidate
 
@@ -111,7 +111,7 @@ Additional MVP work:
 - [x] Define a 10–15 minute presentation flow.
 - [x] Prove the branch can pass the full Windows pipeline before final freeze.
 - [ ] Complete the remaining P0 release gates on a real-save COPY.
-- [ ] Decide whether direct linked illustrations and basic HTML story export are in the presentation slice or explicitly post-MVP; do not leave either in an ambiguous half-shipped state.
+- [x] Freeze presentation scope: direct linked illustrations are in 0.1.6; HTML story export and automatic music playback are explicitly post-MVP until their persistence/control surfaces are proven.
 - [ ] Run the MVP demonstration checklist end-to-end on a migration copy of an existing campaign.
 - [ ] Freeze and merge only after all required presentation gates are green.
 
