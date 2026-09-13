@@ -21,21 +21,26 @@ export function VisualReferenceDock() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewAssetId, setPreviewAssetId] = useState<string | null>(null);
   const [status, setStatus] = useState("Prêt.");
+  const characterInitialized = entities.some((entity) => entity.entity_type === "player_character");
 
   async function loadCampaignData(id: string) {
     if (!id) return;
+    setEntities([]);
+    setAssets([]);
+    setPreviewUrl(null);
+    setPreviewAssetId(null);
     const [rows, assetRows] = await Promise.all([
       backend.listEntities(id, false),
       backend.listAssets(id),
     ]);
     setEntities(rows);
     setAssets(assetRows);
-    setPreviewUrl(null);
-    setPreviewAssetId(null);
   }
 
   async function openPanel() {
     setOpenDock(true);
+    setEntities([]);
+    setAssets([]);
     try {
       const rows = await backend.listCampaigns();
       setCampaigns(rows);
@@ -55,6 +60,10 @@ export function VisualReferenceDock() {
 
   async function importVisual(kind: VisualKind) {
     if (!campaignId) return;
+    if (kind !== "world_map" && !characterInitialized) {
+      setStatus("Portraits et illustrations restent verrouillés tant que l'apparence du personnage n'a pas été établie dans le canon joueur.");
+      return;
+    }
     const titles: Record<VisualKind, string> = {
       world_map: "Importer le fond de carte",
       player_portrait: "Importer le portrait du personnage",
@@ -98,7 +107,11 @@ export function VisualReferenceDock() {
             <button className="ghost" onClick={() => setOpenDock(false)}>Fermer</button>
           </div>
         </header>
-        {!campaignId ? <div className="empty-inline">Aucune campagne active.</div> : <VisualLibrary
+        {!campaignId ? <div className="empty-inline">Aucune campagne active.</div> : !characterInitialized ? <section className="panel">
+          <div className="eyebrow">Canon avant image</div>
+          <h3>Références visuelles verrouillées pour l'instant</h3>
+          <p className="muted">Crée et initialise d'abord le personnage avec le MJ. Les portraits et illustrations deviennent disponibles une fois leur sujet établi dans le canon joueur ; une image ne doit jamais inventer une apparence indécidée.</p>
+        </section> : <VisualLibrary
           campaignId={campaignId}
           entities={entities}
           assets={assets}
