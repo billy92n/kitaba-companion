@@ -10,7 +10,9 @@ def _read(path: str) -> str:
 def test_interactive_map_is_zoomable_pannable_and_clickable():
     component = _read("src/components/InteractiveMap.tsx")
     app = _read("src/App.tsx")
-    assert "onWheel" in component
+    assert 'addEventListener("wheel", onWheel, { passive: false })' in component
+    assert "event.preventDefault()" in component
+    assert "event.stopPropagation()" in component
     assert "onPointerMove" in component
     assert "requestFullscreen" in component
     assert "setSelectedId" in component
@@ -36,11 +38,11 @@ def test_interactive_map_clamps_pan_and_prevents_black_borders():
     assert "Math.max(-maxY, Math.min(maxY, next.y))" in component
     assert "ResizeObserver" in component
     assert 'document.addEventListener("fullscreenchange", synchronizeGeometry)' in component
-    assert "geometry.offsetX + cluster.x * geometry.fittedWidth" in component
-    assert "geometry.offsetY + cluster.y * geometry.fittedHeight" in component
+    assert "rendered.left + cluster.x * rendered.width" in component
+    assert "rendered.top + cluster.y * rendered.height" in component
 
 
-def test_dense_atlas_has_layers_search_clustering_and_current_position():
+def test_dense_atlas_has_layers_search_clustering_current_position_and_overlap_picker():
     component = _read("src/components/InteractiveMap.tsx")
     css = _read("src/interactive-map-mvp.css")
     assert "clusterMarkers" in component
@@ -50,8 +52,23 @@ def test_dense_atlas_has_layers_search_clustering_and_current_position():
     assert "visibleAtZoom" in component
     assert "map_importance" in component
     assert "interactive-map-cluster" in component
+    assert "selectedClusterId" in component
+    assert "Lieux à cet endroit" in component
+    assert "map-cluster-choice-list" in component
+    assert "const MAX_ZOOM = 12" in component
     assert "map-search-results" in css
     assert "interactive-map-cluster" in css
+    assert "map-cluster-choice-list" in css
+
+
+def test_map_raster_is_resized_directly_instead_of_gpu_scaling_whole_stage():
+    component = _read("src/components/InteractiveMap.tsx")
+    css = _read("src/interactive-map-mvp.css")
+    assert "worldRect" in component
+    assert 'style={{ left: `${rendered.left}px`, top: `${rendered.top}px`, width: `${rendered.width}px`, height: `${rendered.height}px` }}' in component
+    assert "transform:none !important" in css.replace(" ", "")
+    assert "max-width:none" in css.replace(" ", "")
+    assert "image-rendering:auto" in css.replace(" ", "")
 
 
 def test_atlas_supports_routes_regions_and_approximate_positions_without_schema_change():
