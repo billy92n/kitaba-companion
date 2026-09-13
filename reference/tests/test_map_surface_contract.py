@@ -60,7 +60,7 @@ def test_map_wheel_is_consumed_by_map_and_does_not_scroll_page():
     assert "overscroll-behavior:contain" in css
 
 
-def test_overlapping_locations_open_a_real_choice_list():
+def test_overlapping_locations_open_a_real_choice_list_without_reclustering_it_away():
     component = source("src/components/InteractiveMap.tsx")
     css = source("src/interactive-map-mvp.css")
 
@@ -70,6 +70,10 @@ def test_overlapping_locations_open_a_real_choice_list():
     assert "map-cluster-choice-list" in component
     assert "selectedCluster.markers.map" in component
     assert ".map-cluster-choice-list" in css
+
+    open_cluster = component.split("function openCluster", 1)[1].split("function reset", 1)[0]
+    assert "setSelectedClusterId(cluster.id)" in open_cluster
+    assert "focusNormalized(" not in open_cluster
 
 
 def test_map_uses_high_zoom_and_resizes_raster_instead_of_css_scaling():
