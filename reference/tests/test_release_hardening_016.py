@@ -65,6 +65,25 @@ def test_map_drag_relies_on_clamping_even_at_cover_minimum_zoom():
     assert "clampPanToWorld(next, zoom, geometry)" in component
 
 
+def test_016_keeps_015_persistence_schema_and_backup_contract():
+    db = _read("src-tauri/src/db.rs")
+    migrations = sorted((ROOT / "src-tauri" / "migrations").glob("*.sql"))
+
+    # 0.1.6 deliberately keeps the production 0.1.5 persistence schema.
+    # Visual-reference bindings are additive backup-managed assets/metadata, not a DB migration.
+    assert "pub const CURRENT_SCHEMA_VERSION: i64 = 4;" in db
+    assert [path.name for path in migrations] == [
+        "0001_initial.sql",
+        "0002_death_gate.sql",
+        "0003_entity_protection.sql",
+        "0004_sync_export_state.sql",
+    ]
+    assert 'include_str!("../migrations/0005_' not in db
+    assert "pub fn create_technical_backup(" in db
+    assert "pub fn restore_technical_backup(" in db
+    assert "pub fn integrity_report(" in db
+
+
 def test_all_release_metadata_identifies_016():
     package = json.loads(_read("package.json"))
     package_lock = json.loads(_read("package-lock.json"))
