@@ -20,7 +20,6 @@ const nav: Array<[SectionKey, string]> = [
   ["journal", "Journal"],
   ["missions", "Missions"],
   ["knowledge", "Connaissances"],
-  ["encyclopedia", "Encyclopédie"],
   ["world", "Monde"],
   ["media", "Médiathèque"],
   ["map", "Carte"],
@@ -39,7 +38,6 @@ const discoveryTypes: Partial<Record<SectionKey, string[]>> = {
   skills: ["skill", "mastery", "characteristic", "specialized_stat"],
   magic: ["magic", "spell", "affinity", "invocation", "contract", "enchantment", "known_aptitude"],
   missions: ["mission", "quest"],
-  encyclopedia: ["npc", "relationship", "settlement", "place", "state", "region", "faction", "organization", "knowledge", "rumor", "belief", "world_event", "historical_event", "timeline_event", "monster", "creature", "troop", "unit", "concept", "lore"],
   world: ["faction", "organization", "settlement", "state", "market", "economy_state", "conflict", "world_event", "environment_state", "resource_state", "infrastructure", "law", "political_state"],
   map: ["place", "map_marker", "map", "current_location", "settlement", "state", "region", "route", "dungeon"],
   timeline: ["timeline_event", "historical_event"],
@@ -73,7 +71,7 @@ export function Sidebar({ campaign, entities, active, onNavigate, portraitUrl, m
     if (!required) return true;
     if (key === "magic" && (manaCurrent !== null || manaMax !== null)) return true;
     if (key === "adventurer_card" && rank !== null) return true;
-    return required.some((type) => entityTypes.has(type)) || (key === "encyclopedia" && entities.some((entity) => entity.data.encyclopedia_include === true));
+    return required.some((type) => entityTypes.has(type));
   }) : preCreationNav;
 
   return (
