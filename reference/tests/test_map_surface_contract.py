@@ -29,3 +29,22 @@ def test_route_distance_is_displayed_only_from_explicit_distance_km():
     assert "ne représentent jamais automatiquement une distance" in contract
     assert "distance_km" in contract
     assert "refuse une route sans distance explicite" in contract
+
+
+def test_successful_update_reloads_campaign_entities_used_by_atlas():
+    app = source("src/App.tsx")
+
+    # Import commits through the canonical backend, then refreshes campaign summaries.
+    assert "const result = await backend.importUpdate(jsonText);" in app
+    assert "await refreshCampaigns();" in app
+
+    # A revision change reloads the actual campaign data rather than leaving stale UI state.
+    assert "refreshCampaignData(campaign.id)" in app
+    assert "[campaign?.id, campaign?.current_revision]" in app
+    assert "setEntities(player);" in app
+
+    # Map/search/current-location are derived from that refreshed PLAYER entity set.
+    assert "const currentLocation = entities.find((e) => e.entity_type === \"current_location\")?.data;" in app
+    assert "const mapEntities = entities.filter" in app
+    assert "<InteractiveMap imageUrl={worldMapUrl" in app
+    assert "entities={mapEntities}" in app
