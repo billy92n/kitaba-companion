@@ -40,10 +40,12 @@ The Companion is not intended to replace a game engine. It demonstrates a reusab
 
 For the current prototype, ChatGPT performs narration, dialogue, action resolution, world evolution, NPC decisions, time advancement and gameplay consequences. A studio integration may substitute its own model orchestration, rules engine or authored runtime behind the same conceptual boundary.
 
+The long-term Kitaba product direction is to put the complete player loop inside the Companion through a controlled narrative API/runtime adapter. Model output still does not write directly to the save: canonical mutations remain validated by the Companion state layer.
+
 ## Core invariants
 
 1. No real-time clock advances game time.
-2. Companion never silently invents or resolves gameplay canon.
+2. Companion never silently invents or resolves gameplay canon outside the authorized narrative/gameplay runtime.
 3. GM secrets never enter player exports or ordinary player reads.
 4. Updates are atomic and revision-checked.
 5. Rest Points are gameplay checkpoints; technical backups are disaster recovery only.
@@ -78,6 +80,10 @@ The production stack is Tauri 2 + React + TypeScript + SQLite. `.github/workflow
 
 The current 0.1.6 candidate has passed the full Windows pipeline on its release-hardening branch; final promotion remains gated by real-save migration/smoke validation and must not modify the live 0.1.5 campaign as its first migration test.
 
-## Adaptation boundary
+## Adaptation and presentation docs
 
-See `docs/ARCHITECTURE.md`, `docs/MVP_PRESENTATION_SCOPE.md` and `docs/STUDIO_ADAPTATION_GUIDE.md` for the current separation between the prototype-specific ChatGPT workflow and the reusable Companion concepts.
+- `docs/ARCHITECTURE.md` — current responsibilities and reusable seams;
+- `docs/STUDIO_ADAPTATION_GUIDE.md` — what a studio can substitute and what the prototype actually proves;
+- `docs/API_INTEGRATION_TARGET.md` — target architecture for playing entirely inside the Companion through a controlled runtime/API;
+- `docs/MVP_PRESENTATION_SCOPE.md` — studio-facing MVP claims and boundaries;
+- `docs/STUDIO_DEMO_RUNBOOK.md` — deterministic 10–15 minute demonstration flow.
