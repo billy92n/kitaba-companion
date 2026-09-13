@@ -7,9 +7,13 @@
 - continuité visuelle persistante : références principales, variantes d'état courant, références de scènes et de lieux, conservées dans les sauvegardes `.kitaba` sans nouvelle migration SQLite ;
 - références visuelles directement visibles dans les vues Personnage, Relations et lieux connus, avec rafraîchissement après association/dissociation et lors d'un changement de campagne ;
 - cadrage des images durci : les portraits et vignettes conservent leurs proportions, sont centrés et recadrés sans étirement ; les grandes prévisualisations et la carte restent affichées sans déformation ;
+- le lanceur `Références visuelles`, initialement flottant sur toutes les pages, est désormais limité à la surface Médiathèque / continuité visuelle afin de ne plus recouvrir les informations de l'interface ;
 - garde « canon avant image » étendue au panneau de références visuelles : aucune importation de portrait/illustration avant l'initialisation canonique du personnage ;
+- compatibilité 0.1.5 durcie : le noyau `src-tauri/src/db.rs` reste byte-identical avec la stable 0.1.5, le schéma SQLite reste v4 sans migration `0005`, et CI verrouille désormais ce contrat ;
+- ajout d'un test Rust de restauration d'une campagne de style 0.1.5 ne contenant aucun `visual-bindings.json`, qui doit restaurer avec références visuelles vides et diagnostic d'intégrité vert ;
 - métadonnées de version harmonisées en `0.1.6` dans npm, Tauri, Rust, lockfiles et nom d'artefact Windows ;
 - fondations testées pour progression/résolution, combat/blessures/mana/récupération, économie/voyage, ambiance adaptative et export éditorial ; ces mécaniques restent **PROPOSAL** tant qu'elles ne sont pas explicitement promues dans le MASTER ;
+- architecture produit documentée pour un futur runtime/API intégré au Companion sans donner au moteur narratif un accès d'écriture direct au canon ;
 - export utilisateur du livre et contrôle musical automatique maintenus hors périmètre du MVP 0.1.6 afin de privilégier migration, intégrité, atlas et continuité visuelle ;
 - migration de la campagne live interdite avant validation sur une COPIE d'une sauvegarde réelle 0.1.5 et smoke tests humains complets.
 
