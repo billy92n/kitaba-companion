@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { open } from "@tauri-apps/plugin-dialog";
 import { backend } from "../lib/backend";
 import type { AssetSummary, CampaignSummary, EntityDocument } from "../lib/types";
@@ -21,6 +22,7 @@ export function VisualReferenceDock() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewAssetId, setPreviewAssetId] = useState<string | null>(null);
   const [status, setStatus] = useState("Prêt.");
+  const [launcherTarget, setLauncherTarget] = useState<HTMLElement | null>(null);
   const characterInitialized = entities.some((entity) => entity.entity_type === "player_character");
 
   async function loadCampaignData(id: string) {
@@ -57,6 +59,18 @@ export function VisualReferenceDock() {
     if (!openDock || !campaignId) return;
     loadCampaignData(campaignId).catch((error) => setStatus(`Chargement impossible : ${String(error)}`));
   }, [campaignId]);
+
+  useEffect(() => {
+    const root = document.getElementById("root");
+    if (!root) return;
+    const synchronizeTarget = () => {
+      setLauncherTarget(document.querySelector<HTMLElement>(".media-stack .visual-continuity"));
+    };
+    synchronizeTarget();
+    const observer = new MutationObserver(synchronizeTarget);
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   async function importVisual(kind: VisualKind) {
     if (!campaignId) return;
@@ -96,8 +110,10 @@ export function VisualReferenceDock() {
     }
   }
 
+  const launcher = <button className="visual-reference-launcher secondary" onClick={openPanel} aria-label="Ouvrir les références visuelles">Gérer les références visuelles</button>;
+
   return <>
-    <button className="visual-reference-launcher" onClick={openPanel} aria-label="Ouvrir les références visuelles">Références visuelles</button>
+    {launcherTarget ? createPortal(launcher, launcherTarget) : null}
     {openDock && <div className="visual-reference-overlay" role="dialog" aria-modal="true" aria-label="Références visuelles de campagne">
       <div className="visual-reference-modal">
         <header className="visual-reference-modal-head">
