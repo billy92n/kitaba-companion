@@ -8,26 +8,36 @@ The MVP pass is materially different from stable 0.1.5, so it must ship under a 
 
 ## Live-campaign rule
 
-`Kitaba Solo - Test 1` / the ongoing `Kitaba première partie` campaign is never used as the first migration target. The first validation uses a COPY restored from the known-good 0.1.5 `.kitaba` backup. Only after that copy passes revision/timeline checks, integrity, map, visual-reference and update smoke tests may the live installation be upgraded.
+The user's current ongoing campaign is never used as the first migration target. The first validation uses a COPY restored from a known-good 0.1.5 `.kitaba` backup. Only after that copy passes revision/timeline checks, integrity, map, visual-reference and update smoke tests may the live installation be upgraded.
 
 No release may require recreating the character or restarting the campaign.
 
-## Project Sources
+## Current live play stack
 
-Until the 0.1.6 content contract is intentionally frozen, the user's current project Sources remain exactly:
+While 0.1.6 remains a development candidate, the user's real campaign continues on:
 
-1. `KITABA_MASTER_PROJECT_SOURCE_v1.4_FINAL.md`
-2. `Carte fantasy panoramique sans légendes.png`
+1. **Kitaba Companion 0.1.5**;
+2. **`KITABA_MASTER_PROJECT_SOURCE_v1.4.4_FINAL.md`** as the single active MASTER SOURCE;
+3. the canonical project map image.
 
-Development drafts, installers, release ZIPs, migration guides, LIVE_PATCH files and campaign GM_FULL exports are never added to Project Sources.
+The cumulative Source patches already accepted for live play are:
+
+- 1.4.1 — optional initial character anchor + emergent protagonist nature;
+- 1.4.2 — default 3+1 guided-choice presentation while preserving unrestricted free input;
+- 1.4.3 — future API integration is allowed/targeted; only a paid API forced as the sole play path remains rejected;
+- 1.4.4 — clarification that ChatGPT is the **current** narrative runtime, while a future in-app runtime/API may occupy that role without merging narrative authority into the persistence core.
+
+These Source updates do not require a Companion upgrade and do not rewrite an existing campaign's frozen Genesis or established dynamic canon.
+
+Development drafts, installers, release ZIPs, migration guides, LIVE_PATCH files and campaign GM_FULL exports are never Project Sources.
 
 ## Content-contract deliverables before 0.1.6 migration
 
 The application build alone is not enough. Before telling the user to migrate, prepare and verify:
 
 - a next MASTER SOURCE revision only for rules that have actually been accepted/promoted from PROPOSAL;
-- a LIVE_PATCH for the existing game chat so interaction/pacing/new persistence contracts can be adopted without restarting the save;
-- an updated fresh-campaign game prompt for future campaigns;
+- any necessary live-chat instruction/update so the current campaign can adopt non-Genesis interaction/persistence contracts without restarting the save;
+- an updated fresh-campaign game prompt for future campaigns if the Companion/API flow changes;
 - a concise migration guide explaining backup → install-in-place → same campaign → integrity → fresh GM_FULL → same game chat;
 - release metadata/checksums matching the exact production artifact.
 
@@ -69,6 +79,6 @@ Only then can the live-save migration instructions be issued.
 
 ## Music and story export honesty gate
 
-Adaptive music is not advertised as automatically controlled by ChatGPT until the actual playback/control surface is verified end-to-end. If reliable control is unavailable, it remains a prototype/post-MVP capability.
+Adaptive music is not advertised as automatically controlled by the narrative runtime until the actual playback/control surface is verified end-to-end. If reliable control is unavailable, it remains a prototype/post-MVP capability.
 
 Likewise, the editorial HTML renderer foundation is not advertised as an in-app `Exporter mon histoire` feature until the Companion actually exposes and persists the required editorial scenes.
