@@ -17,7 +17,7 @@ type Props = {
 
 let campaignRequest: Promise<string | null> | null = null;
 let bindingCache: { campaignId: string; rows: VisualAssetBinding[]; loadedAt: number } | null = null;
-let bindingRequest: Promise<VisualAssetBinding[]> | null = null;
+let bindingRequest: { campaignId: string; promise: Promise<VisualAssetBinding[]> } | null = null;
 const assetUrlCache = new Map<string, Promise<string>>();
 
 function normalize(value: string | null | undefined) {
@@ -35,18 +35,19 @@ async function resolveSelectedCampaignId(): Promise<string | null> {
   return campaignRequest;
 }
 
-async function loadBindings(campaignId: string) {
+async function loadBindings(campaignId: string): Promise<VisualAssetBinding[]> {
   const now = Date.now();
   if (bindingCache?.campaignId === campaignId && now - bindingCache.loadedAt < 1000) return bindingCache.rows;
-  if (!bindingRequest) {
-    bindingRequest = backend.listVisualAssetBindings(campaignId).then((rows) => {
+  if (!bindingRequest || bindingRequest.campaignId !== campaignId) {
+    const promise = backend.listVisualAssetBindings(campaignId).then((rows) => {
       bindingCache = { campaignId, rows, loadedAt: Date.now() };
       return rows;
     }).finally(() => {
-      bindingRequest = null;
+      if (bindingRequest?.campaignId === campaignId) bindingRequest = null;
     });
+    bindingRequest = { campaignId, promise };
   }
-  return bindingRequest;
+  return bindingRequest.promise;
 }
 
 function bindingPriority(binding: VisualAssetBinding, currentState: string) {
