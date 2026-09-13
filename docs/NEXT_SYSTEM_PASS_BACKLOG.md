@@ -16,7 +16,9 @@ Status: working backlog for the post-0.1.5 development branch. The branch is int
 - [x] Obtain at least one fully green Windows build of the feature branch before release hardening.
 - [x] Obtain a fully green Windows build after the final 0.1.6 code correction: run #175 / `34764023146` at `3e51dc4fcff402bbbff560d4b3244aa2ad65b18a`.
 - [x] Verify the corrected artifact name and installer product version are 0.1.6; artifact `kitaba-companion-windows-0.1.6`, GitHub digest `e1624e5a3a003126759a8f8ab28d419b8f74e3e209e9c2f665b90802eae53c46`.
-- [ ] Re-check newest PR-head CI after final documentation/freeze commits; documentation-only commits do not invalidate the last built binary, but merge still requires a green current HEAD.
+- [x] Prove repository-level 0.1.5→0.1.6 persistence compatibility: `src-tauri/src/db.rs` is byte-identical on stable `main` and the 0.1.6 branch at freeze (Git blob `e1198993619865a5a38af5acf22a9ab9c1d0f20f`), schema stays v4, and CI now rejects an unreviewed migration beyond `0004`.
+- [x] Document the compatibility evidence and its limits in `docs/COMPATIBILITY_0.1.5_TO_0.1.6.md`.
+- [ ] Re-check newest PR-head CI after the latest hardening/docs commits; merge still requires a green current HEAD.
 - [ ] Verify upgrade/restore compatibility on a COPY of a real 0.1.5 `.kitaba` backup; never use the live save as the first migration test.
 - [ ] Human smoke-test strict map edges at several zoom levels and fullscreen so no black background can be exposed.
 - [ ] Human smoke-test visual binding → backup → restore → integrity on the migration copy.
@@ -42,18 +44,23 @@ Status: working backlog for the post-0.1.5 development branch. The branch is int
 
 ## P1 — interactive fiction quality
 
-Already carried by the 0.1.5 contract and still under live playtest:
+Already carried by the active game contract and still under live playtest:
 
 - shorter playable beats rather than passive text walls;
 - enrich terse player actions with concise gestures/sensory/emotional detail without changing intent;
 - player-declared outcomes remain attempts when uncertain;
 - player controls protagonist actions, not NPC reactions or world results;
-- deeper description on inspection, major reveals and emotionally important beats rather than every turn.
+- deeper description on inspection, major reveals and emotionally important beats rather than every turn;
+- optional light initial character anchor, otherwise character nature remains OPEN and emerges from play;
+- character development follows repeated/costly choices and contradictions rather than a fixed morality meter;
+- nature/reputation remain distinct and no inferred trait may take control of the protagonist;
+- default **3+1 guidance** when a player decision is expected: three contextual suggestions plus unrestricted free input.
 
-Additional MVP work:
+Additional MVP/product work:
 
 - [x] Add explicit pacing profiles for exploration, dialogue, tension/combat and emotional scenes.
 - [x] Define chapter/scene editorial capture for future readable story export without storing a verbatim chat transcript as canon.
+- [x] Reflect the 3+1 guided-freedom contract and emergent-character model in studio/API design docs without claiming native Companion controls already exist.
 - [ ] Keep collecting live-player feedback before freezing the next MJ contract; no pacing rule is promoted merely because it exists in code/docs.
 
 ## P1 — visual continuity / illustration
@@ -123,6 +130,7 @@ Additional MVP work:
 - [x] Document studio adaptation boundary so ChatGPT-specific prototype choices are not confused with product invariants.
 - [x] Document future in-app API target while preserving canonical validation as a separate authority boundary.
 - [x] Add deterministic studio demo runbook.
+- [x] Add guided-freedom (3+1) and emergent protagonist-character concepts to the API and studio presentation path without expanding the 0.1.6 executable scope.
 - [ ] Complete the remaining P0 release gates on a real-save COPY.
 - [ ] Run the MVP demonstration checklist end-to-end on a migration/demo copy of an existing campaign.
 - [ ] Freeze and merge only after all required presentation gates are green.
@@ -132,6 +140,8 @@ Additional MVP work:
 - [ ] Build a provider-neutral `NarrativeRuntimeAdapter` and one real API implementation inside the Companion.
 - [ ] Add secure credential storage outside campaign backups/contexts/logs.
 - [ ] Add in-app player conversation/streaming surface.
+- [ ] Render the 3 suggested contextual actions as quick controls while keeping a permanent unrestricted free-input action path.
+- [ ] Keep initial character anchor optional and expose durable character-development context without turning traits into automatic player actions.
 - [ ] Project only causal/relevant context to the narrative runtime instead of sending the full database each turn.
 - [ ] Keep model prose separate from structured canonical update proposals and validate all proposed mutations before commit.
 - [ ] Add robust retry/idempotency/failure behavior so a network/model failure never advances canon.
