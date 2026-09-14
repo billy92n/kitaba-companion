@@ -13,7 +13,7 @@ type Category = {
 };
 
 const categories: Category[] = [
-  { key: "settlements", label: "Colonies & lieux", description: "Villes, villages, régions, routes, donjons et lieux remarquables connus.", types: new Set(["settlement", "place", "region", "dungeon", "route"]) },
+  { key: "settlements", label: "Lieux & localités", description: "Villes, villages, régions, routes, donjons et lieux remarquables connus.", types: new Set(["settlement", "place", "region", "dungeon", "route"]) },
   { key: "figures", label: "Figures & relations", description: "PNJ nommés, héros, dirigeants, mentors, rivaux et autres personnes durablement pertinentes.", types: new Set(["npc", "hero", "notable", "leader", "ruler", "mentor", "rival", "character"]) },
   { key: "lineages", label: "Relations & lignées", description: "Liens connus, parentés, maisons, clans, filiations et dynasties.", types: new Set(["relationship", "family_relation", "kinship", "lineage", "dynasty", "house", "clan"]) },
   { key: "bestiary", label: "Bestiaire & troupes", description: "Créatures, monstres, unités et ennemis étudiés, avec forces/faiblesses lorsqu'elles sont connues.", types: new Set(["monster", "creature", "beast", "species", "troop", "unit", "military_unit", "enemy_type", "bestiary_entry"]) },
@@ -70,7 +70,14 @@ function supportsInlineVisual(entity: EntityDocument) {
   return ["npc", "hero", "notable", "leader", "ruler", "place", "settlement", "region", "state", "kingdom", "dungeon", "monster", "creature"].includes(entity.entity_type);
 }
 
-const hiddenKeys = new Set(["name", "title", "first_name", "known_name", "label", "subject", "known_summary", "summary", "description", "notes", "knowledge_summary", "encyclopedia_category", "encyclopedia_include", "epistemic_status", "knowledge_status", "certainty", "confidence"]);
+const hiddenKeys = new Set([
+  "name", "title", "first_name", "known_name", "label", "subject",
+  "known_summary", "summary", "description", "notes", "knowledge_summary",
+  "encyclopedia_category", "encyclopedia_include",
+  "epistemic_status", "knowledge_status", "certainty", "confidence",
+  "x", "y", "map_x", "map_y", "map_importance", "priority", "importance",
+  "current", "place_id", "settlement_id", "map_marker_id", "entity_id", "source_gm_entity_id",
+]);
 
 export function EncyclopediaView({ entities }: { entities: EntityDocument[] }) {
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
@@ -98,7 +105,7 @@ export function EncyclopediaView({ entities }: { entities: EntityDocument[] }) {
       <section className="panel encyclopedia-intro">
         <div className="eyebrow">Livre du joueur</div>
         <h2>Encyclopédie de campagne</h2>
-        <p>Tout ce qui apparaît ici provient uniquement des connaissances visibles du personnage. Une rumeur reste une rumeur ; une information inconnue du joueur n'est jamais révélée par le Codex.</p>
+        <p>Tout ce qui apparaît ici provient uniquement des connaissances visibles du personnage. Une rumeur reste une rumeur ; une information inconnue du joueur n'est jamais révélée par l'Encyclopédie.</p>
         <div className="encyclopedia-summary"><strong>{entries.length}</strong><span>entrée(s) connue(s)</span></div>
       </section>
 
