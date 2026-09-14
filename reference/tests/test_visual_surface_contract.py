@@ -11,6 +11,7 @@ def source(path: str) -> str:
 def test_normal_player_views_surface_persisted_visual_bindings():
     gallery = source("src/components/VisualReferenceGallery.tsx")
     rpg = source("src/components/RpgViews.tsx")
+    relations = source("src/components/RelationsNetworkView.tsx")
     entity_list = source("src/components/EntityList.tsx")
 
     assert "listVisualAssetBindings" in gallery
@@ -20,8 +21,8 @@ def test_normal_player_views_surface_persisted_visual_bindings():
     assert 'binding.role === "primary_reference"' in gallery
 
     assert "subjectEntityId={pcEntity.id}" in rpg
-    assert "<NpcPortraitControl subjectEntityId={e.id}" in rpg
-    assert "currentState={visualState}" in rpg
+    assert "RelationsNetworkView" in rpg
+    assert "<NpcPortraitControl subjectEntityId={npc.id}" in relations
 
     assert '"place"' in entity_list
     assert '"settlement"' in entity_list
@@ -62,17 +63,22 @@ def test_sidebar_portrait_shows_complete_source_without_crop_or_stretch():
     assert "transform: none" in rule
 
 
-def test_relations_can_assign_a_primary_npc_portrait_directly():
+def test_relations_can_assign_a_primary_npc_portrait_directly_without_overflow_copy():
     control = source("src/components/NpcPortraitControl.tsx")
-    rpg = source("src/components/RpgViews.tsx")
+    relations = source("src/components/RelationsNetworkView.tsx")
+    css = source("src/npc-portrait-control.css")
 
-    assert "NpcPortraitControl" in rpg
+    assert "NpcPortraitControl" in relations
     assert 'importCampaignAsset(campaignId, "npc_portrait", path)' in control
     assert '"primary_reference"' in control
     assert "bindVisualAsset" in control
-    assert 'hasPortrait ? "Changer" : "Ajouter un portrait"' in control
+    assert 'hasPortrait ? "Changer" : "Ajouter"' in control
     assert "kitaba-visual-bindings-changed" in control
     assert 'className="npc-avatar-image"' in control
+    assert 'className="npc-avatar npc-avatar-empty"' in control
+    assert "onClick={choosePortrait}" in control
+    assert "white-space: nowrap" in css
+    assert "position: absolute" in css
 
 
 def test_relations_can_reuse_unbound_npc_portraits_imported_before_bindings_existed():
