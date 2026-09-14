@@ -13,6 +13,8 @@ def test_image_slots_preserve_expected_aspect_behavior():
     main = _read("src/main.tsx")
     css = _read("src/image-fit-hardening.css")
     sidebar = _read("src/components/Sidebar.tsx")
+    map_component = _read("src/components/InteractiveMap.tsx")
+    map_css = _read("src/interactive-map-mvp.css")
     assert 'import "./image-fit-hardening.css"' in main
     # Sidebar portrait must show the complete source image, reduced without square stretching/cropping.
     assert 'className="portrait-frame"' not in sidebar
@@ -22,12 +24,15 @@ def test_image_slots_preserve_expected_aspect_behavior():
     assert "height: auto" in sidebar_rule
     assert "object-fit: contain" in sidebar_rule
     assert "object-fit: cover" not in sidebar_rule
-    # Fixed reference cards may still crop consistently; large previews/maps keep their source ratio.
+    # Fixed reference cards may still crop consistently; large previews keep their source ratio.
     assert ".visual-reference-card img" in css
     assert "object-position: 50% 50%" in css
     assert ".media-preview img" in css
     assert "object-fit: contain" in css
-    assert ".interactive-map-stage > img" in css
+    # The map now uses a DPR-aware canvas rather than a zoomed DOM image.
+    assert "interactive-map-raster-canvas" in map_component
+    assert ".interactive-map-raster-canvas" in map_css
+    assert "ctx.drawImage(image" in map_component
 
 
 def test_shared_mvp_theme_tokens_are_defined_before_feature_css_uses_them():
@@ -66,11 +71,13 @@ def test_inline_visuals_refresh_when_campaign_selection_changes():
     assert "bindingCache = null" in gallery
 
 
-def test_map_drag_relies_on_clamping_even_at_cover_minimum_zoom():
+def test_map_drag_relies_on_clamping_at_fit_and_native_zoom():
     component = _read("src/components/InteractiveMap.tsx")
     assert 'if (!drag || drag.pointerId !== event.pointerId) return;' in component
-    assert 'if (!drag || drag.pointerId !== event.pointerId || zoom <= minimumZoom) return;' not in component
-    assert "clampPanToWorld(next, zoomRef.current, geometryRef.current)" in component
+    assert "applyView(scaleRef.current" in component
+    assert "const clampedPan = clampPan(nextPan, clampedScale, nextGeometry);" in component
+    assert "geometry.viewportWidth - renderedWidth" in component
+    assert "geometry.viewportHeight - renderedHeight" in component
 
 
 def test_016_keeps_015_persistence_schema_and_backup_contract():
