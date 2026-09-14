@@ -21,7 +21,7 @@ def test_encyclopedia_is_player_only_projection_without_schema_change():
 def test_encyclopedia_has_requested_discovery_categories_and_epistemic_labels():
     view = read("src/components/EncyclopediaView.tsx")
     for label in [
-        "Colonies & lieux",
+        "Lieux & localités",
         "Figures & relations",
         "Relations & lignées",
         "Bestiaire & troupes",
