@@ -31,15 +31,15 @@ def test_map_remains_player_knowledge_gated():
 
 def test_interactive_map_clamps_pan_and_prevents_black_borders():
     component = _read("src/components/InteractiveMap.tsx")
-    assert "measureWorld" in component
-    assert "minimumZoom" in component
-    assert "clampPanToWorld" in component
-    assert "Math.max(-maxX, Math.min(maxX, next.x))" in component
-    assert "Math.max(-maxY, Math.min(maxY, next.y))" in component
+    assert "function clampPan" in component
+    assert "geometry.viewportWidth - renderedWidth" in component
+    assert "geometry.viewportHeight - renderedHeight" in component
+    assert "fitPan" in component
+    assert "fitScale" in component
     assert "ResizeObserver" in component
-    assert 'document.addEventListener("fullscreenchange", synchronizeGeometry)' in component
-    assert "rendered.left + cluster.x * rendered.width" in component
-    assert "rendered.top + cluster.y * rendered.height" in component
+    assert "applyView(nextScale, panRef.current, next)" in component
+    assert "marker.x * geometry.naturalWidth * scale" in component
+    assert "marker.y * geometry.naturalHeight * scale" in component
 
 
 def test_dense_atlas_has_layers_search_clustering_current_position_and_overlap_picker():
@@ -47,43 +47,47 @@ def test_dense_atlas_has_layers_search_clustering_current_position_and_overlap_p
     css = _read("src/interactive-map-mvp.css")
     assert "clusterMarkers" in component
     assert "map-layer-chip" in component
-    assert "Trouver un lieu connu" in component
+    assert "Rechercher un lieu…" in component
     assert "Ma position" in component
-    assert "visibleAtZoom" in component
+    assert "visibleAtScale" in component
     assert "map_importance" in component
     assert "interactive-map-cluster" in component
-    assert "selectedClusterId" in component
+    assert "spiderClusterId" in component
+    assert "SPIDER_RADIUS_PX" in component
+    assert "interactive-map-spider-marker" in component
     assert "Lieux à cet endroit" in component
     assert "map-cluster-choice-list" in component
-    assert "const MAX_ZOOM = 12" in component
+    assert "maxScale: 1" in component
     assert "map-search-results" in css
     assert "interactive-map-cluster" in css
+    assert "interactive-map-spider-marker" in css
     assert "map-cluster-choice-list" in css
 
 
-def test_map_raster_is_resized_directly_instead_of_gpu_scaling_whole_stage():
+def test_map_raster_uses_dpr_canvas_and_native_resolution_ceiling():
     component = _read("src/components/InteractiveMap.tsx")
     css = _read("src/interactive-map-mvp.css")
-    compact_css = css.replace(" ", "")
-    assert "worldRect" in component
-    assert 'style={{ left: `${rendered.left}px`, top: `${rendered.top}px`, width: `${rendered.width}px`, height: `${rendered.height}px` }}' in component
-    assert "transform:none!important" in compact_css
-    assert "max-width:none" in compact_css
-    assert "image-rendering:auto" in compact_css
+    assert "canvasRef" in component
+    assert "window.devicePixelRatio" in component
+    assert "canvas.width = Math.round(g.viewportWidth * dpr)" in component
+    assert "ctx.drawImage(image" in component
+    assert "maxScale: 1" in component
+    assert "100% natif" in component
+    assert "interactive-map-raster-canvas" in component
+    assert ".interactive-map-raster-canvas" in css
+    assert "no automatic enlargement beyond native resolution" in css
 
 
 def test_atlas_supports_routes_regions_and_approximate_positions_without_schema_change():
     component = _read("src/components/InteractiveMap.tsx")
     css = _read("src/interactive-map-mvp.css")
     assert "parseNormalizedPoints" in component
-    assert 'data.path ?? data.points ?? data.map_path' in component
-    assert 'data.polygon ?? data.boundary ?? data.map_polygon' in component
-    assert "map-vector-route" in component
-    assert "map-vector-region" in component
+    assert 'entity.data.path ?? entity.data.points ?? entity.data.map_path' in component
+    assert 'entity.data.polygon ?? entity.data.boundary ?? entity.data.map_polygon' in component
+    assert 'feature.layer === "routes"' in component
+    assert "ctx.lineTo" in component
+    assert "ctx.ellipse" in component
     assert "location_precision" in component
-    assert "connu(s) non localisé(s)" in component
-    assert ".map-vector-route" in css
-    assert ".map-vector-region" in css
     assert ".interactive-map-marker.approximate" in css
 
 
@@ -95,7 +99,6 @@ def test_visual_continuity_guidance_is_in_companion():
     assert "Scènes de groupe = références déjà établies" in app
     assert "visualIdentitySummary" in rpg
     assert "Référence visuelle stable" in rpg
-    assert "Référence visuelle" in rpg
     assert "current_visual_state" in rpg
 
 
