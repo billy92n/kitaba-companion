@@ -15,8 +15,9 @@ def test_normal_player_views_surface_persisted_visual_bindings():
 
     assert "listVisualAssetBindings" in gallery
     assert "readAssetDataUrl" in gallery
-    assert 'binding.role !== "state_variant"' in gallery
-    assert "normalize(binding.state) === currentState" in gallery
+    assert "function newestBinding" in gallery
+    assert 'binding.role === "state_variant" && normalize(binding.state) === currentState' in gallery
+    assert 'binding.role === "primary_reference"' in gallery
 
     assert "subjectEntityId={pcEntity.id}" in rpg
     assert "<NpcPortraitControl subjectEntityId={e.id}" in rpg
