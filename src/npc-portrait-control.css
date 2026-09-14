@@ -2,8 +2,9 @@
   display: grid;
   justify-items: center;
   align-content: start;
-  gap: 7px;
-  min-width: 72px;
+  width: 58px;
+  min-width: 58px;
+  padding-bottom: 18px;
   position: relative;
 }
 
@@ -27,19 +28,38 @@
   place-items: center;
   color: #d7c89d;
   font-weight: 800;
+  padding: 0;
+}
+
+.npc-avatar-empty {
+  cursor: pointer;
+}
+
+.npc-avatar-empty:hover:not(:disabled) {
+  border-color: #a58a5c;
+  background: #292822;
 }
 
 .npc-portrait-action {
-  max-width: 92px;
-  padding: 5px 7px;
-  font-size: 10px;
-  line-height: 1.15;
+  position: absolute;
+  top: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 46px;
+  max-width: 58px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: 9px;
+  line-height: 1.1;
+  background: #10141af2 !important;
+  box-shadow: 0 3px 10px #0008;
 }
 
 .npc-portrait-picker {
   position: absolute;
   z-index: 40;
-  top: 76px;
+  top: 67px;
   left: 0;
   width: min(340px, 72vw);
   padding: 12px;
