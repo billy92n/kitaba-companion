@@ -63,6 +63,10 @@ function roleLabel(role: string) {
   return ROLE_OPTIONS.find(([key]) => key === role)?.[1] ?? fieldLabelFr(role);
 }
 
+function normalize(value: string | null | undefined) {
+  return (value ?? "").trim().toLocaleLowerCase("fr");
+}
+
 function notifyVisualBindingsChanged(campaignId: string) {
   window.dispatchEvent(new CustomEvent(VISUAL_BINDINGS_CHANGED_EVENT, { detail: { campaignId } }));
 }
@@ -106,15 +110,37 @@ export function VisualLibrary({ campaignId, entities, assets, previewUrl, previe
     setCaption(existing?.caption ?? "");
   }
 
+  async function removeConflictingBindings(assetId: string, nextSubjectId: string, nextRole: string, nextState: string) {
+    const normalizedState = normalize(nextState || "normal");
+    const conflicts = bindings.filter((binding) => {
+      if (binding.asset_id === assetId || binding.subject_entity_id !== nextSubjectId) return false;
+      if (nextRole === "primary_reference") return binding.role === "primary_reference";
+      if (nextRole === "state_variant") return binding.role === "state_variant" && normalize(binding.state) === normalizedState;
+      if (nextRole === "place_reference") return binding.role === "place_reference";
+      return false;
+    });
+    for (const binding of conflicts) await backend.unbindVisualAsset(campaignId, binding.asset_id);
+    return new Set(conflicts.map((binding) => binding.asset_id));
+  }
+
   async function saveBinding() {
     if (!bindingAssetId || !subjectId) return;
     setBusy(true);
     try {
-      const result = await backend.bindVisualAsset(campaignId, bindingAssetId, subjectId, role, visualState.trim() || "normal", caption.trim() || undefined);
-      setBindings((current) => [...current.filter((binding) => binding.asset_id !== result.asset_id), result]);
+      const state = visualState.trim() || "normal";
+      const removed = await removeConflictingBindings(bindingAssetId, subjectId, role, state);
+      const result = await backend.bindVisualAsset(campaignId, bindingAssetId, subjectId, role, state, caption.trim() || undefined);
+      setBindings((current) => [
+        ...current.filter((binding) => binding.asset_id !== result.asset_id && !removed.has(binding.asset_id)),
+        result,
+      ]);
       setBindingAssetId(null);
       notifyVisualBindingsChanged(campaignId);
-      onStatus("Image associée. Cette référence sera conservée dans les sauvegardes .kitaba sans modifier le canon narratif.");
+      onStatus(role === "primary_reference"
+        ? "Portrait principal enregistré. L’ancienne référence principale reste dans la campagne mais n’est plus utilisée comme portrait actif."
+        : role === "state_variant"
+          ? "Variante d’état enregistrée. Une seule image active est conservée pour ce même état."
+          : "Image associée. Cette référence sera conservée dans les sauvegardes .kitaba sans modifier le canon narratif.");
     } catch (error) {
       onStatus(`Association visuelle impossible : ${String(error)}`);
     } finally {
