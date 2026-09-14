@@ -3,7 +3,7 @@ import type { EntityDocument } from "../lib/types";
 import { backend } from "../lib/backend";
 import { valueFr } from "../lib/frenchUi";
 import { VisualReferenceGallery } from "./VisualReferenceGallery";
-import { NpcPortraitControl } from "./NpcPortraitControl";
+import { RelationsNetworkView } from "./RelationsNetworkView";
 import { AdventurerCardView, MagicView, SkillsView, TimelineView } from "./ProgressionViews";
 import "../player-hubs.css";
 
@@ -23,18 +23,6 @@ function shortText(value: unknown, fallback: string, max = 150) {
   const sentence = raw.slice(0, max + 1).match(/^(.{40,150}?[.!?])(?:\s|$)/)?.[1];
   if (sentence) return sentence;
   return `${raw.slice(0, max).trimEnd()}…`;
-}
-
-function relationToPlayer(data: Record<string, unknown>) {
-  return text(
-    data.relation_to_player
-      ?? data.relationship_to_player
-      ?? data.player_relation
-      ?? data.family_role
-      ?? data.kinship_to_player
-      ?? data.role_to_player,
-    "",
-  );
 }
 
 function visualIdentitySummary(value: unknown): string {
@@ -220,31 +208,7 @@ function ItemCards({ items, empty }: { items: EntityDocument[]; empty: string })
 }
 
 export function RelationsView({ entities }: { entities: EntityDocument[] }) {
-  const npcs = entities.filter((e) => e.entity_type === "npc");
-  const relations = entities.filter((e) => e.entity_type === "relationship");
-  const reps = entities.filter((e) => e.entity_type === "reputation");
-  return <div className="relations-layout">
-    <section className="panel full-span"><h2>Personnes connues</h2><p className="muted">Les portraits se gèrent directement sur la personne concernée. Le rôle par rapport au personnage est affiché dès qu'il est présent dans les données joueur.</p>{npcs.length === 0 ? <div className="empty-inline">Personne enregistrée.</div> : <div className="npc-grid">{npcs.map((e) => {
-      const name = labelFromData(e.data, "Personne inconnue");
-      const role = relationToPlayer(e.data);
-      const visualIdentity = visualIdentitySummary(e.data.visual_identity);
-      const visualState = currentVisualState(e.data);
-      const visualStateLabel = text(visualState, "");
-      const summary = shortText(e.data.known_summary ?? e.data.description ?? e.data.player_impression ?? e.data.known_information, "Aucune description connue.");
-      const meta = [role, text(e.data.species, ""), text(e.data.profession, "")].filter(Boolean).join(" · ");
-      return <article className="npc-card" key={e.id}>
-        <NpcPortraitControl subjectEntityId={e.id} name={name} currentState={visualState} />
-        <div className="npc-card-body">
-          <strong>{name}</strong>
-          <span>{meta || "Relation connue"}</span>
-          <p>{summary}</p>
-          {visualIdentity && <p className="visual-identity-summary"><b>Référence visuelle</b><span>{visualIdentity}{visualStateLabel ? ` · État : ${visualStateLabel}` : ""}</span></p>}
-        </div>
-      </article>;
-    })}</div>}</section>
-    <section className="panel"><h2>Relations perçues</h2><CompactEntities entities={relations} empty="Aucune relation explicitement perçue." /></section>
-    <section className="panel"><h2>Réputation</h2><CompactEntities entities={reps} empty="Aucune réputation enregistrée." /></section>
-  </div>;
+  return <RelationsNetworkView entities={entities} />;
 }
 
 export function KnowledgeView({ entities }: { entities: EntityDocument[] }) {
