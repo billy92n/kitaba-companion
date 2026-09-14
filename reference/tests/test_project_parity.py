@@ -128,7 +128,7 @@ def test_world_state_remains_supported_without_duplicate_world_navigation():
     assert '["world", "Monde"' not in sidebar
     assert '["knowledge", "Connaissances"' not in sidebar
     assert 'world: ["faction", "organization", "settlement"' in app
-    assert 'label: "Colonies & lieux"' in encyclopedia
+    assert 'label: "Lieux & localités"' in encyclopedia
     assert 'label: "Royaumes & factions"' in encyclopedia
     assert 'label: "Monde & histoire"' in encyclopedia
     assert '"world": ["faction", "organization", "settlement"' in rust
