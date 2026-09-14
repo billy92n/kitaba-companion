@@ -180,9 +180,9 @@ export function NpcPortraitControl({ subjectEntityId, name, currentState }: Prop
   return <div className="npc-portrait-control">
     {url
       ? <img className="npc-avatar-image" src={url} alt={`Portrait de ${name}${stateLabel}`} />
-      : <div className="npc-avatar" aria-label={`Aucun portrait pour ${name}`}>{name.slice(0, 1).toUpperCase()}</div>}
+      : <button className="npc-avatar npc-avatar-empty" onClick={choosePortrait} disabled={busy} aria-label={`Ajouter un portrait pour ${name}`} title={`Ajouter un portrait pour ${name}`}>{name.slice(0, 1).toUpperCase()}</button>}
     <button className="ghost small npc-portrait-action" onClick={choosePortrait} disabled={busy}>
-      {hasPortrait ? "Changer" : "Ajouter un portrait"}
+      {hasPortrait ? "Changer" : "Ajouter"}
     </button>
     {pickerOpen && <div className="npc-portrait-picker" role="dialog" aria-label={`Choisir le portrait de ${name}`}>
       <div className="npc-portrait-picker-head"><strong>Portrait de {name}</strong><button className="ghost small" onClick={() => setPickerOpen(false)}>Fermer</button></div>
