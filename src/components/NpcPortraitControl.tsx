@@ -82,6 +82,14 @@ export function NpcPortraitControl({ subjectEntityId, name, currentState }: Prop
   }, [reload]);
 
   async function bindPortrait(campaignId: string, assetId: string) {
+    const bindings = await backend.listVisualAssetBindings(campaignId);
+    const previousPrimary = bindings.filter((binding) =>
+      binding.subject_entity_id === subjectEntityId
+      && binding.role === "primary_reference"
+      && binding.asset_id !== assetId
+    );
+    for (const binding of previousPrimary) await backend.unbindVisualAsset(campaignId, binding.asset_id);
+
     await backend.bindVisualAsset(
       campaignId,
       assetId,
