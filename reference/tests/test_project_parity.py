@@ -118,15 +118,53 @@ def test_sync_ui_masks_raw_update_payload_by_default():
     assert "Mode collage manuel" in app
 
 
-def test_world_state_has_dedicated_player_ui_and_contract():
+def test_world_state_remains_supported_without_duplicate_world_navigation():
     app = _read("src/App.tsx")
     sidebar = _read("src/components/Sidebar.tsx")
+    encyclopedia = _read("src/components/EncyclopediaView.tsx")
     rust = _read("src-tauri/src/db.rs")
     py = _read("reference/engine.py")
-    assert '["world", "Monde"]' in sidebar
+
+    assert '["world", "Monde"' not in sidebar
+    assert '["knowledge", "Connaissances"' not in sidebar
     assert 'world: ["faction", "organization", "settlement"' in app
+    assert 'label: "Lieux & localités"' in encyclopedia
+    assert 'label: "Royaumes & factions"' in encyclopedia
+    assert 'label: "Monde & histoire"' in encyclopedia
     assert '"world": ["faction", "organization", "settlement"' in rust
     assert '"world": ["faction", "organization", "settlement"' in py
+
+
+def test_primary_navigation_uses_player_task_hubs_instead_of_technical_subsections():
+    sidebar = _read("src/components/Sidebar.tsx")
+    rpg = _read("src/components/RpgViews.tsx")
+    encyclopedia_dock = _read("src/components/EncyclopediaDock.tsx")
+
+    for row in [
+        '["overview", "Accueil", "play"]',
+        '["character", "Personnage", "play"]',
+        '["relations", "Relations", "memory"]',
+        '["journal", "Journal & quêtes", "memory"]',
+        '["map", "Carte", "memory"]',
+        '["media", "Portraits & images", "manage"]',
+        '["sync", "Mettre à jour la partie", "manage"]',
+    ]:
+        assert row in sidebar
+
+    for obsolete_primary in [
+        '["inventory", "Inventaire"',
+        '["skills", "Compétences"',
+        '["magic", "Magie"',
+        '["missions", "Missions"',
+    ]:
+        assert obsolete_primary not in sidebar
+
+    assert 'className="encyclopedia-nav-slot"' in sidebar
+    assert 'querySelector<HTMLElement>(".encyclopedia-nav-slot")' in encyclopedia_dock
+    assert 'type CharacterTab = "profile" | "inventory" | "skills" | "magic" | "card"' in rpg
+    assert 'type JournalTab = "journal" | "missions" | "timeline"' in rpg
+    assert 'aria-label="Rubriques du personnage"' in rpg
+    assert 'aria-label="Journal et quêtes"' in rpg
 
 
 def test_fresh_campaign_ui_is_generic_and_requires_character_creation_before_play():
@@ -151,7 +189,8 @@ def test_player_knowledge_ui_hides_undiscovered_resource_and_lore_surfaces():
     progression = _read("src/components/ProgressionViews.tsx")
     main = _read("src/main.tsx")
     hardening_css = _read("src/player-knowledge-hardening.css")
-    assert '["overview", "Vue d\'ensemble"],\n  ["sync", "Synchronisation"]' in sidebar
+    assert '["overview", "Accueil", "play"]' in sidebar
+    assert '["sync", "Mettre à jour la partie", "manage"]' in sidebar
     assert 'discoveryTypes' in sidebar
     assert 'awakening && <section' in rpg
     assert 'hasMana && <Resource label="Mana"' in rpg

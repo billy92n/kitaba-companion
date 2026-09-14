@@ -1,6 +1,7 @@
 mod db;
 mod error;
 mod model;
+mod visual;
 
 use std::{fs, path::PathBuf, sync::Mutex};
 use rusqlite::Connection;
@@ -195,7 +196,9 @@ fn read_text_file(input_path: String) -> Result<String, KitabaError> {
 #[tauri::command]
 fn list_assets(campaign_id: String, state: State<'_, DbState>) -> Result<Vec<AssetSummary>, KitabaError> {
     let conn = state.conn.lock().map_err(|_| KitabaError::Validation("database lock poisoned".into()))?;
-    db::list_assets(&conn, &campaign_id)
+    let mut assets = db::list_assets(&conn, &campaign_id)?;
+    assets.retain(|asset| asset.kind != visual::VISUAL_BINDINGS_META_KIND);
+    Ok(assets)
 }
 
 #[tauri::command]
@@ -208,6 +211,41 @@ fn import_campaign_asset(campaign_id: String, kind: String, input_path: String, 
 fn read_asset_data_url(campaign_id: String, asset_id: String, state: State<'_, DbState>) -> Result<String, KitabaError> {
     let conn = state.conn.lock().map_err(|_| KitabaError::Validation("database lock poisoned".into()))?;
     db::read_asset_data_url(&conn, &campaign_id, &asset_id, &state.app_dir.join("assets"))
+}
+
+#[tauri::command]
+fn list_visual_asset_bindings(campaign_id: String, state: State<'_, DbState>) -> Result<Vec<visual::VisualAssetBinding>, KitabaError> {
+    let conn = state.conn.lock().map_err(|_| KitabaError::Validation("database lock poisoned".into()))?;
+    visual::list_bindings(&conn, &campaign_id, &state.app_dir.join("assets"))
+}
+
+#[tauri::command]
+fn bind_visual_asset(
+    campaign_id: String,
+    asset_id: String,
+    subject_entity_id: String,
+    role: String,
+    visual_state: Option<String>,
+    caption: Option<String>,
+    state: State<'_, DbState>,
+) -> Result<visual::VisualAssetBinding, KitabaError> {
+    let conn = state.conn.lock().map_err(|_| KitabaError::Validation("database lock poisoned".into()))?;
+    visual::bind_asset(
+        &conn,
+        &campaign_id,
+        &asset_id,
+        &subject_entity_id,
+        &role,
+        visual_state.as_deref(),
+        caption.as_deref(),
+        &state.app_dir.join("assets"),
+    )
+}
+
+#[tauri::command]
+fn unbind_visual_asset(campaign_id: String, asset_id: String, state: State<'_, DbState>) -> Result<(), KitabaError> {
+    let conn = state.conn.lock().map_err(|_| KitabaError::Validation("database lock poisoned".into()))?;
+    visual::unbind_asset(&conn, &campaign_id, &asset_id, &state.app_dir.join("assets"))
 }
 
 pub fn run() {
@@ -231,7 +269,7 @@ pub fn run() {
             app.manage(DbState { conn: Mutex::new(conn), app_dir });
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![list_campaigns, create_campaign, list_archived_campaigns, set_campaign_archived, delete_campaign_permanently, campaign_integrity_report, preview_kitaba_update, import_kitaba_update, export_kitaba_context, list_entities, list_rest_points, list_audit_events, rollback_death, create_technical_backup, restore_technical_backup, save_kitaba_context, manual_patch_entity, record_context_export, read_text_file, list_assets, import_campaign_asset, read_asset_data_url])
+        .invoke_handler(tauri::generate_handler![list_campaigns, create_campaign, list_archived_campaigns, set_campaign_archived, delete_campaign_permanently, campaign_integrity_report, preview_kitaba_update, import_kitaba_update, export_kitaba_context, list_entities, list_rest_points, list_audit_events, rollback_death, create_technical_backup, restore_technical_backup, save_kitaba_context, manual_patch_entity, record_context_export, read_text_file, list_assets, import_campaign_asset, read_asset_data_url, list_visual_asset_bindings, bind_visual_asset, unbind_visual_asset])
         .run(tauri::generate_context!())
         .expect("error while running Kitaba Companion");
 }

@@ -49,7 +49,6 @@ export interface RestPointSummary {
   created_at: string;
 }
 
-
 export interface AssetSummary {
   id: string;
   campaign_id: string;
@@ -60,14 +59,21 @@ export interface AssetSummary {
   created_at: string;
 }
 
+export interface VisualAssetBinding {
+  asset_id: string;
+  subject_entity_id: string;
+  role: "primary_reference" | "state_variant" | "scene_reference" | "place_reference" | "historical_reference" | string;
+  state: string;
+  caption: string | null;
+  updated_at: string;
+}
+
 export interface AuditEvent {
   id: string;
   event_type: string;
   summary: string;
   created_at: string;
 }
-
-
 
 export interface IntegrityCheck {
   code: string;
