@@ -70,13 +70,24 @@ function roleLabel(binding: VisualAssetBinding) {
   return fieldLabelFr(binding.role);
 }
 
+function newestBinding(bindings: VisualAssetBinding[], predicate: (binding: VisualAssetBinding) => boolean) {
+  return bindings.filter(predicate).sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0] ?? null;
+}
+
 function selectBindings(bindings: VisualAssetBinding[], subjectEntityId: string, currentState: string, limit: number) {
-  return bindings
-    .filter((binding) => binding.subject_entity_id === subjectEntityId)
-    .filter((binding) => {
-      if (binding.role !== "state_variant") return true;
-      return Boolean(currentState) && normalize(binding.state) === currentState;
-    })
+  const subject = bindings.filter((binding) => binding.subject_entity_id === subjectEntityId);
+  const primary = newestBinding(subject, (binding) => binding.role === "primary_reference");
+  const place = newestBinding(subject, (binding) => binding.role === "place_reference");
+  const stateVariant = currentState
+    ? newestBinding(subject, (binding) => binding.role === "state_variant" && normalize(binding.state) === currentState)
+    : null;
+  const supplemental = subject
+    .filter((binding) => binding.role === "scene_reference" || binding.role === "historical_reference")
+    .sort((a, b) => bindingPriority(a, currentState) - bindingPriority(b, currentState) || b.updated_at.localeCompare(a.updated_at));
+
+  return [primary, place, stateVariant, ...supplemental]
+    .filter((binding): binding is VisualAssetBinding => binding !== null)
+    .filter((binding, index, rows) => rows.findIndex((candidate) => candidate.asset_id === binding.asset_id) === index)
     .sort((a, b) => bindingPriority(a, currentState) - bindingPriority(b, currentState) || b.updated_at.localeCompare(a.updated_at))
     .slice(0, limit);
 }
