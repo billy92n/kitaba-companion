@@ -25,11 +25,12 @@ def test_rpg_and_progression_views_localize_enum_values():
     assert "valueFr(value)" in progression
 
 
-def test_map_does_not_surface_raw_entity_types_or_common_english_status_values():
+def test_map_does_not_surface_raw_entity_types_and_localizes_displayed_values():
     component = read("src/components/InteractiveMap.tsx")
     assert 'import { entityTypeLabelFr, valueFr } from "../lib/frenchUi"' in component
     assert "entityTypeLabelFr(marker.entity.entity_type)" in component
-    assert "valueFr(stringField(selected.data" in component
+    assert "entityTypeLabelFr(selected.entity_type)" in component
+    assert "valueFr(routeDistance)" in component
 
 
 def test_french_dictionary_covers_common_player_facing_enums():
